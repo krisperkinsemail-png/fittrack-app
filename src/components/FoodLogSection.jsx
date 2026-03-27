@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { FOOD_LIBRARY } from "../lib/foodLibrary";
+import { loadFoodLibraryUsage, recordFoodLibraryUsage } from "../lib/libraryUsage";
 
 const EMPTY_FORM = {
   foodName: "",
@@ -49,6 +50,7 @@ export function FoodLogSection({
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
 
   const totalCalories = useMemo(
     () => entries.reduce((sum, entry) => sum + entry.calories, 0),
@@ -71,8 +73,8 @@ export function FoodLogSection({
       isScalable: false,
     }));
 
-    return [...savedMeals, ...FOOD_LIBRARY.map((item) => ({ ...item, itemType: "food" }))].filter(
-      (item) => {
+    return [...savedMeals, ...FOOD_LIBRARY.map((item) => ({ ...item, itemType: "food" }))]
+      .filter((item) => {
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
         const matchesSearch =
           !search ||
@@ -80,9 +82,20 @@ export function FoodLogSection({
           item.servingSize.toLowerCase().includes(search.toLowerCase());
 
         return matchesCategory && matchesSearch;
-      }
-    );
-  }, [categoryFilter, mealTemplates, search]);
+      })
+      .sort((left, right) => {
+        if (categoryFilter === "all") {
+          const rightUsage = usageCounts[right.id] || 0;
+          const leftUsage = usageCounts[left.id] || 0;
+
+          if (rightUsage !== leftUsage) {
+            return rightUsage - leftUsage;
+          }
+        }
+
+        return left.name.localeCompare(right.name);
+      });
+  }, [categoryFilter, mealTemplates, search, usageCounts]);
 
   function resetForm() {
     setForm(EMPTY_FORM);
@@ -91,6 +104,7 @@ export function FoodLogSection({
   }
 
   function loadPreset(item) {
+    setUsageCounts(recordFoodLibraryUsage(item.id));
     setSelectedPreset(item.isScalable ? item : null);
     setForm({
       foodName: item.name,
@@ -230,6 +244,19 @@ export function FoodLogSection({
       servingAmount: value,
       ...scaled,
     }));
+  }
+
+  function quickAddItem(item) {
+    setUsageCounts(recordFoodLibraryUsage(item.id));
+    onAddEntry({
+      date: selectedDate,
+      foodName: item.name,
+      servingSize: item.servingSize,
+      calories: item.calories,
+      protein: item.protein,
+      carbs: item.carbs,
+      fat: item.fat,
+    });
   }
 
   return (
@@ -534,17 +561,7 @@ export function FoodLogSection({
                 <button
                   type="button"
                   className="secondary-button"
-                  onClick={() =>
-                    onAddEntry({
-                      date: selectedDate,
-                      foodName: item.name,
-                      servingSize: item.servingSize,
-                      calories: item.calories,
-                      protein: item.protein,
-                      carbs: item.carbs,
-                      fat: item.fat,
-                    })
-                  }
+                  onClick={() => quickAddItem(item)}
                 >
                   Quick add
                 </button>
