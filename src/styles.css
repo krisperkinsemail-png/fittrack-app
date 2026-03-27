@@ -103,6 +103,11 @@ button {
   gap: 10px;
 }
 
+.topbar-heading-row {
+  display: grid;
+  gap: 12px;
+}
+
 .topbar h1,
 .section-heading h2,
 .date-card h2,
@@ -727,6 +732,13 @@ button:focus {
   flex-wrap: wrap;
 }
 
+.topbar-home-link {
+  justify-self: start;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
 .accent-switcher .home-button {
   width: 100%;
 }
@@ -751,6 +763,11 @@ button:focus {
     grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
     align-items: center;
     padding: 28px;
+  }
+
+  .topbar-heading-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
   }
 
   .landing-feature-grid,

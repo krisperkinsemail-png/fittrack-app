@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { DashboardSection } from "./components/DashboardSection";
+import { useAuth } from "./components/AuthGate";
 import { DateNavigator } from "./components/DateNavigator";
 import { FoodLogSection } from "./components/FoodLogSection";
 import { MobileTabs } from "./components/MobileTabs";
@@ -24,6 +25,7 @@ const TABS = [
 ];
 
 export default function App() {
+  const { goToHomepage } = useAuth();
   const {
     state,
     addFoodEntry,
@@ -133,9 +135,14 @@ export default function App() {
   return (
     <div className="app-shell theme-shell" data-accent={state.settings.accentColor}>
       <header className="topbar">
-        <div>
-          <p className="eyebrow">FitTrack</p>
-          <h1>Nutrition, weight, and workout tracking in one place.</h1>
+        <div className="topbar-heading-row">
+          <div>
+            <p className="eyebrow">FitTrack</p>
+            <h1>Nutrition, weight, and workout tracking in one place.</h1>
+          </div>
+          <button type="button" className="secondary-button topbar-home-link" onClick={goToHomepage}>
+            Homepage
+          </button>
         </div>
         <p className="topbar-copy">
           Mobile-first and fast, with local storage today and a clean path to cloud sync later.

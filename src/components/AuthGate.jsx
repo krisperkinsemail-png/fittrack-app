@@ -4,6 +4,8 @@ import { hasSupabaseConfig, supabase } from "../lib/supabase";
 const AuthContext = createContext({
   session: null,
   signOut: async () => {},
+  goToHomepage: () => {},
+  returnToApp: () => {},
   hasCloud: false,
 });
 
@@ -17,6 +19,7 @@ export function AuthGate({ children }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showAuthForm, setShowAuthForm] = useState(false);
+  const [showHomepage, setShowHomepage] = useState(false);
   const [mode, setMode] = useState("sign-in");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(hasSupabaseConfig);
@@ -34,12 +37,13 @@ export function AuthGate({ children }) {
       }
 
       if (error) {
-        setMessage(error.message);
-      } else {
-        setSession(data.session);
-      }
-      setLoading(false);
-    });
+      setMessage(error.message);
+    } else {
+      setSession(data.session);
+      setShowHomepage(false);
+    }
+    setLoading(false);
+  });
 
     const {
       data: { subscription },
@@ -58,6 +62,8 @@ export function AuthGate({ children }) {
     () => ({
       session,
       signOut: handleSignOut,
+      goToHomepage: () => setShowHomepage(true),
+      returnToApp: () => setShowHomepage(false),
       hasCloud: hasSupabaseConfig,
     }),
     [session]
@@ -139,6 +145,7 @@ export function AuthGate({ children }) {
 
   async function handleSignOut() {
     setSession(null);
+    setShowHomepage(false);
     setMessage("");
     await supabase.auth.signOut();
   }
@@ -158,7 +165,7 @@ export function AuthGate({ children }) {
     );
   }
 
-  if (!session) {
+  if (!session || showHomepage) {
     if (!showAuthForm) {
       return (
         <main className="app-shell landing-shell">
@@ -175,11 +182,11 @@ export function AuthGate({ children }) {
                   type="button"
                   className="primary-button"
                   onClick={() => {
-                    setMode("sign-in");
+                    setMode(session ? "sign-in" : "sign-in");
                     setShowAuthForm(true);
                   }}
                 >
-                  Login / Create Account
+                  {session ? "Open Dashboard" : "Login / Create Account"}
                 </button>
               </div>
             </div>
@@ -277,7 +284,7 @@ export function AuthGate({ children }) {
                   setShowAuthForm(true);
                 }}
               >
-                Create account
+                {session ? "Back to dashboard" : "Create account"}
               </button>
             </div>
           </section>
@@ -391,6 +398,7 @@ export function AuthGate({ children }) {
               onClick={() => {
                 setMessage("");
                 setShowAuthForm(false);
+                setShowHomepage(Boolean(session));
               }}
             >
               Back
