@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthGate";
 
 function roundMacroGrams(calories, percent, caloriesPerGram) {
-  return Math.round(((Number(calories) * Number(percent || 0)) / 100 / caloriesPerGram) * 10) / 10;
+  return Math.round((Number(calories) * Number(percent || 0)) / 100 / caloriesPerGram);
 }
 
 export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
