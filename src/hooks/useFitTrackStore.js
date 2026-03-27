@@ -4,8 +4,22 @@ import { createId, getToday } from "../lib/date";
 import { hasSupabaseConfig } from "../lib/supabase";
 import { hasMeaningfulLocalData, localStorageAdapter } from "../lib/storage.local";
 
+const SELECTED_DATE_KEY = "fittrack.selected-date.v1";
+
+function getInitialSelectedDate() {
+  if (typeof window === "undefined") {
+    return getToday();
+  }
+
+  try {
+    return window.localStorage.getItem(SELECTED_DATE_KEY) || getToday();
+  } catch {
+    return getToday();
+  }
+}
+
 const initialState = {
-  selectedDate: getToday(),
+  selectedDate: getInitialSelectedDate(),
   settings: {
     calorieTarget: 2200,
     proteinTarget: 180,
@@ -318,6 +332,14 @@ export function useFitTrackStore() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isHydrated]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SELECTED_DATE_KEY, state.selectedDate);
+    } catch {
+      // Ignore local selected-date persistence failures.
+    }
+  }, [state.selectedDate]);
 
   useEffect(() => {
     if (!isHydrated) {
