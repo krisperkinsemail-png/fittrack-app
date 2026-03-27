@@ -145,7 +145,7 @@ export default function App() {
           </button>
         </div>
         <p className="topbar-copy">
-          Mobile-first and fast, with local storage today and a clean path to cloud sync later.
+          Built to make consistency easier than excuses.
         </p>
         <div className="accent-switcher" aria-label="Accent color">
           <button
