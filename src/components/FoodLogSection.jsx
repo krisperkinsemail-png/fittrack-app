@@ -33,6 +33,36 @@ function scalePreset(item, nextAmount) {
   };
 }
 
+function getScalablePreset(item) {
+  if (item.isScalable) {
+    return item;
+  }
+
+  if (item.itemType !== "saved-food") {
+    return null;
+  }
+
+  const match = item.servingSize.trim().match(/^(\d*\.?\d+)\s+(\S+)(?:\s+(.*))?$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, amount, unit, note = ""] = match;
+  const baseAmount = Number(amount);
+
+  if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
+    return null;
+  }
+
+  return {
+    ...item,
+    isScalable: true,
+    baseAmount,
+    baseUnit: unit,
+    servingNote: note,
+  };
+}
+
 export function FoodLogSection({
   selectedDate,
   entries,
@@ -104,14 +134,15 @@ export function FoodLogSection({
   }
 
   function loadPreset(item) {
+    const scalablePreset = getScalablePreset(item);
     setUsageCounts(recordFoodLibraryUsage(item.id));
-    setSelectedPreset(item.isScalable ? item : null);
+    setSelectedPreset(scalablePreset);
     setForm({
       foodName: item.name,
       servingSize: item.servingSize,
-      servingAmount: item.baseAmount ? String(item.baseAmount) : "",
-      servingUnit: item.baseUnit || "",
-      servingNote: item.servingNote || "",
+      servingAmount: scalablePreset?.baseAmount ? String(scalablePreset.baseAmount) : "",
+      servingUnit: scalablePreset?.baseUnit || "",
+      servingNote: scalablePreset?.servingNote || "",
       calories: String(item.calories),
       protein: String(item.protein),
       carbs: String(item.carbs),
