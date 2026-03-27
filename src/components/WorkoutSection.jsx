@@ -16,6 +16,7 @@ function createExerciseDraft(exercise) {
     id: crypto.randomUUID(),
     name: exercise.name,
     target: exercise.target,
+    notes: exercise.notes || "",
     sets: Array.from({ length: exercise.defaultSets || 1 }, () => createSet()),
   };
 }
@@ -54,10 +55,14 @@ export function WorkoutSection({
   onSaveSystem,
   onDeleteSystem,
 }) {
-  const workoutSystems = useMemo(() => getAllWorkoutSystems(customSystems), [customSystems]);
-  const [selectedSystemId, setSelectedSystemId] = useState(workoutSystems[0].id);
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState(workoutSystems[0].workouts[0].id);
-  const [draftExercises, setDraftExercises] = useState(createWorkoutDraft(workoutSystems[0].workouts[0]));
+  const workoutPrograms = useMemo(() => getAllWorkoutSystems(customSystems), [customSystems]);
+  const [selectedProgramId, setSelectedProgramId] = useState(workoutPrograms[0].id);
+  const [selectedPhaseId, setSelectedPhaseId] = useState(
+    workoutPrograms[0].phases?.[0]?.id || null
+  );
+  const initialWorkouts = workoutPrograms[0].phases?.[0]?.workouts || workoutPrograms[0].workouts;
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState(initialWorkouts[0].id);
+  const [draftExercises, setDraftExercises] = useState(createWorkoutDraft(initialWorkouts[0]));
   const [customExerciseName, setCustomExerciseName] = useState("");
   const [templateForm, setTemplateForm] = useState({
     systemName: "",
@@ -68,27 +73,52 @@ export function WorkoutSection({
   const [timeLeft, setTimeLeft] = useState(90);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  const selectedSystem = useMemo(
-    () => workoutSystems.find((system) => system.id === selectedSystemId) || workoutSystems[0],
-    [selectedSystemId, workoutSystems]
+  const selectedProgram = useMemo(
+    () => workoutPrograms.find((program) => program.id === selectedProgramId) || workoutPrograms[0],
+    [selectedProgramId, workoutPrograms]
   );
+
+  const selectedPhase = useMemo(() => {
+    if (!selectedProgram.phases?.length) {
+      return null;
+    }
+
+    return (
+      selectedProgram.phases.find((phase) => phase.id === selectedPhaseId) || selectedProgram.phases[0]
+    );
+  }, [selectedPhaseId, selectedProgram]);
+
+  const availableWorkouts = selectedPhase?.workouts || selectedProgram.workouts;
 
   const selectedWorkout = useMemo(
-    () =>
-      selectedSystem.workouts.find((workout) => workout.id === selectedWorkoutId) ||
-      selectedSystem.workouts[0],
-    [selectedSystem, selectedWorkoutId]
+    () => availableWorkouts.find((workout) => workout.id === selectedWorkoutId) || availableWorkouts[0],
+    [availableWorkouts, selectedWorkoutId]
   );
 
   useEffect(() => {
-    if (!workoutSystems.some((system) => system.id === selectedSystemId)) {
-      setSelectedSystemId(workoutSystems[0].id);
+    if (!workoutPrograms.some((program) => program.id === selectedProgramId)) {
+      setSelectedProgramId(workoutPrograms[0].id);
     }
-  }, [selectedSystemId, workoutSystems]);
+  }, [selectedProgramId, workoutPrograms]);
 
   useEffect(() => {
-    setSelectedWorkoutId(selectedSystem.workouts[0].id);
-  }, [selectedSystemId, selectedSystem]);
+    if (selectedProgram.phases?.length) {
+      setSelectedPhaseId(selectedProgram.phases[0].id);
+      setSelectedWorkoutId(selectedProgram.phases[0].workouts[0].id);
+      return;
+    }
+
+    setSelectedPhaseId(null);
+    setSelectedWorkoutId(selectedProgram.workouts[0].id);
+  }, [selectedProgramId, selectedProgram]);
+
+  useEffect(() => {
+    if (!selectedPhase) {
+      return;
+    }
+
+    setSelectedWorkoutId(selectedPhase.workouts[0].id);
+  }, [selectedPhaseId, selectedPhase]);
 
   useEffect(() => {
     setDraftExercises(createWorkoutDraft(selectedWorkout));
@@ -96,11 +126,11 @@ export function WorkoutSection({
 
   useEffect(() => {
     setTemplateForm({
-      systemName: selectedSystem.name,
+      systemName: selectedProgram.name,
       workoutName: selectedWorkout.name,
       summary: selectedWorkout.summary,
     });
-  }, [selectedSystem, selectedWorkout]);
+  }, [selectedProgram, selectedWorkout]);
 
   useEffect(() => {
     let intervalId;
@@ -258,9 +288,9 @@ export function WorkoutSection({
     }
 
     onAddEntry({
-      date: selectedDate,
-      systemId: selectedSystem.id,
-      systemName: selectedSystem.name,
+        date: selectedDate,
+      systemId: selectedProgram.id,
+      systemName: selectedPhase ? `${selectedProgram.name} • ${selectedPhase.name}` : selectedProgram.name,
       workoutId: selectedWorkout.id,
       workoutName: selectedWorkout.name,
       exercises,
@@ -290,8 +320,8 @@ export function WorkoutSection({
       (system) => system.name.toLowerCase() === systemName.toLowerCase()
     );
 
-    const systemId = overwrite && selectedSystem.isCustom
-      ? selectedSystem.id
+    const systemId = overwrite && selectedProgram.isCustom
+      ? selectedProgram.id
       : existingCustomSystem?.id;
 
     const existingWorkouts = systemId
@@ -299,13 +329,13 @@ export function WorkoutSection({
       : [];
 
     const nextWorkout = {
-      id: overwrite && selectedSystem.isCustom ? selectedWorkout.id : undefined,
+      id: overwrite && selectedProgram.isCustom ? selectedWorkout.id : undefined,
       name: workoutName,
       summary: summary || "Custom workout",
       exercises: templateExercises,
     };
 
-    const mergedWorkouts = overwrite && selectedSystem.isCustom
+    const mergedWorkouts = overwrite && selectedProgram.isCustom
       ? existingWorkouts.map((workout) =>
           workout.id === selectedWorkout.id ? { ...workout, ...nextWorkout } : workout
         )
@@ -337,28 +367,34 @@ export function WorkoutSection({
           <p className="muted">Selected day: {selectedDate}</p>
         </div>
 
-        <div className="workout-system-grid">
-          {workoutSystems.map((system) => (
-            <button
-              key={system.id}
-              type="button"
-              className={
-                system.id === selectedSystemId
-                  ? "workout-chip workout-chip--selected"
-                  : "workout-chip"
-              }
-              onClick={() => setSelectedSystemId(system.id)}
-            >
-              <strong>{system.name}</strong>
-              <span>{system.description}</span>
-            </button>
-          ))}
-        </div>
+        <label>
+          Program
+          <select value={selectedProgramId} onChange={(event) => setSelectedProgramId(event.target.value)}>
+            {workoutPrograms.map((program) => (
+              <option key={program.id} value={program.id}>
+                {program.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {selectedProgram.phases?.length ? (
+          <label>
+            Mesocycle block
+            <select value={selectedPhaseId || ""} onChange={(event) => setSelectedPhaseId(event.target.value)}>
+              {selectedProgram.phases.map((phase) => (
+                <option key={phase.id} value={phase.id}>
+                  {phase.name} • {phase.summary}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
 
         <div className="workout-picker-header">
           <div>
             <p className="eyebrow">Select workout</p>
-            <h3>{selectedSystem.name}</h3>
+            <h3>{selectedPhase ? `${selectedProgram.name} • ${selectedPhase.name}` : selectedProgram.name}</h3>
           </div>
           <p className="muted">
             Switching workouts reloads the active template automatically.
@@ -366,7 +402,7 @@ export function WorkoutSection({
         </div>
 
         <div className="workout-system-grid">
-          {selectedSystem.workouts.map((workout) => (
+          {availableWorkouts.map((workout) => (
             <button
               key={workout.id}
               type="button"
@@ -378,7 +414,7 @@ export function WorkoutSection({
               onClick={() => setSelectedWorkoutId(workout.id)}
             >
               <strong>{workout.name}</strong>
-              <span>{workout.summary}</span>
+              <span>{workout.phaseSummary || workout.summary}</span>
             </button>
           ))}
         </div>
@@ -457,7 +493,7 @@ export function WorkoutSection({
             <h2>{selectedWorkout.name}</h2>
           </div>
           <p className="muted">
-            Log actual reps and load per set. Only filled sets are saved.
+            {selectedWorkout.summary || "Log actual reps and load per set. Only filled sets are saved."}
           </p>
         </div>
 
@@ -525,6 +561,7 @@ export function WorkoutSection({
                       aria-label={`Exercise ${exerciseIndex + 1} target`}
                       placeholder="4 x 8-10"
                     />
+                    {exercise.notes ? <p className="muted">{exercise.notes}</p> : null}
                   </div>
                 </div>
                 <button
@@ -634,7 +671,7 @@ export function WorkoutSection({
           <button type="button" className="primary-button" onClick={() => saveTemplate(false)}>
             Save as custom template
           </button>
-          {selectedSystem.isCustom ? (
+          {selectedProgram.isCustom ? (
             <>
               <button
                 type="button"
@@ -646,7 +683,7 @@ export function WorkoutSection({
               <button
                 type="button"
                 className="secondary-button danger-button"
-                onClick={() => onDeleteSystem(selectedSystem.id)}
+                onClick={() => onDeleteSystem(selectedProgram.id)}
               >
                 Delete custom system
               </button>

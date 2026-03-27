@@ -1,0 +1,1996 @@
+{
+  "program_name": "1-Year Hypertrophy and Fat Loss Program",
+  "format_version": "1.0",
+  "description": "8 mesocycles x 6 weeks each (intro/deload + build + peak), 4 lifting days per week, fixed day structure within each mesocycle. Monday and Thursday lower body, Tuesday and Friday upper body. Mesocycle 1 upper body is arms-only due to post-surgery restrictions.",
+  "schedule": {
+    "weekly_split": {
+      "monday": "Lower 1 - Glute/Ham",
+      "tuesday": "Upper 1",
+      "thursday": "Lower 2 - Quad",
+      "friday": "Upper 2"
+    },
+    "cardio": {
+      "steady_state_sessions_per_week": "2-3",
+      "steady_state_duration_minutes": "20-30",
+      "modalities": [
+        "incline walk",
+        "bike",
+        "elliptical"
+      ],
+      "optional_hiit_sessions_per_week": "0-1",
+      "optional_hiit_duration_minutes": "10-15",
+      "step_goal_per_day": "8000-12000"
+    }
+  },
+  "global_constraints": {
+    "sets_per_exercise_max": 3,
+    "days_and_exercises_remain_constant_within_each_mesocycle": true,
+    "meso_1_upper_body_restrictions": [
+      "no chest movements",
+      "no shoulder movements",
+      "no overhead lifting",
+      "arms only"
+    ]
+  },
+  "progression_model": {
+    "week_0": "Intro/deload week: 1 set per exercise, stop well short of failure.",
+    "week_1": "Establish baseline loads, keep prescribed RIR.",
+    "week_2": "Add reps within target range before adding load.",
+    "week_3": "Increase load if all sets hit top of rep range at target RIR.",
+    "week_4": "Push toward lower end of prescribed RIR range.",
+    "week_5": "Peak week: maintain exercise selection, use planned intensity techniques where programmed."
+  },
+  "mesocycles": [
+    {
+      "mesocycle": 1,
+      "name": "Recovery / Reintroduction",
+      "weeks": 6,
+      "goal": "Post-surgery reintroduction, tissue tolerance, technique practice, low fatigue.",
+      "global_rules": {
+        "sets_default": 2,
+        "rir_range": "3-4",
+        "intensity_techniques": [],
+        "notes": [
+          "No failure work.",
+          "Use slow eccentrics and controlled pauses to rebuild movement quality.",
+          "Upper body is arms only."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "3-2-1",
+              "rest_seconds": 90,
+              "details": "3-second lower, 2-second squeeze at top, controlled up. Prioritize glute lockout without lumbar extension."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 2,
+              "reps": "10",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Slow stretch-focused eccentric, brief pause near stretch, controlled concentric."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-2-1",
+              "rest_seconds": 75,
+              "details": "Controlled curl with 2-second squeeze in shortened position."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "15",
+              "tempo": "2-2-2",
+              "rest_seconds": 60,
+              "details": "Constant tension, controlled outward drive, no bouncing."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8 each leg",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled descent, brief bottom pause, drive through front heel."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "12",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Wide stance with controlled lowering and no lockout bounce."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1 - Arms Only",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Seated Dumbbell Curl",
+              "sets": 2,
+              "reps": "12",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Strict curl, controlled eccentric, keep elbows stable."
+            },
+            {
+              "order": 2,
+              "exercise": "Hammer Curl",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Neutral grip, avoid shoulder swing."
+            },
+            {
+              "order": 3,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "12",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Emphasize the lengthened position and full elbow extension under control."
+            },
+            {
+              "order": 4,
+              "exercise": "Rope Triceps Pushdown",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Keep elbows pinned, slight spread at lockout."
+            },
+            {
+              "order": 5,
+              "exercise": "Straight Bar Triceps Pushdown",
+              "sets": 2,
+              "reps": "12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Controlled lockout, no torso lean."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 2,
+              "reps": "8 each leg",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Long eccentric, brief pause, controlled drive."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 90,
+              "details": "Lower with control, moderate stance, full foot pressure."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled descent, slight forward torso if needed for comfort, drive through midfoot."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-2-1",
+              "rest_seconds": 60,
+              "details": "Controlled raise with 2-second squeeze at top."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10-12 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled stride length and smooth transitions."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2 - Arms Only",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Seated Dumbbell Curl",
+              "sets": 2,
+              "reps": "12",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Same movement pattern as Tuesday to keep recovery predictable."
+            },
+            {
+              "order": 2,
+              "exercise": "Hammer Curl",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Neutral grip, no shoulder contribution."
+            },
+            {
+              "order": 3,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "12",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Strict tempo, emphasize elbow flexor control."
+            },
+            {
+              "order": 4,
+              "exercise": "Rope Triceps Pushdown",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Controlled lockout."
+            },
+            {
+              "order": 5,
+              "exercise": "Straight Bar Triceps Pushdown",
+              "sets": 2,
+              "reps": "12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "No torso swing, smooth reversal."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mesocycle": 2,
+      "name": "Hypertrophy Base",
+      "weeks": 6,
+      "goal": "Rebuild full training volume, establish baseline hypertrophy loading.",
+      "global_rules": {
+        "sets_default": "2-3",
+        "rir_range": "2-3",
+        "intensity_techniques": [],
+        "notes": [
+          "Compounds use controlled eccentrics.",
+          "Isolation work uses smooth continuous tension.",
+          "Increase reps before load when possible."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 3,
+              "reps": "8-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled down, brief peak squeeze, more explosive concentric."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Maintain stretch tension and neutral spine."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Smooth squeeze without bouncing."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Constant tension and controlled return."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Stable front leg loading, controlled descent."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Wide stance, deliberate eccentric."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Incline Dumbbell Press (60\u00b0)",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled lower, light pause, press smoothly."
+            },
+            {
+              "order": 2,
+              "exercise": "Single-Arm Lat Pulldown",
+              "sets": 3,
+              "reps": "10 each arm",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Drive elbow down, control full stretch."
+            },
+            {
+              "order": 3,
+              "exercise": "Lateral Raise",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Slight pause at top, slow lowering."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "10-12 each arm",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Lengthened-position control emphasized."
+            },
+            {
+              "order": 5,
+              "exercise": "Dumbbell Skull Crusher",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Lower under control, avoid elbow flare."
+            },
+            {
+              "order": 6,
+              "exercise": "Seated Cable Row (Wide Grip)",
+              "sets": 3,
+              "reps": "10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Pause with shoulder blades retracted."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 3,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Control descent, smooth drive through front leg."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 3,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 90,
+              "details": "Controlled eccentric and no rebound out of bottom."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Longer lowering to improve stability and quad loading."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "No swinging, controlled lowering."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10-12 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Continuous controlled movement."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Chest Supported Row Machine",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Pause at contraction, controlled stretch."
+            },
+            {
+              "order": 2,
+              "exercise": "Incline Smith Machine Press",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled eccentric, press with stable bar path."
+            },
+            {
+              "order": 3,
+              "exercise": "No Cheat Curls",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Strict curl, no torso sway."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Cable Y Raise",
+              "sets": 2,
+              "reps": "12-15 each arm",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Smooth arc with controlled lowering."
+            },
+            {
+              "order": 5,
+              "exercise": "Assisted Dips",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled depth and strong lockout within comfort."
+            },
+            {
+              "order": 6,
+              "exercise": "Dumbbell Pullover",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled stretch, avoid shoulder discomfort."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mesocycle": 3,
+      "name": "Hypertrophy + Drop Sets",
+      "weeks": 6,
+      "goal": "Increase metabolic stress while holding volume in check.",
+      "global_rules": {
+        "sets_default": "2-3",
+        "rir_range": "1-2",
+        "intensity_techniques": [
+          "drop_sets"
+        ],
+        "notes": [
+          "Drop sets are reserved for lower-risk isolation exercises.",
+          "Use only on the last set of the programmed exercises.",
+          "Reduce load about 25-30% and continue to near failure."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Heavy but controlled. No intensity method."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Stretch-focused. No intensity method."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled squeeze. No drop set here this meso."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 25% and continue with constant tension."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "No intensity method."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Controlled full range."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Incline Dumbbell Press (60\u00b0)",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "No intensity method."
+            },
+            {
+              "order": 2,
+              "exercise": "Single-Arm Lat Pulldown",
+              "sets": 3,
+              "reps": "10 each arm",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "No intensity method."
+            },
+            {
+              "order": 3,
+              "exercise": "Lateral Raise",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 25%, then finish with controlled partials in top half."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "10-12 each arm",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Strict work, no drop set this meso."
+            },
+            {
+              "order": 5,
+              "exercise": "Dumbbell Skull Crusher",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "No drop set."
+            },
+            {
+              "order": 6,
+              "exercise": "Seated Cable Row (Wide Grip)",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled squeeze, no intensity method."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 3,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "No intensity method."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 3,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 90,
+              "details": "No drop set."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 30% and continue to near failure with full range."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10-12 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "No intensity method."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Chest Supported Row Machine",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "No intensity method."
+            },
+            {
+              "order": 2,
+              "exercise": "Incline Smith Machine Press",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "No intensity method."
+            },
+            {
+              "order": 3,
+              "exercise": "No Cheat Curls",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 25% and continue with strict reps only."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Cable Y Raise",
+              "sets": 2,
+              "reps": "12-15 each arm",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Controlled top position. No drop set this meso."
+            },
+            {
+              "order": 5,
+              "exercise": "Assisted Dips",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "No intensity method."
+            },
+            {
+              "order": 6,
+              "exercise": "Dumbbell Pullover",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "No intensity method."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mesocycle": 4,
+      "name": "Strength + Eccentric Control",
+      "weeks": 6,
+      "goal": "Increase mechanical tension through heavier loading and longer eccentrics on compounds.",
+      "global_rules": {
+        "sets_default": "2-3",
+        "rir_range": "1-2",
+        "intensity_techniques": [],
+        "notes": [
+          "Heavier compounds use longer eccentrics.",
+          "Isolation remains controlled but not exaggerated.",
+          "Progress load before extra reps when form stays clean."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Heavy loading with slow eccentric and solid top lockout."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "4-1-1",
+              "rest_seconds": 120,
+              "details": "Very controlled lowering to emphasize stretch-mediated tension."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard controlled hypertrophy tempo."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Constant tension."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8 each leg",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled quad/glute loading."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Deliberate eccentric."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Incline Dumbbell Press (60\u00b0)",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Slow lower, pause, drive strongly."
+            },
+            {
+              "order": 2,
+              "exercise": "Single-Arm Lat Pulldown",
+              "sets": 3,
+              "reps": "8 each arm",
+              "tempo": "3-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled stretch and deliberate elbow drive."
+            },
+            {
+              "order": 3,
+              "exercise": "Lateral Raise",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Controlled standard tempo."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "8-10 each arm",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Strict control in the lengthened range."
+            },
+            {
+              "order": 5,
+              "exercise": "Dumbbell Skull Crusher",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Controlled elbow extension."
+            },
+            {
+              "order": 6,
+              "exercise": "Seated Cable Row (Wide Grip)",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Longer eccentric and strong retraction."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 3,
+              "reps": "6-8 each leg",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Heavier loading with controlled descent."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Slow lower, pause, drive out smoothly."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8 each leg",
+              "tempo": "3-1-1",
+              "rest_seconds": 90,
+              "details": "Maintain stability and control."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Controlled but not overly slow."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Stable pace with full range."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Chest Supported Row Machine",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Heavy loading with controlled negative."
+            },
+            {
+              "order": 2,
+              "exercise": "Incline Smith Machine Press",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Long eccentric and stable pressing path."
+            },
+            {
+              "order": 3,
+              "exercise": "No Cheat Curls",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Strict, controlled."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Cable Y Raise",
+              "sets": 2,
+              "reps": "12-15 each arm",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Controlled line of pull."
+            },
+            {
+              "order": 5,
+              "exercise": "Assisted Dips",
+              "sets": 2,
+              "reps": "6-8",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled depth, no bounce."
+            },
+            {
+              "order": 6,
+              "exercise": "Dumbbell Pullover",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled range and stable rib position."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mesocycle": 5,
+      "name": "Hypertrophy + Myo Reps",
+      "weeks": 6,
+      "goal": "Maximize hypertrophy stimulus efficiently with low-to-moderate volume.",
+      "global_rules": {
+        "sets_default": 2,
+        "rir_range": "1-2 on standard sets; activation set near failure on myo work",
+        "intensity_techniques": [
+          "myo_reps"
+        ],
+        "notes": [
+          "Use myo reps on low-skill isolation movements only.",
+          "Activation set should stop around 0-1 reps in reserve.",
+          "Mini-sets use 10-15 seconds rest."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work, no myo reps."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Standard work, no myo reps."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "Myo: 12-15 + 3-5 x 3 mini-sets",
+              "tempo": "2-1-1",
+              "rest_seconds": 15,
+              "details": "First set is activation set, then 3 mini-sets of 3-5 reps with 10-15 sec rest."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Standard constant-tension set."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Incline Dumbbell Press (60\u00b0)",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 2,
+              "exercise": "Single-Arm Lat Pulldown",
+              "sets": 2,
+              "reps": "10 each arm",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            },
+            {
+              "order": 3,
+              "exercise": "Lateral Raise",
+              "sets": 2,
+              "reps": "Myo: 12-20 + 3-5 x 3 mini-sets",
+              "tempo": "1-1-2",
+              "rest_seconds": 15,
+              "details": "Use lighter load, go near failure on activation set, then short-rest clusters."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "10-12 each arm",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Standard strict work."
+            },
+            {
+              "order": 5,
+              "exercise": "Dumbbell Skull Crusher",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Seated Cable Row (Wide Grip)",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "Myo: 12-15 + 3-5 x 3 mini-sets",
+              "tempo": "1-1-2",
+              "rest_seconds": 15,
+              "details": "Activation set near failure, then three mini-sets with short rest."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10-12 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Chest Supported Row Machine",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 2,
+              "exercise": "Incline Smith Machine Press",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 3,
+              "exercise": "No Cheat Curls",
+              "sets": 2,
+              "reps": "Myo: 12-15 + 3-5 x 3 mini-sets",
+              "tempo": "2-1-2",
+              "rest_seconds": 15,
+              "details": "Activation set near failure, then short-rest mini-sets with strict form."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Cable Y Raise",
+              "sets": 2,
+              "reps": "12-15 each arm",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Standard controlled work."
+            },
+            {
+              "order": 5,
+              "exercise": "Assisted Dips",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Dumbbell Pullover",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mesocycle": 6,
+      "name": "Strength + Drop Set Hybrid",
+      "weeks": 6,
+      "goal": "Emphasize heavier compounds while using strategic finishers for extra hypertrophy stimulus.",
+      "global_rules": {
+        "sets_default": "2-3",
+        "rir_range": "1",
+        "intensity_techniques": [
+          "drop_sets"
+        ],
+        "notes": [
+          "Main lifts are heavy and controlled.",
+          "Only isolation work gets drop sets.",
+          "Keep technique strict even in fatigue."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "2-1-1",
+              "rest_seconds": 120,
+              "details": "Heavy loading, no drop set."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Heavy loading, no drop set."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Last set drop set: reduce 25-30% and continue with full ROM."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Constant tension, no drop set this meso."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Controlled work."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Incline Dumbbell Press (60\u00b0)",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "2-1-1",
+              "rest_seconds": 120,
+              "details": "Heavy work, no drop set."
+            },
+            {
+              "order": 2,
+              "exercise": "Single-Arm Lat Pulldown",
+              "sets": 3,
+              "reps": "8 each arm",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Heavy controlled reps."
+            },
+            {
+              "order": 3,
+              "exercise": "Lateral Raise",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 25% and continue with strict reps."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "8-10 each arm",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Standard strict work."
+            },
+            {
+              "order": 5,
+              "exercise": "Dumbbell Skull Crusher",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce load 20-25% and continue with controlled reps."
+            },
+            {
+              "order": 6,
+              "exercise": "Seated Cable Row (Wide Grip)",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Heavy stable pulling."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 3,
+              "reps": "6-8 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Heavier loading, no drop set."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-2",
+              "rest_seconds": 120,
+              "details": "Heavy but controlled."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard controlled reps."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 30% and continue to near failure."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Chest Supported Row Machine",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "2-1-1",
+              "rest_seconds": 120,
+              "details": "Heavy loading, no intensity method."
+            },
+            {
+              "order": 2,
+              "exercise": "Incline Smith Machine Press",
+              "sets": 3,
+              "reps": "6-8",
+              "tempo": "2-1-1",
+              "rest_seconds": 120,
+              "details": "Heavy loading, no intensity method."
+            },
+            {
+              "order": 3,
+              "exercise": "No Cheat Curls",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 25% and continue with strict form."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Cable Y Raise",
+              "sets": 2,
+              "reps": "12-15 each arm",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Standard work."
+            },
+            {
+              "order": 5,
+              "exercise": "Assisted Dips",
+              "sets": 2,
+              "reps": "6-8",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Dumbbell Pullover",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mesocycle": 7,
+      "name": "Advanced Hypertrophy",
+      "weeks": 6,
+      "goal": "Peak hypertrophy phase using one myo-rep movement and one drop-set movement per day.",
+      "global_rules": {
+        "sets_default": "2-3",
+        "rir_range": "0-1 on isolation finishers; 1-2 elsewhere",
+        "intensity_techniques": [
+          "myo_reps",
+          "drop_sets"
+        ],
+        "notes": [
+          "Do not stack myo reps and drop sets on the same exercise.",
+          "Keep compounds controlled and repeatable.",
+          "High fatigue management phase, so execution matters."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Standard work."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "Myo: 12-15 + 3-5 x 3 mini-sets",
+              "tempo": "2-1-1",
+              "rest_seconds": 15,
+              "details": "Activation set near failure, then short-rest clusters."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 25% and continue with constant tension."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Incline Dumbbell Press (60\u00b0)",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 2,
+              "exercise": "Single-Arm Lat Pulldown",
+              "sets": 3,
+              "reps": "10 each arm",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            },
+            {
+              "order": 3,
+              "exercise": "Lateral Raise",
+              "sets": 2,
+              "reps": "Myo: 12-20 + 3-5 x 3 mini-sets",
+              "tempo": "1-1-2",
+              "rest_seconds": 15,
+              "details": "Activation set near failure, then short-rest clusters."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "10-12 each arm",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 25% and continue with strict reps."
+            },
+            {
+              "order": 5,
+              "exercise": "Dumbbell Skull Crusher",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Seated Cable Row (Wide Grip)",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 3,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 3,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "Myo: 12-15 + 3-5 x 3 mini-sets",
+              "tempo": "1-1-2",
+              "rest_seconds": 15,
+              "details": "Activation set near failure, then short-rest mini-sets."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10-12 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Last set drop set: reduce bodyweight or dumbbell load only if safe and practical; otherwise perform standard sets."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Chest Supported Row Machine",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 2,
+              "exercise": "Incline Smith Machine Press",
+              "sets": 3,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Standard work."
+            },
+            {
+              "order": 3,
+              "exercise": "No Cheat Curls",
+              "sets": 2,
+              "reps": "Myo: 12-15 + 3-5 x 3 mini-sets",
+              "tempo": "2-1-2",
+              "rest_seconds": 15,
+              "details": "Activation set near failure, then short-rest clusters with strict form."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Cable Y Raise",
+              "sets": 2,
+              "reps": "12-15 each arm",
+              "tempo": "1-1-2",
+              "rest_seconds": 60,
+              "details": "Last set drop set: reduce 20-25% and continue with controlled reps."
+            },
+            {
+              "order": 5,
+              "exercise": "Assisted Dips",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            },
+            {
+              "order": 6,
+              "exercise": "Dumbbell Pullover",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Standard work."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mesocycle": 8,
+      "name": "Consolidation / Recomp",
+      "weeks": 6,
+      "goal": "Maintain muscle, manage fatigue, and consolidate progress.",
+      "global_rules": {
+        "sets_default": 2,
+        "rir_range": "2-3",
+        "intensity_techniques": [],
+        "notes": [
+          "Back off fatigue slightly.",
+          "Keep execution clean and consistent.",
+          "Use this phase to recover while maintaining output."
+        ]
+      },
+      "days": {
+        "monday": {
+          "name": "Lower 1 - Glute/Ham",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Barbell Glute Bridge",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled and repeatable."
+            },
+            {
+              "order": 2,
+              "exercise": "Romanian Deadlift",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "3-1-1",
+              "rest_seconds": 120,
+              "details": "Maintain stretch tension without grinding."
+            },
+            {
+              "order": 3,
+              "exercise": "Seated Hamstring Curl",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled standard work."
+            },
+            {
+              "order": 4,
+              "exercise": "Abduction Machine",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Constant tension."
+            },
+            {
+              "order": 5,
+              "exercise": "Rear Foot Elevated Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 6,
+              "exercise": "Leg Press (Adductor Stance)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 75,
+              "details": "Controlled work."
+            }
+          ]
+        },
+        "tuesday": {
+          "name": "Upper 1",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Incline Dumbbell Press (60\u00b0)",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 2,
+              "exercise": "Single-Arm Lat Pulldown",
+              "sets": 2,
+              "reps": "10 each arm",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled stretch and pull."
+            },
+            {
+              "order": 3,
+              "exercise": "Lateral Raise",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Controlled work."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Preacher Curl",
+              "sets": 2,
+              "reps": "10-12 each arm",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Strict work."
+            },
+            {
+              "order": 5,
+              "exercise": "Dumbbell Skull Crusher",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 60,
+              "details": "Controlled work."
+            },
+            {
+              "order": 6,
+              "exercise": "Seated Cable Row (Wide Grip)",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            }
+          ]
+        },
+        "thursday": {
+          "name": "Lower 2 - Quad",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Front Foot Elevated Reverse Lunge",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 2,
+              "exercise": "Leg Press (Quad Focus)",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-2",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 3,
+              "exercise": "Bulgarian Split Squat",
+              "sets": 2,
+              "reps": "8-10 each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 4,
+              "exercise": "Leg Extension",
+              "sets": 2,
+              "reps": "12-15",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Controlled work."
+            },
+            {
+              "order": 5,
+              "exercise": "Walking Lunges",
+              "sets": 2,
+              "reps": "10-12 steps each leg",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled work."
+            }
+          ]
+        },
+        "friday": {
+          "name": "Upper 2",
+          "exercises": [
+            {
+              "order": 1,
+              "exercise": "Chest Supported Row Machine",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 2,
+              "exercise": "Incline Smith Machine Press",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 90,
+              "details": "Controlled work."
+            },
+            {
+              "order": 3,
+              "exercise": "No Cheat Curls",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "3-1-1",
+              "rest_seconds": 60,
+              "details": "Strict controlled reps."
+            },
+            {
+              "order": 4,
+              "exercise": "Single-Arm Cable Y Raise",
+              "sets": 2,
+              "reps": "12-15 each arm",
+              "tempo": "2-1-2",
+              "rest_seconds": 60,
+              "details": "Controlled work."
+            },
+            {
+              "order": 5,
+              "exercise": "Assisted Dips",
+              "sets": 2,
+              "reps": "8-10",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled work."
+            },
+            {
+              "order": 6,
+              "exercise": "Dumbbell Pullover",
+              "sets": 2,
+              "reps": "10-12",
+              "tempo": "2-1-1",
+              "rest_seconds": 75,
+              "details": "Controlled work."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
