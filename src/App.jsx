@@ -261,6 +261,7 @@ export default function App() {
             selectedDate={state.selectedDate}
             entries={selectedWorkoutEntries}
             recentEntries={state.workoutEntries.slice().sort(sortByDateDescending).slice(0, 8)}
+            allEntries={state.workoutEntries}
             customSystems={state.customWorkoutSystems}
             onAddEntry={addWorkoutEntry}
             onDeleteEntry={deleteWorkoutEntry}

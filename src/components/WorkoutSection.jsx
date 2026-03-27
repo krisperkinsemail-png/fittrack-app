@@ -39,10 +39,15 @@ function summarizeSession(entry) {
   return { totalSets, totalVolume };
 }
 
+function normalizeExerciseName(value) {
+  return value.trim().toLowerCase();
+}
+
 export function WorkoutSection({
   selectedDate,
   entries,
   recentEntries,
+  allEntries,
   customSystems,
   onAddEntry,
   onDeleteEntry,
@@ -119,6 +124,27 @@ export function WorkoutSection({
     };
   }, [draftExercises]);
 
+  const latestMatchingWorkout = useMemo(
+    () =>
+      [...allEntries]
+        .sort((left, right) => new Date(right.date) - new Date(left.date))
+        .find((entry) => entry.workoutId === selectedWorkout.id),
+    [allEntries, selectedWorkout.id]
+  );
+
+  const previousExerciseMap = useMemo(() => {
+    if (!latestMatchingWorkout) {
+      return new Map();
+    }
+
+    return new Map(
+      latestMatchingWorkout.exercises.map((exercise) => [
+        normalizeExerciseName(exercise.name),
+        exercise,
+      ])
+    );
+  }, [latestMatchingWorkout]);
+
   function addCustomExercise() {
     const trimmedName = customExerciseName.trim();
 
@@ -194,6 +220,23 @@ export function WorkoutSection({
 
   function removeExercise(exerciseId) {
     setDraftExercises((current) => current.filter((exercise) => exercise.id !== exerciseId));
+  }
+
+  function applyPreviousSets(exerciseId, previousExercise) {
+    setDraftExercises((current) =>
+      current.map((exercise) =>
+        exercise.id === exerciseId
+          ? {
+              ...exercise,
+              sets: previousExercise.sets.map((set) => ({
+                id: crypto.randomUUID(),
+                reps: String(set.reps ?? ""),
+                weight: String(set.weight ?? ""),
+              })),
+            }
+          : exercise
+      )
+    );
   }
 
   function handleSaveWorkout() {
@@ -418,6 +461,13 @@ export function WorkoutSection({
           </p>
         </div>
 
+        {latestMatchingWorkout ? (
+          <div className="summary-panel">
+            <span>Last saved {selectedWorkout.name}</span>
+            <strong>{latestMatchingWorkout.date}</strong>
+          </div>
+        ) : null}
+
         <div className="inline-form">
           <label>
             Add custom exercise
@@ -433,8 +483,33 @@ export function WorkoutSection({
         </div>
 
         <div className="list-stack">
-          {draftExercises.map((exercise, exerciseIndex) => (
+          {draftExercises.map((exercise, exerciseIndex) => {
+            const previousExercise = previousExerciseMap.get(
+              normalizeExerciseName(exercise.name)
+            );
+
+            return (
             <article className="exercise-card" key={exercise.id}>
+              {previousExercise ? (
+                <div className="previous-lift-panel">
+                  <div>
+                    <span className="set-label">Last workout</span>
+                    <strong>
+                      {previousExercise.sets
+                        .map((set) => `${set.reps} x ${set.weight}`)
+                        .join(" • ")}
+                    </strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => applyPreviousSets(exercise.id, previousExercise)}
+                  >
+                    Use last sets
+                  </button>
+                </div>
+              ) : null}
+
               <div className="log-card__top">
                 <div className="exercise-title-group">
                   <span className="exercise-index">{exerciseIndex + 1}</span>
@@ -505,7 +580,7 @@ export function WorkoutSection({
                 Add set
               </button>
             </article>
-          ))}
+          )})}
         </div>
 
         <button type="button" className="primary-button" onClick={handleSaveWorkout}>
