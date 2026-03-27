@@ -58,6 +58,16 @@ export function AuthGate({ children }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    setShowHomepage(false);
+    setShowAuthForm(false);
+    setMessage("");
+  }, [session]);
+
   const authValue = useMemo(
     () => ({
       session,
@@ -105,16 +115,22 @@ export function AuthGate({ children }) {
 
     setLoading(true);
 
-    const action =
+    const response =
       mode === "sign-up"
-        ? supabase.auth.signUp({ email, password })
-        : supabase.auth.signInWithPassword({ email, password });
+        ? await supabase.auth.signUp({ email, password })
+        : await supabase.auth.signInWithPassword({ email, password });
 
-    const { error } = await action;
+    const { data, error } = response;
 
     if (error) {
       setMessage(error.message);
     } else {
+      if (data.session) {
+        setSession(data.session);
+        setShowHomepage(false);
+        setShowAuthForm(false);
+      }
+
       setMessage(
         mode === "sign-up"
           ? "Account created. If email confirmation is required, check your inbox."
