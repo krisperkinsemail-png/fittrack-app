@@ -16,6 +16,7 @@ export function AuthGate({ children }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showAuthForm, setShowAuthForm] = useState(false);
   const [mode, setMode] = useState("sign-in");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(hasSupabaseConfig);
@@ -158,6 +159,132 @@ export function AuthGate({ children }) {
   }
 
   if (!session) {
+    if (!showAuthForm) {
+      return (
+        <main className="app-shell landing-shell">
+          <section className="landing-hero card">
+            <div className="landing-copy">
+              <p className="eyebrow">AI Fit</p>
+              <h1 className="landing-title">Track food, training, and scale trend without friction.</h1>
+              <p className="landing-text">
+                AI Fit gives you one clean mobile dashboard for calories, macros, body weight,
+                workouts, and goal progress. Built for fast iPhone use, not spreadsheet energy.
+              </p>
+              <div className="button-row landing-actions">
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => {
+                    setMode("sign-in");
+                    setShowAuthForm(true);
+                  }}
+                >
+                  Login / Create Account
+                </button>
+              </div>
+            </div>
+
+            <div className="landing-visual-grid" aria-hidden="true">
+              <article className="landing-visual-card landing-visual-card--hero">
+                <span className="landing-kicker">Today's view</span>
+                <strong>1,884 cal</strong>
+                <p>Protein 182g • Carbs 201g • Fat 58g</p>
+              </article>
+              <article className="landing-visual-card">
+                <span className="landing-kicker">Weight trend</span>
+                <strong>-0.8 lb / week</strong>
+                <div className="landing-mini-chart">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </article>
+              <article className="landing-visual-card">
+                <span className="landing-kicker">Workout flow</span>
+                <strong>Push A</strong>
+                <p>Rest timer, sets, reps, load, and history in one place.</p>
+              </article>
+            </div>
+          </section>
+
+          <section className="card landing-section">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">What it does</p>
+                <h2>Your daily fitness control panel</h2>
+              </div>
+              <p className="muted">
+                Log quickly, see the signal, and stay consistent without jumping between five apps.
+              </p>
+            </div>
+
+            <div className="landing-feature-grid">
+              <article className="summary-panel">
+                <p className="eyebrow">Nutrition</p>
+                <strong>Calories + macros</strong>
+                <span>Track food entries, reuse saved foods and meals, and compare intake against targets.</span>
+              </article>
+              <article className="summary-panel">
+                <p className="eyebrow">Body weight</p>
+                <strong>Trend over noise</strong>
+                <span>See actual progress toward your goal with smoothed weight trend and estimated pace.</span>
+              </article>
+              <article className="summary-panel">
+                <p className="eyebrow">Training</p>
+                <strong>Structured workouts</strong>
+                <span>Run push-pull or custom programs with live set logging and a built-in rest timer.</span>
+              </article>
+            </div>
+          </section>
+
+          <section className="card landing-section">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Why it works</p>
+                <h2>Designed for mobile, not desktop leftovers</h2>
+              </div>
+            </div>
+
+            <div className="landing-detail-grid">
+              <article className="log-card">
+                <h3>Fast on iPhone</h3>
+                <p className="muted">
+                  Large tap targets, simple navigation, and quick-entry flows tuned for Safari and one-handed use.
+                </p>
+              </article>
+              <article className="log-card">
+                <h3>Cloud-backed</h3>
+                <p className="muted">
+                  Your data syncs with Supabase so refreshes, sign-outs, and device changes do not wipe progress.
+                </p>
+              </article>
+              <article className="log-card">
+                <h3>Built to grow</h3>
+                <p className="muted">
+                  Clean React structure, isolated persistence layer, and room for future barcode, coaching, or AI features.
+                </p>
+              </article>
+            </div>
+
+            <div className="landing-footer-cta">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  setMode("sign-up");
+                  setShowAuthForm(true);
+                }}
+              >
+                Create account
+              </button>
+            </div>
+          </section>
+        </main>
+      );
+    }
+
     return (
       <main className="app-shell">
         <section className="card">
@@ -242,11 +369,11 @@ export function AuthGate({ children }) {
           </form>
 
           <div className="button-row">
-            <button type="button" className="secondary-button" onClick={() => setMode("sign-in")}>
-              Sign in
-            </button>
-            <button type="button" className="secondary-button" onClick={() => setMode("sign-up")}>
-              Create account
+              <button type="button" className="secondary-button" onClick={() => setMode("sign-in")}>
+                Sign in
+              </button>
+              <button type="button" className="secondary-button" onClick={() => setMode("sign-up")}>
+                Create account
             </button>
             <button type="button" className="secondary-button" onClick={() => setMode("reset")}>
               Forgot password
@@ -257,6 +384,16 @@ export function AuthGate({ children }) {
               onClick={() => setMode("magic-link")}
             >
               Magic link
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setMessage("");
+                setShowAuthForm(false);
+              }}
+            >
+              Back
             </button>
           </div>
 

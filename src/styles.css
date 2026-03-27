@@ -79,6 +79,10 @@ button {
   gap: 16px;
 }
 
+.landing-shell {
+  width: min(100%, 1100px);
+}
+
 .topbar,
 .card,
 .tab-button {
@@ -112,6 +116,20 @@ button {
   letter-spacing: -0.05em;
 }
 
+.landing-title {
+  margin: 0;
+  font-size: clamp(2.4rem, 11vw, 5.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+}
+
+.landing-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
 .eyebrow {
   margin: 0 0 6px;
   font-size: 0.75rem;
@@ -141,6 +159,136 @@ button {
 .card {
   border-radius: var(--radius-xl);
   padding: 18px;
+}
+
+.landing-hero {
+  position: relative;
+  overflow: hidden;
+  gap: 22px;
+}
+
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% auto auto 62%;
+  width: 240px;
+  height: 240px;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 36%, transparent), transparent 72%);
+  pointer-events: none;
+}
+
+.landing-copy,
+.landing-section {
+  display: grid;
+  gap: 18px;
+}
+
+.landing-actions {
+  margin-top: 6px;
+}
+
+.landing-actions .primary-button,
+.landing-footer-cta .primary-button {
+  min-width: min(100%, 260px);
+}
+
+.landing-visual-grid,
+.landing-feature-grid,
+.landing-detail-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.landing-visual-card {
+  position: relative;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
+    rgba(17, 24, 38, 0.96);
+  border: 1px solid rgba(96, 114, 139, 0.22);
+  overflow: hidden;
+}
+
+.landing-visual-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -30px -50px auto;
+  width: 130px;
+  height: 130px;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 28%, transparent), transparent 72%);
+}
+
+.landing-visual-card strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font-size: clamp(1.55rem, 6vw, 2.6rem);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.landing-visual-card p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--muted);
+}
+
+.landing-kicker {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 76%, white);
+}
+
+.landing-mini-chart {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  margin-top: 14px;
+  min-height: 70px;
+}
+
+.landing-mini-chart span {
+  display: block;
+  border-radius: 999px 999px 10px 10px;
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent-strong) 65%, #07111c));
+}
+
+.landing-mini-chart span:nth-child(1) {
+  height: 42%;
+}
+
+.landing-mini-chart span:nth-child(2) {
+  height: 56%;
+}
+
+.landing-mini-chart span:nth-child(3) {
+  height: 68%;
+}
+
+.landing-mini-chart span:nth-child(4) {
+  height: 78%;
+}
+
+.landing-mini-chart span:nth-child(5) {
+  height: 100%;
+}
+
+.landing-footer-cta {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .sync-card {
@@ -597,6 +745,17 @@ button:focus {
   .app-shell {
     padding-left: 24px;
     padding-right: 24px;
+  }
+
+  .landing-hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    align-items: center;
+    padding: 28px;
+  }
+
+  .landing-feature-grid,
+  .landing-detail-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .stats-grid {
