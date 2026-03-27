@@ -63,6 +63,32 @@ function getScalablePreset(item) {
   };
 }
 
+function inferSavedTemplateType(item) {
+  if (item.templateType === "food" || item.templateType === "meal") {
+    return item.templateType;
+  }
+
+  const normalizedName = item.name.trim().toLowerCase();
+  const foodLibraryMatch = FOOD_LIBRARY.find(
+    (libraryItem) => libraryItem.name.trim().toLowerCase() === normalizedName
+  );
+
+  if (foodLibraryMatch) {
+    return "food";
+  }
+
+  const normalizedServing = item.servingSize.trim().toLowerCase();
+  if (
+    /^(?:\d*\.?\d+)\s+(?:oz|g|gram|grams|cup|cups|tbsp|tsp|slice|slices|egg|eggs|stick|sticks|banana|avocado|tortilla|tortillas)\b/.test(
+      normalizedServing
+    )
+  ) {
+    return "food";
+  }
+
+  return "meal";
+}
+
 export function FoodLogSection({
   selectedDate,
   entries,
@@ -98,8 +124,9 @@ export function FoodLogSection({
   const filteredLibrary = useMemo(() => {
     const savedMeals = mealTemplates.map((meal) => ({
       ...meal,
-      category: meal.templateType === "food" ? "food" : "meal",
-      itemType: meal.templateType === "food" ? "saved-food" : "meal",
+      templateType: inferSavedTemplateType(meal),
+      category: inferSavedTemplateType(meal) === "food" ? "food" : "meal",
+      itemType: inferSavedTemplateType(meal) === "food" ? "saved-food" : "meal",
       isScalable: false,
     }));
 
