@@ -53,31 +53,46 @@ function normalizeWorkoutEntry(entry) {
   };
 }
 
-function normalizeHydratedState(payload) {
+function normalizeHydratedState(payload, currentState = initialState) {
   return {
-    ...payload,
-    settings: {
-      ...initialState.settings,
-      ...(payload.settings || {}),
-    },
-    workoutEntries: Array.isArray(payload.workoutEntries)
-      ? payload.workoutEntries.map(normalizeWorkoutEntry)
-      : [],
-    mealTemplates: Array.isArray(payload.mealTemplates) ? payload.mealTemplates : [],
-    customWorkoutSystems: Array.isArray(payload.customWorkoutSystems)
-      ? payload.customWorkoutSystems
-      : [],
+    selectedDate: payload.selectedDate || currentState.selectedDate,
+    settings:
+      payload.settings !== undefined
+        ? {
+            ...initialState.settings,
+            ...currentState.settings,
+            ...(payload.settings || {}),
+          }
+        : currentState.settings,
+    foodEntries:
+      payload.foodEntries !== undefined ? payload.foodEntries : currentState.foodEntries,
+    workoutEntries:
+      payload.workoutEntries !== undefined
+        ? Array.isArray(payload.workoutEntries)
+          ? payload.workoutEntries.map(normalizeWorkoutEntry)
+          : []
+        : currentState.workoutEntries,
+    mealTemplates:
+      payload.mealTemplates !== undefined
+        ? Array.isArray(payload.mealTemplates)
+          ? payload.mealTemplates
+          : []
+        : currentState.mealTemplates,
+    customWorkoutSystems:
+      payload.customWorkoutSystems !== undefined
+        ? Array.isArray(payload.customWorkoutSystems)
+          ? payload.customWorkoutSystems
+          : []
+        : currentState.customWorkoutSystems,
+    weightEntries:
+      payload.weightEntries !== undefined ? payload.weightEntries : currentState.weightEntries,
   };
 }
 
 function reducer(state, action) {
   switch (action.type) {
     case "hydrate":
-      return {
-        ...state,
-        ...normalizeHydratedState(action.payload),
-        selectedDate: action.payload.selectedDate || state.selectedDate,
-      };
+      return normalizeHydratedState(action.payload, state);
     case "setSelectedDate":
       return { ...state, selectedDate: action.payload };
     case "updateSettings":
