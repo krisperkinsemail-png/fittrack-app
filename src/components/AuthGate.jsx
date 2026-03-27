@@ -279,21 +279,21 @@ export function AuthGate({ children }) {
 
             <div className="landing-detail-grid">
               <article className="log-card">
-                <h3>Fast on iPhone</h3>
+                <h3>Less friction, more follow-through</h3>
                 <p className="muted">
-                  Large tap targets, simple navigation, and quick-entry flows tuned for Safari and one-handed use.
+                  Log meals, workouts, and weigh-ins in seconds so staying on plan feels easy instead of annoying.
                 </p>
               </article>
               <article className="log-card">
-                <h3>Cloud-backed</h3>
+                <h3>See the truth, not the noise</h3>
                 <p className="muted">
-                  Your data syncs with Supabase so refreshes, sign-outs, and device changes do not wipe progress.
+                  Your calories, macros, and weight trend all line up in one place so you always know what is actually working.
                 </p>
               </article>
               <article className="log-card">
-                <h3>Built to grow</h3>
+                <h3>Built for real consistency</h3>
                 <p className="muted">
-                  Clean React structure, isolated persistence layer, and room for future barcode, coaching, or AI features.
+                  Whether you are cutting, building, or just trying to stay dialed in, AI Fit helps you stack better days without overthinking it.
                 </p>
               </article>
             </div>
