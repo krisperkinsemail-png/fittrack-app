@@ -25,7 +25,7 @@ export function WeightTrendChart({ entries }) {
       <svg viewBox="0 0 100 100" className="trend-chart" preserveAspectRatio="none">
         <line x1="0" y1="100" x2="100" y2="100" className="trend-axis" />
         {points.length === 1 ? (
-          <circle cx={50} cy={points[0].y} r="3.5" className="trend-dot" />
+          <circle cx={50} cy={points[0].y} r="0.8" className="trend-dot" />
         ) : (
           <>
             <polyline
@@ -41,7 +41,7 @@ export function WeightTrendChart({ entries }) {
                 key={point.id}
                 cx={point.x}
                 cy={point.y}
-                r="2.6"
+                r="0.55"
                 className="trend-dot"
               />
             ))}

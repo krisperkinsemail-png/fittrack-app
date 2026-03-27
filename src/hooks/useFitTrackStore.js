@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { appStorage, storageCapabilities } from "../lib/storage";
 import { createId, getToday } from "../lib/date";
 import { hasSupabaseConfig } from "../lib/supabase";
@@ -206,15 +206,18 @@ export function useFitTrackStore() {
   const [syncStatus, setSyncStatus] = useState(hasSupabaseConfig ? "loading" : "local");
   const [syncError, setSyncError] = useState("");
   const [localMigrationData, setLocalMigrationData] = useState(null);
+  const lastCloudRefreshAtRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
 
-    Promise.all([
-      appStorage.load(),
-      hasSupabaseConfig ? localStorageAdapter.load() : Promise.resolve({}),
-    ])
-      .then(([payload, localSnapshot]) => {
+    async function hydrateStore() {
+      try {
+        const [payload, localSnapshot] = await Promise.all([
+          appStorage.load(),
+          hasSupabaseConfig ? localStorageAdapter.load() : Promise.resolve({}),
+        ]);
+
         if (!isMounted) {
           return;
         }
@@ -228,21 +231,74 @@ export function useFitTrackStore() {
           setLocalMigrationData(localSnapshot);
         }
         setSyncStatus(hasSupabaseConfig ? "synced" : "local");
+        setSyncError("");
+        lastCloudRefreshAtRef.current = Date.now();
         setIsHydrated();
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to hydrate FitTrack state.", error);
         if (isMounted) {
           setSyncStatus("error");
           setSyncError(error.message || "Failed to load data.");
           setIsHydrated();
         }
-      });
+      }
+    }
+
+    hydrateStore();
 
     return () => {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isHydrated || !storageCapabilities.hasCloudConfig) {
+      return;
+    }
+
+    let isRefreshing = false;
+
+    async function refreshFromCloud() {
+      const now = Date.now();
+      if (isRefreshing || now - lastCloudRefreshAtRef.current < 4000) {
+        return;
+      }
+
+      isRefreshing = true;
+
+      try {
+        const payload = await appStorage.load();
+        dispatch({ type: "hydrate", payload });
+        setSyncStatus("synced");
+        setSyncError("");
+        lastCloudRefreshAtRef.current = Date.now();
+      } catch (error) {
+        console.error("Failed to refresh FitTrack cloud state.", error);
+        setSyncStatus("error");
+        setSyncError(error.message || "Failed to refresh cloud data.");
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    function handleFocus() {
+      refreshFromCloud();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        refreshFromCloud();
+      }
+    }
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) {
