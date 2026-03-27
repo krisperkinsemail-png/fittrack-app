@@ -1,6 +1,6 @@
-# FitTrack
+# AI Fit
 
-FitTrack is a mobile-first React web app for tracking calories, macros, body weight, meals, workouts, and goal progress.
+AI Fit is a mobile-first React web app for tracking calories, macros, body weight, meals, workouts, and goal progress.
 
 ## Stack
 

@@ -152,7 +152,7 @@ export default function App() {
       <header className="topbar">
         <div className="topbar-heading-row">
           <div>
-            <p className="eyebrow">FitTrack</p>
+            <p className="eyebrow">AI Fit</p>
             <h1>Welcome back, {firstName}.</h1>
           </div>
           <button type="button" className="secondary-button topbar-home-link" onClick={goToHomepage}>

@@ -1,6 +1,6 @@
 {
-  "name": "FitTrack",
-  "short_name": "FitTrack",
+  "name": "AI Fit",
+  "short_name": "AI Fit",
   "description": "A mobile-first nutrition, weight, and workout tracker.",
   "start_url": "/",
   "display": "standalone",

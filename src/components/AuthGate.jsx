@@ -172,7 +172,7 @@ export function AuthGate({ children }) {
         <section className="card">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">FitTrack Cloud</p>
+              <p className="eyebrow">AI Fit Cloud</p>
               <h2>Loading session</h2>
             </div>
           </div>
@@ -327,7 +327,7 @@ export function AuthGate({ children }) {
         <section className="card">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">FitTrack Cloud</p>
+              <p className="eyebrow">AI Fit Cloud</p>
               <h2>
                 {mode === "sign-up"
                   ? "Create your account"
