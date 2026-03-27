@@ -25,7 +25,7 @@ const TABS = [
 ];
 
 export default function App() {
-  const { goToHomepage } = useAuth();
+  const { goToHomepage, session } = useAuth();
   const {
     state,
     addFoodEntry,
@@ -50,6 +50,21 @@ export default function App() {
   } = useFitTrackStore();
 
   const [activeTab, setActiveTab] = useState("dashboard");
+  const firstName = useMemo(() => {
+    const metadataName = session?.user?.user_metadata?.first_name || session?.user?.user_metadata?.name;
+    if (metadataName) {
+      return String(metadataName).trim().split(/\s+/)[0];
+    }
+
+    const emailName = session?.user?.email?.split("@")[0] || "";
+    if (!emailName) {
+      return "there";
+    }
+
+    const cleaned = emailName.replace(/[._-]+/g, " ").trim();
+    const firstPart = cleaned.split(/\s+/)[0] || "there";
+    return firstPart.charAt(0).toUpperCase() + firstPart.slice(1);
+  }, [session]);
 
   const selectedFoodEntries = useMemo(
     () =>
@@ -138,15 +153,13 @@ export default function App() {
         <div className="topbar-heading-row">
           <div>
             <p className="eyebrow">FitTrack</p>
-            <h1>Nutrition, weight, and workout tracking in one place.</h1>
+            <h1>Welcome back, {firstName}.</h1>
           </div>
           <button type="button" className="secondary-button topbar-home-link" onClick={goToHomepage}>
             Homepage
           </button>
         </div>
-        <p className="topbar-copy">
-          Built to make consistency easier than excuses.
-        </p>
+        <p className="topbar-copy">Let&apos;s build the version of you that your future self is proud of.</p>
         <div className="accent-switcher" aria-label="Accent color">
           <button
             type="button"
