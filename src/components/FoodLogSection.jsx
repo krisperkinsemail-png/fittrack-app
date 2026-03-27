@@ -647,13 +647,13 @@ export function FoodLogSection({
                 >
                   Quick add
                 </button>
-                {item.itemType === "meal" ? (
+                {item.itemType === "meal" || item.itemType === "saved-food" ? (
                   <button
                     type="button"
                     className="secondary-button danger-button"
                     onClick={() => onDeleteMeal(item.id)}
                   >
-                    Delete meal
+                    Delete
                   </button>
                 ) : null}
               </div>
