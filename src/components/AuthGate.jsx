@@ -198,7 +198,14 @@ export function AuthGate({ children }) {
                   type="button"
                   className="primary-button"
                   onClick={() => {
-                    setMode(session ? "sign-in" : "sign-in");
+                    if (session) {
+                      setShowHomepage(false);
+                      setShowAuthForm(false);
+                      setMessage("");
+                      return;
+                    }
+
+                    setMode("sign-in");
                     setShowAuthForm(true);
                   }}
                 >
@@ -296,6 +303,13 @@ export function AuthGate({ children }) {
                 type="button"
                 className="primary-button"
                 onClick={() => {
+                  if (session) {
+                    setShowHomepage(false);
+                    setShowAuthForm(false);
+                    setMessage("");
+                    return;
+                  }
+
                   setMode("sign-up");
                   setShowAuthForm(true);
                 }}
