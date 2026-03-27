@@ -33,6 +33,28 @@ function scalePreset(item, nextAmount) {
   };
 }
 
+function parseServingAmount(value) {
+  const trimmed = value.trim();
+
+  if (/^\d+\/\d+$/.test(trimmed)) {
+    const [numerator, denominator] = trimmed.split("/").map(Number);
+    if (denominator) {
+      return numerator / denominator;
+    }
+  }
+
+  if (/^\d+\s+\d+\/\d+$/.test(trimmed)) {
+    const [whole, fraction] = trimmed.split(/\s+/);
+    const [numerator, denominator] = fraction.split("/").map(Number);
+    if (denominator) {
+      return Number(whole) + numerator / denominator;
+    }
+  }
+
+  const numeric = Number(trimmed);
+  return Number.isFinite(numeric) ? numeric : NaN;
+}
+
 function getScalablePreset(item) {
   if (item.isScalable) {
     return item;
@@ -42,13 +64,15 @@ function getScalablePreset(item) {
     return null;
   }
 
-  const match = item.servingSize.trim().match(/^(\d*\.?\d+)\s+(\S+)(?:\s+(.*))?$/);
+  const match = item.servingSize
+    .trim()
+    .match(/^(\d+(?:\.\d+)?|\d+\/\d+|\d+\s+\d+\/\d+)\s+(\S+)(?:\s+(.*))?$/);
   if (!match) {
     return null;
   }
 
   const [, amount, unit, note = ""] = match;
-  const baseAmount = Number(amount);
+  const baseAmount = parseServingAmount(amount);
 
   if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
     return null;
