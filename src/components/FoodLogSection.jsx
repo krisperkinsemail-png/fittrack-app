@@ -103,7 +103,7 @@ function inferSavedTemplateType(item) {
 
   const normalizedServing = item.servingSize.trim().toLowerCase();
   if (
-    /^(?:\d*\.?\d+)\s+(?:oz|g|gram|grams|cup|cups|tbsp|tsp|slice|slices|egg|eggs|stick|sticks|banana|avocado|tortilla|tortillas)\b/.test(
+    /^(?:\d*\.?\d+)\s+(?:oz|g|gram|grams|cup|cups|tbsp|tsp|slice|slices|egg|eggs|stick|sticks|banana|avocado|tortilla|tortillas|link|links|patty|patties|serving|servings)\b/.test(
       normalizedServing
     )
   ) {
