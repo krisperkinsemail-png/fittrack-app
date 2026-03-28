@@ -827,6 +827,7 @@ button {
   color: var(--text);
   text-align: left;
   cursor: pointer;
+  touch-action: pan-y;
   transition:
     transform 140ms ease,
     border-color 140ms ease,
@@ -848,6 +849,14 @@ button {
   margin: 0;
 }
 
+.workout-selector-card span,
+.workout-chip strong,
+.exercise-card__summary strong,
+.exercise-card__collapsed-meta span:last-child,
+.secondary-button.workout-insights-button {
+  color: var(--accent-strong);
+}
+
 .workout-picker-modal {
   width: min(100%, 720px);
   max-height: min(82vh, 720px);
@@ -861,7 +870,6 @@ button {
   min-height: 84px;
   padding: 20px 34px;
   font-size: 1.05rem;
-  color: var(--accent-strong);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 46%),
     linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, #162131), #0f1724 78%);
@@ -998,6 +1006,7 @@ button {
   padding: 16px;
   text-align: left;
   color: var(--text);
+  touch-action: pan-y;
 }
 
 .workout-chip strong,
@@ -1070,6 +1079,7 @@ button {
   background: transparent;
   border: 0;
   padding: 0;
+  touch-action: pan-y;
 }
 
 .exercise-card__summary {
