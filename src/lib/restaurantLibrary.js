@@ -128,7 +128,7 @@ export async function searchRestaurantLibrary(query) {
       .order("item_name")
       .limit(40);
 
-    if (!fastResult.error && fastResult.data?.length >= 12) {
+    if (!fastResult.error && fastResult.data?.length) {
       const mapped = fastResult.data.filter((row) => !shouldExcludeRestaurantRow(row)).map(mapRestaurantRow);
       setCachedQuery(normalized, mapped);
       return mapped;

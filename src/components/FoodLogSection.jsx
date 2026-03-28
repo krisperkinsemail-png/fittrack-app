@@ -252,7 +252,7 @@ export function FoodLogSection({
 
     const localMatches = quickPickLibrary
       .map((item) => ({ item, meta: getItemSearchMeta(item, trimmedSearch) }))
-      .filter(({ meta }) => meta.tier >= 2 || (meta.tier === 1 && meta.score >= 0.84))
+      .filter(({ meta }) => meta.tier >= 2)
       .sort((left, right) => {
         if (right.meta.tier !== left.meta.tier) {
           return right.meta.tier - left.meta.tier;
@@ -268,7 +268,7 @@ export function FoodLogSection({
       .slice(0, 6);
 
     setQuickSearchResults(localMatches);
-    setQuickSearchStatus("loading");
+    setQuickSearchStatus(localMatches.length ? "ready" : "loading");
 
     const timeoutId = window.setTimeout(() => {
       searchRestaurantLibrary(trimmedSearch)
@@ -279,7 +279,12 @@ export function FoodLogSection({
 
           const seen = new Set(localMatches.map((item) => item.id));
           const mergedResults = [...localMatches];
-          for (const item of restaurantMatches) {
+          const strictRestaurantMatches = restaurantMatches.filter(
+            (item) => getItemSearchMeta(item, trimmedSearch).tier >= 2
+          );
+
+          const sourceResults = localMatches.length ? strictRestaurantMatches : restaurantMatches;
+          for (const item of sourceResults) {
             if (seen.has(item.id)) {
               continue;
             }
