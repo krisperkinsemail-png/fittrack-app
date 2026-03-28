@@ -219,14 +219,6 @@ export function WorkoutSection({
     };
   }, []);
 
-  const draftSummary = useMemo(() => {
-    const plannedSets = draftExercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
-    return {
-      exerciseCount: draftExercises.length,
-      plannedSets,
-    };
-  }, [draftExercises]);
-
   const isDraftDirty = useMemo(
     () => hasDraftChanges(draftExercises, selectedWorkout),
     [draftExercises, selectedWorkout]
@@ -745,7 +737,7 @@ export function WorkoutSection({
               className="secondary-button workout-insights-button"
               onClick={() => setIsInsightsOpen(true)}
             >
-              Growth metrics
+              Growth Metrics
             </button>
           </div>
         </div>
@@ -771,19 +763,6 @@ export function WorkoutSection({
               {selectedWorkout.summary || "Switching workouts reloads the active template automatically."}
             </p>
           </button>
-        </div>
-
-        <div className="summary-grid">
-          <div className="summary-panel">
-            <span>Current template</span>
-            <strong>{selectedWorkout.name}</strong>
-          </div>
-          <div className="summary-panel">
-            <span>Planned work</span>
-            <strong>
-              {draftSummary.exerciseCount} exercises • {draftSummary.plannedSets} sets
-            </strong>
-          </div>
         </div>
       </section>
 
@@ -1270,7 +1249,7 @@ export function WorkoutSection({
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Workout insights</p>
-                <h2 id="workout-insights-title">Growth metrics</h2>
+                <h2 id="workout-insights-title">Growth Metrics</h2>
               </div>
               <button
                 type="button"

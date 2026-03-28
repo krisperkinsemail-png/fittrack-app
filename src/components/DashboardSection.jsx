@@ -26,6 +26,14 @@ function formatDelta(value, unit) {
   return `${prefix}${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} ${unit} vs yesterday`;
 }
 
+function formatThemeLabel(value) {
+  if (!value) {
+    return "--";
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 export function DashboardSection({
   selectedDate,
   formattedDate,
@@ -316,7 +324,7 @@ export function DashboardSection({
             <p className="muted">Choose the accent used across charts, buttons, and highlights.</p>
           </div>
           <div className="dashboard-fold-summary">
-            <strong>{settings.accentColor}</strong>
+            <strong>{formatThemeLabel(settings.accentColor)}</strong>
             <span>Current theme</span>
           </div>
           <span className="dashboard-fold-chevron">{openSection === "appearance" ? "−" : "+"}</span>
