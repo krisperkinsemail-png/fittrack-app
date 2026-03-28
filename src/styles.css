@@ -170,16 +170,32 @@ button {
   position: relative;
   overflow: hidden;
   gap: 22px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top center, rgba(78, 114, 255, 0.18), transparent 32%),
+    radial-gradient(circle at 78% 18%, rgba(187, 87, 255, 0.18), transparent 22%),
+    linear-gradient(180deg, rgba(10, 14, 24, 0.98), rgba(8, 11, 20, 0.98));
 }
 
 .landing-hero::before {
   content: "";
   position: absolute;
-  inset: -20% auto auto 62%;
-  width: 240px;
-  height: 240px;
+  inset: -18% auto auto 58%;
+  width: 320px;
+  height: 320px;
   border-radius: 999px;
   background: radial-gradient(circle, color-mix(in srgb, var(--accent) 36%, transparent), transparent 72%);
+  pointer-events: none;
+}
+
+.landing-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto auto -80px 10%;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(77, 183, 255, 0.14), transparent 72%);
   pointer-events: none;
 }
 
@@ -189,14 +205,85 @@ button {
   gap: 18px;
 }
 
+.landing-hero-top {
+  position: relative;
+  display: grid;
+}
+
+.landing-hero-top::before {
+  content: "";
+  position: absolute;
+  inset: 8% 14% 10%;
+  border-radius: 40px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(92, 132, 255, 0.22), transparent 34%),
+    radial-gradient(circle at 62% 44%, rgba(208, 102, 255, 0.18), transparent 30%);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
 .landing-actions {
-  margin-top: 6px;
-  margin-bottom: 10px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.landing-top-actions {
+  justify-content: center;
+  margin-bottom: 6px;
 }
 
 .landing-actions .primary-button,
 .landing-footer-cta .primary-button {
   min-width: min(100%, 260px);
+}
+
+.landing-top-actions .primary-button,
+.landing-top-actions .secondary-button {
+  min-width: min(100%, 260px);
+}
+
+.landing-actions .secondary-button {
+  border: 1px solid rgba(102, 126, 255, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    rgba(10, 16, 28, 0.88);
+  color: #eef4ff;
+}
+
+.landing-top-actions .secondary-button {
+  border: 1px solid rgba(102, 126, 255, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    rgba(10, 16, 28, 0.88);
+  color: #eef4ff;
+}
+
+.landing-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.landing-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 121, 255, 0.36);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent),
+    rgba(11, 18, 31, 0.84);
+  color: #eef4ff;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 24px rgba(4, 8, 16, 0.3);
 }
 
 .landing-visual-grid,
@@ -215,6 +302,108 @@ button {
     rgba(17, 24, 38, 0.96);
   border: 1px solid rgba(96, 114, 139, 0.22);
   overflow: hidden;
+}
+
+.landing-logo-stage {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 12px;
+  background:
+    radial-gradient(circle at center, rgba(84, 115, 255, 0.14), transparent 35%),
+    linear-gradient(180deg, rgba(12, 18, 30, 0.96), rgba(8, 12, 21, 0.98));
+}
+
+.landing-hero-image {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(100%, 620px);
+  height: auto;
+  object-fit: contain;
+  border-radius: 36px;
+  -webkit-mask-image: radial-gradient(ellipse 92% 92% at 50% 48%, #000 72%, transparent 100%);
+  mask-image: radial-gradient(ellipse 92% 92% at 50% 48%, #000 72%, transparent 100%);
+  filter:
+    drop-shadow(0 0 20px rgba(70, 128, 255, 0.18))
+    drop-shadow(0 0 30px rgba(196, 96, 255, 0.14));
+}
+
+.landing-neon-metrics {
+  display: grid;
+  gap: 14px;
+}
+
+.landing-neon-card,
+.landing-feature-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-neon-card {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(91, 126, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    rgba(11, 17, 30, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 16px 32px rgba(3, 7, 14, 0.34);
+}
+
+.landing-neon-card__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.landing-neon-card__header .landing-kicker {
+  margin-bottom: 0;
+}
+
+.landing-neon-card__header strong {
+  margin: 0;
+  text-align: right;
+}
+
+.landing-neon-card::after,
+.landing-feature-panel::after {
+  content: "";
+  position: absolute;
+  inset: auto -32px -60px auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(113, 86, 255, 0.18), transparent 72%);
+  pointer-events: none;
+}
+
+.landing-section--accent {
+  background:
+    radial-gradient(circle at top left, rgba(88, 120, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(10, 15, 27, 0.94), rgba(10, 14, 22, 0.94));
+}
+
+.landing-section--dark {
+  background:
+    radial-gradient(circle at top right, rgba(201, 98, 255, 0.1), transparent 26%),
+    linear-gradient(180deg, rgba(8, 12, 20, 0.94), rgba(7, 10, 18, 0.96));
+}
+
+.landing-feature-panel {
+  border: 1px solid rgba(91, 126, 255, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
+    rgba(13, 19, 31, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.landing-feature-panel span {
+  position: relative;
+  z-index: 1;
 }
 
 .landing-visual-card::after {
@@ -958,9 +1147,16 @@ button:focus {
   }
 
   .landing-hero {
-    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
     padding: 28px;
+  }
+
+  .landing-hero-top {
+    justify-items: center;
+  }
+
+  .landing-neon-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .topbar-heading-row {

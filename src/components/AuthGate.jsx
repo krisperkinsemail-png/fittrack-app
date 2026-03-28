@@ -186,114 +186,148 @@ export function AuthGate({ children }) {
       return (
         <main className="app-shell landing-shell">
           <section className="landing-hero card">
-            <div className="landing-copy">
-              <p className="eyebrow">AI Fit</p>
-              <h1 className="landing-title">Track food, training, and scale trend without friction.</h1>
-              <p className="landing-text">
-                AI Fit gives you one clean mobile dashboard for calories, macros, body weight,
-                workouts, and goal progress. Built for fast iPhone use, not spreadsheet energy.
-              </p>
-              <div className="button-row landing-actions">
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => {
-                    if (session) {
-                      setShowHomepage(false);
-                      setShowAuthForm(false);
-                      setMessage("");
-                      return;
-                    }
+            <div className="button-row landing-top-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  if (session) {
+                    setShowHomepage(false);
+                    setShowAuthForm(false);
+                    setMessage("");
+                    return;
+                  }
 
-                    setMode("sign-in");
-                    setShowAuthForm(true);
-                  }}
-                >
-                  {session ? "Open Dashboard" : "Login / Create Account"}
-                </button>
+                  setMode("sign-in");
+                  setShowAuthForm(true);
+                }}
+              >
+                Open Dashboard
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setMode("sign-in");
+                  setShowAuthForm(true);
+                }}
+              >
+                Sign In / Create Account
+              </button>
+            </div>
+
+            <div className="landing-hero-top" aria-hidden="true">
+              <article className="landing-logo-stage">
+                <img
+                  className="landing-hero-image"
+                  src="/homepageimage.png"
+                  alt="AI Fit neon logo with flexing figure"
+                />
+              </article>
+            </div>
+
+            <div className="landing-copy">
+              <h1 className="landing-title">Built for the version of you that actually follows through.</h1>
+              <p className="landing-text">
+                Track nutrition, macros, scale trend, and workouts in one dark, fast, high-signal
+                system. No spreadsheet feel. No bloated fitness-app clutter.
+              </p>
+              <div className="landing-pill-row" aria-label="Core features">
+                <span className="landing-pill">Nutrition</span>
+                <span className="landing-pill">Macros</span>
+                <span className="landing-pill">Weight</span>
+                <span className="landing-pill">Workouts</span>
               </div>
             </div>
 
             <div className="landing-visual-grid" aria-hidden="true">
-              <article className="landing-visual-card landing-visual-card--hero">
-                <span className="landing-kicker">Today's view</span>
-                <strong>1,884 cal</strong>
-                <p>Protein 182g • Carbs 201g • Fat 58g</p>
-              </article>
-              <article className="landing-visual-card">
-                <span className="landing-kicker">Weight trend</span>
-                <strong>-0.8 lb / week</strong>
-                <div className="landing-mini-chart">
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </article>
-              <article className="landing-visual-card">
-                <span className="landing-kicker">Workout flow</span>
-                <strong>Push A</strong>
-                <p>Rest timer, sets, reps, load, and history in one place.</p>
-              </article>
+              <div className="landing-neon-metrics">
+                <article className="landing-neon-card">
+                  <div className="landing-neon-card__header">
+                    <span className="landing-kicker">Daily target lock</span>
+                    <strong>1,884 cal</strong>
+                  </div>
+                  <p>Protein 182g • Carbs 201g • Fat 58g</p>
+                </article>
+                <article className="landing-neon-card">
+                  <div className="landing-neon-card__header">
+                    <span className="landing-kicker">Weight trend</span>
+                    <strong>-0.8 lb / week</strong>
+                  </div>
+                  <div className="landing-mini-chart">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </article>
+                <article className="landing-neon-card">
+                  <div className="landing-neon-card__header">
+                    <span className="landing-kicker">Workout flow</span>
+                    <strong>Push A</strong>
+                  </div>
+                  <p>Rest timer, sets, reps, load, and history side by side.</p>
+                </article>
+              </div>
             </div>
           </section>
 
-          <section className="card landing-section">
+          <section className="card landing-section landing-section--accent">
             <div className="section-heading">
               <div>
                 <p className="eyebrow">What it does</p>
-                <h2>Your daily fitness control panel</h2>
+                <h2>Everything you need to stay on track in one place.</h2>
               </div>
               <p className="muted">
-                Log quickly, see the signal, and stay consistent without jumping between five apps.
+                Instead of bouncing between notes, spreadsheets, and different apps, you can manage the whole day here.
               </p>
             </div>
 
             <div className="landing-feature-grid">
-              <article className="summary-panel">
+              <article className="summary-panel landing-feature-panel">
                 <p className="eyebrow">Nutrition</p>
-                <strong>Calories + macros</strong>
-                <span>Track food entries, reuse saved foods and meals, and compare intake against targets.</span>
+                <strong>Log meals fast and keep your macros tight</strong>
+                <span>Track calories and macros with quick search, saved foods, meals, and restaurant options.</span>
               </article>
-              <article className="summary-panel">
+              <article className="summary-panel landing-feature-panel">
                 <p className="eyebrow">Body weight</p>
-                <strong>Trend over noise</strong>
-                <span>See actual progress toward your goal with smoothed weight trend and estimated pace.</span>
+                <strong>Know whether your body weight is actually moving</strong>
+                <span>See trend data instead of getting thrown off by one random weigh-in.</span>
               </article>
-              <article className="summary-panel">
+              <article className="summary-panel landing-feature-panel">
                 <p className="eyebrow">Training</p>
-                <strong>Structured workouts</strong>
-                <span>Run push-pull or custom programs with live set logging and a built-in rest timer.</span>
+                <strong>Train with more structure and better feedback</strong>
+                <span>Log workouts, track sets and load, and compare against what you did last time.</span>
               </article>
             </div>
           </section>
 
-          <section className="card landing-section">
+          <section className="card landing-section landing-section--dark">
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Why it works</p>
-                <h2>Designed for mobile, not desktop leftovers</h2>
+                <h2>Built to help you stay consistent when motivation is not enough.</h2>
               </div>
             </div>
 
             <div className="landing-detail-grid">
               <article className="log-card">
-                <h3>Less friction, more follow-through</h3>
+                <h3>Hit your targets without overthinking it</h3>
                 <p className="muted">
-                  Log meals, workouts, and weigh-ins in seconds so staying on plan feels easy instead of annoying.
+                  When logging is quick and the numbers are clear, it is easier to stay locked in day after day.
                 </p>
               </article>
               <article className="log-card">
-                <h3>See the truth, not the noise</h3>
+                <h3>See what is working faster</h3>
                 <p className="muted">
-                  Your calories, macros, and weight trend all line up in one place so you always know what is actually working.
+                  Your food, scale trend, and workouts live in one place, so you can connect your habits to your results.
                 </p>
               </article>
               <article className="log-card">
-                <h3>Built for real consistency</h3>
+                <h3>Keep momentum when life gets busy</h3>
                 <p className="muted">
-                  Whether you are cutting, building, or just trying to stay dialed in, AI Fit helps you stack better days without overthinking it.
+                  The easier it is to log a meal, a lift, or a weigh-in, the less likely you are to fall off when the day gets crowded.
                 </p>
               </article>
             </div>
