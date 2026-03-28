@@ -940,6 +940,10 @@ button {
   padding: 16px;
 }
 
+.timer-panel .button-row + .button-row {
+  margin-top: 10px;
+}
+
 .timer-readout {
   display: block;
   font-size: clamp(2rem, 10vw, 3.4rem);

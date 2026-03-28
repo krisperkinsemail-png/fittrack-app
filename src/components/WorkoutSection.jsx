@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getAllWorkoutSystems } from "../lib/workoutTemplates";
 import { formatLongDate } from "../lib/date";
 
@@ -89,6 +89,8 @@ export function WorkoutSection({
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [isProgramPickerOpen, setIsProgramPickerOpen] = useState(false);
   const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
+  const audioContextRef = useRef(null);
+  const previousTimeLeftRef = useRef(timeLeft);
 
   const selectedProgram = useMemo(
     () => workoutPrograms.find((program) => program.id === selectedProgramId) || workoutPrograms[0],
@@ -162,6 +164,24 @@ export function WorkoutSection({
 
     return () => window.clearInterval(intervalId);
   }, [isTimerRunning, timeLeft]);
+
+  useEffect(() => {
+    if (previousTimeLeftRef.current > 0 && timeLeft === 0) {
+      playTimerAlarm(audioContextRef);
+    }
+
+    previousTimeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {
+          // Ignore cleanup failures from already-closed contexts.
+        });
+      }
+    };
+  }, []);
 
   const draftSummary = useMemo(() => {
     const plannedSets = draftExercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
@@ -502,9 +522,7 @@ export function WorkoutSection({
           >
             <span>Program</span>
             <strong>{selectedProgram.name}</strong>
-            <p className="muted">
-              {selectedPhase ? selectedPhase.name : selectedProgram.description || "Choose program"}
-            </p>
+            <p className="muted">{selectedPhase ? selectedPhase.name : "Tap to choose"}</p>
           </button>
           <button
             type="button"
@@ -990,6 +1008,11 @@ export function WorkoutSection({
               </button>
             </div>
 
+            <p className="muted">
+              Pick the training system first, then choose a mesocycle block if that program uses
+              phases.
+            </p>
+
             <div className="workout-system-grid">
               {workoutPrograms.map((program) => (
                 <button
@@ -1093,4 +1116,43 @@ export function WorkoutSection({
       ) : null}
     </div>
   );
+}
+
+function playTimerAlarm(audioContextRef) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    return;
+  }
+
+  if (!audioContextRef.current) {
+    audioContextRef.current = new AudioContextClass();
+  }
+
+  const context = audioContextRef.current;
+  if (context.state === "suspended") {
+    context.resume().catch(() => {
+      // Ignore autoplay-policy failures.
+    });
+  }
+
+  const startAt = context.currentTime;
+  [0, 0.22, 0.44].forEach((offset, index) => {
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(index === 1 ? 1046.5 : 880, startAt + offset);
+    gainNode.gain.setValueAtTime(0.0001, startAt + offset);
+    gainNode.gain.exponentialRampToValueAtTime(0.18, startAt + offset + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.16);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.start(startAt + offset);
+    oscillator.stop(startAt + offset + 0.18);
+  });
 }
