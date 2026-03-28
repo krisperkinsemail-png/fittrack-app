@@ -1,4 +1,5 @@
 import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "./AuthGate";
 import { FOOD_LIBRARY } from "../lib/foodLibrary";
 import { loadFoodLibraryUsage, recordFoodLibraryUsage } from "../lib/libraryUsage";
 import { searchRestaurantLibrary } from "../lib/restaurantLibrary";
@@ -18,6 +19,19 @@ const EMPTY_FORM = {
 };
 
 const QUICK_SEARCH_LIMIT = 50;
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function canAccessLibraryItem(item, userEmail) {
+  if (!item.allowedEmails?.length) {
+    return true;
+  }
+
+  const normalizedUserEmail = normalizeEmail(userEmail);
+  return item.allowedEmails.some((email) => normalizeEmail(email) === normalizedUserEmail);
+}
 
 function formatDecimal(value) {
   const rounded = Math.round(value * 10) / 10;
@@ -216,6 +230,7 @@ export function FoodLogSection({
   onSaveMeal,
   onDeleteMeal,
 }) {
+  const { session } = useAuth();
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(EMPTY_FORM);
@@ -264,6 +279,12 @@ export function FoodLogSection({
 
     return allEntries.filter((entry) => entry.date === previousDateString);
   }, [allEntries, selectedDate]);
+
+  const accessibleFoodLibrary = useMemo(
+    () =>
+      FOOD_LIBRARY.filter((item) => canAccessLibraryItem(item, session?.user?.email)),
+    [session?.user?.email]
+  );
 
   useEffect(() => {
     if (categoryFilter !== "restaurant") {
@@ -322,8 +343,8 @@ export function FoodLogSection({
       isScalable: false,
     }));
 
-    return [...savedMeals, ...FOOD_LIBRARY.map((item) => ({ ...item, itemType: "food" }))];
-  }, [mealTemplates]);
+    return [...savedMeals, ...accessibleFoodLibrary.map((item) => ({ ...item, itemType: "food" }))];
+  }, [accessibleFoodLibrary, mealTemplates]);
 
   useEffect(() => {
     function handlePointerDown(event) {
