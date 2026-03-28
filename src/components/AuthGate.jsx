@@ -332,25 +332,6 @@ export function AuthGate({ children }) {
               </article>
             </div>
 
-            <div className="landing-footer-cta">
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => {
-                  if (session) {
-                    setShowHomepage(false);
-                    setShowAuthForm(false);
-                    setMessage("");
-                    return;
-                  }
-
-                  setMode("sign-up");
-                  setShowAuthForm(true);
-                }}
-              >
-                {session ? "Back to dashboard" : "Create account"}
-              </button>
-            </div>
           </section>
         </main>
       );
