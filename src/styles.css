@@ -619,6 +619,10 @@ button {
   padding: 0;
 }
 
+.dashboard-fold-toggle h2 {
+  color: #f8fafc;
+}
+
 .dashboard-fold-summary {
   display: flex;
   justify-content: space-between;
