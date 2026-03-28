@@ -526,26 +526,6 @@ export function WorkoutSection({
 
             return (
             <article className="exercise-card" key={exercise.id}>
-              {previousExercise ? (
-                <div className="previous-lift-panel">
-                  <div>
-                    <span className="set-label">Last workout</span>
-                    <strong>
-                      {previousExercise.sets
-                        .map((set) => `${set.reps} x ${set.weight}`)
-                        .join(" • ")}
-                    </strong>
-                  </div>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => applyPreviousSets(exercise.id, previousExercise)}
-                  >
-                    Use last sets
-                  </button>
-                </div>
-              ) : null}
-
               <div className="log-card__top">
                 <div className="exercise-title-group">
                   <span className="exercise-index">{exerciseIndex + 1}</span>
@@ -573,31 +553,53 @@ export function WorkoutSection({
                 </button>
               </div>
 
+              {previousExercise ? (
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => applyPreviousSets(exercise.id, previousExercise)}
+                  >
+                    Use last sets
+                  </button>
+                </div>
+              ) : null}
+
               <div className="set-grid">
                 {exercise.sets.map((set, setIndex) => (
                   <div className="set-row" key={set.id}>
                     <span className="set-label">Set {setIndex + 1}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      inputMode="numeric"
-                      placeholder="Reps"
-                      value={set.reps}
-                      onChange={(event) =>
-                        updateSet(exercise.id, set.id, "reps", event.target.value)
-                      }
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      inputMode="decimal"
-                      placeholder="Weight"
-                      value={set.weight}
-                      onChange={(event) =>
-                        updateSet(exercise.id, set.id, "weight", event.target.value)
-                      }
-                    />
+                    <div className="set-field">
+                      <input
+                        type="number"
+                        min="0"
+                        inputMode="numeric"
+                        placeholder="Reps"
+                        value={set.reps}
+                        onChange={(event) =>
+                          updateSet(exercise.id, set.id, "reps", event.target.value)
+                        }
+                      />
+                      <span className="set-subtext">
+                        Last: {previousExercise?.sets?.[setIndex]?.reps ?? "--"}
+                      </span>
+                    </div>
+                    <div className="set-field">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        inputMode="decimal"
+                        placeholder="Weight"
+                        value={set.weight}
+                        onChange={(event) =>
+                          updateSet(exercise.id, set.id, "weight", event.target.value)
+                        }
+                      />
+                      <span className="set-subtext">
+                        Last: {previousExercise?.sets?.[setIndex]?.weight ?? "--"}
+                      </span>
+                    </div>
                     <button
                       type="button"
                       className="secondary-button"

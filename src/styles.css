@@ -629,24 +629,6 @@ button {
   gap: 14px;
 }
 
-.previous-lift-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
-}
-
-.previous-lift-panel strong {
-  display: block;
-  margin-top: 6px;
-  font-size: 0.95rem;
-  line-height: 1.35;
-}
-
 .exercise-title-group {
   display: flex;
   gap: 12px;
@@ -681,6 +663,17 @@ button {
   grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
+}
+
+.set-field {
+  display: grid;
+  gap: 6px;
+}
+
+.set-subtext {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.2;
 }
 
 .exercise-history-row {
