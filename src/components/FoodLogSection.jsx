@@ -773,7 +773,7 @@ export function FoodLogSection({
             </label>
           )}
 
-          <div className="compact-grid">
+          <div className="compact-grid compact-grid--mobile-two">
             <label>
               Calories
               <input

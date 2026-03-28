@@ -567,6 +567,10 @@ button {
   gap: 12px;
 }
 
+.compact-grid--mobile-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .progress-grid {
   display: grid;
   gap: 12px;
@@ -1244,6 +1248,10 @@ button:focus {
   }
 
   .compact-grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compact-grid--mobile-two {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
