@@ -3,6 +3,7 @@ import { FOOD_LIBRARY } from "../lib/foodLibrary";
 import { loadFoodLibraryUsage, recordFoodLibraryUsage } from "../lib/libraryUsage";
 import { searchRestaurantLibrary } from "../lib/restaurantLibrary";
 import { computeSearchScore, getSearchMeta, isFuzzyMatch } from "../lib/search";
+import { formatLongDate } from "../lib/date";
 
 const EMPTY_FORM = {
   foodName: "",
@@ -644,7 +645,7 @@ export function FoodLogSection({
             <h2>Add food entry</h2>
           </div>
           <div className="food-log-search" ref={quickSearchRef}>
-            <p className="muted">Selected day: {selectedDate}</p>
+            <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
             <div className="food-log-search__fields">
               <label className="food-log-search__label">
                 <span className="sr-only">Search foods</span>

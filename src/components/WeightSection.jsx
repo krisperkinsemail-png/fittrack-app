@@ -34,8 +34,8 @@ export function WeightSection({
           </div>
           <p className="muted">
             {currentEntry
-              ? `Current entry for ${selectedDate}: ${currentEntry.weight} ${settings.weightUnit}`
-              : `No weight entry for ${selectedDate}`}
+              ? `Current entry for ${formatLongDate(selectedDate)}: ${currentEntry.weight} ${settings.weightUnit}`
+              : `No weight entry for ${formatLongDate(selectedDate)}`}
           </p>
         </div>
 

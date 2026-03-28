@@ -608,7 +608,7 @@ export function WorkoutSection({
         {latestMatchingWorkout ? (
           <div className="summary-panel">
             <span>Last saved {selectedWorkout.name}</span>
-            <strong>{latestMatchingWorkout.date}</strong>
+            <strong>{formatLongDate(latestMatchingWorkout.date)}</strong>
           </div>
         ) : null}
 
@@ -822,7 +822,7 @@ export function WorkoutSection({
                     <div>
                       <h3>{entry.workoutName}</h3>
                       <p className="muted">
-                        {entry.systemName} • {entry.date}
+                        {entry.systemName} • {formatLongDate(entry.date)}
                       </p>
                     </div>
                     <strong>{summary.totalSets} sets</strong>
@@ -876,7 +876,7 @@ export function WorkoutSection({
                     <div className="log-card__top">
                       <div>
                         <h3>{entry.workoutName}</h3>
-                        <p className="muted">{entry.date}</p>
+                        <p className="muted">{formatLongDate(entry.date)}</p>
                       </div>
                       <strong>{summary.totalSets} sets</strong>
                     </div>
@@ -932,7 +932,7 @@ export function WorkoutSection({
                 <strong>{workoutInsights.focusExercise?.exerciseName || "Not enough history yet"}</strong>
                 <p className="muted">
                   {workoutInsights.focusExercise
-                    ? `${Math.round(workoutInsights.focusExercise.improvement)} lb from ${workoutInsights.focusExercise.firstDate} to ${workoutInsights.focusExercise.latestDate}`
+                    ? `${Math.round(workoutInsights.focusExercise.improvement)} lb from ${formatLongDate(workoutInsights.focusExercise.firstDate)} to ${formatLongDate(workoutInsights.focusExercise.latestDate)}`
                     : "This fills in once the same lift has been logged on multiple days."}
                 </p>
               </div>
@@ -951,7 +951,7 @@ export function WorkoutSection({
                 </strong>
                 <p className="muted">
                   {workoutInsights.improvedExercise
-                    ? `${Math.round(workoutInsights.improvedExercise.improvement)} lb from ${workoutInsights.improvedExercise.firstDate} to ${workoutInsights.improvedExercise.latestDate}`
+                    ? `${Math.round(workoutInsights.improvedExercise.improvement)} lb from ${formatLongDate(workoutInsights.improvedExercise.firstDate)} to ${formatLongDate(workoutInsights.improvedExercise.latestDate)}`
                     : "Log the same lift on multiple dates to see progression."}
                 </p>
               </div>
