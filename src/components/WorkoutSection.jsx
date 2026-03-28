@@ -112,6 +112,7 @@ export function WorkoutSection({
   const [savedWorkoutDraft, setSavedWorkoutDraft] = useState(null);
   const [isDraftActive, setIsDraftActive] = useState(false);
   const [removedExerciseUndo, setRemovedExerciseUndo] = useState(null);
+  const [openExerciseId, setOpenExerciseId] = useState(null);
   const [customExerciseForm, setCustomExerciseForm] = useState({
     name: "",
     target: "",
@@ -175,6 +176,7 @@ export function WorkoutSection({
     setSavedWorkoutDraft(nextSavedDraft);
     setIsDraftActive(false);
     setRemovedExerciseUndo(null);
+    setOpenExerciseId(null);
   }, [selectedDate, selectedWorkout]);
 
   useEffect(() => {
@@ -385,10 +387,13 @@ export function WorkoutSection({
       return;
     }
 
+    const exerciseId = crypto.randomUUID();
+    setOpenExerciseId(exerciseId);
+
     updateDraft((current) => [
       ...current,
       {
-        id: crypto.randomUUID(),
+        id: exerciseId,
         name: trimmedName,
         target: target.trim() || "Custom",
         sets: Array.from({ length: nextSetCount }, () => createSet()),
@@ -510,6 +515,9 @@ export function WorkoutSection({
         exercise: removedExercise,
         index: removedIndex,
       });
+      if (openExerciseId === exerciseId) {
+        setOpenExerciseId(null);
+      }
       return current.filter((exercise) => exercise.id !== exerciseId);
     });
   }
@@ -697,6 +705,7 @@ export function WorkoutSection({
       nextDraft.splice(insertIndex, 0, removedExerciseUndo.exercise);
       return nextDraft;
     });
+    setOpenExerciseId(removedExerciseUndo.exercise.id);
     setRemovedExerciseUndo(null);
   }
 
@@ -912,13 +921,30 @@ export function WorkoutSection({
             const previousExercise = previousExerciseMap.get(
               normalizeExerciseName(exercise.name)
             );
+            const isExpanded = openExerciseId === exercise.id;
 
             return (
             <article className="exercise-card" key={exercise.id}>
-              <div className="log-card__top">
+              <button
+                type="button"
+                className="exercise-card__toggle"
+                onClick={() => setOpenExerciseId((current) => (current === exercise.id ? null : exercise.id))}
+                aria-expanded={isExpanded}
+              >
                 <div className="exercise-title-group">
                   <span className="exercise-index">{exerciseIndex + 1}</span>
-                  <div className="exercise-title-text">
+                  <div className="exercise-card__summary">
+                    <strong>{exercise.name || `Exercise ${exerciseIndex + 1}`}</strong>
+                    <span>{exercise.target || "Tap to log sets"}</span>
+                    {exercise.notes ? <p className="muted">{exercise.notes}</p> : null}
+                  </div>
+                </div>
+                <span className="exercise-card__chevron">{isExpanded ? "−" : "+"}</span>
+              </button>
+
+              {isExpanded ? (
+                <>
+                  <div className="exercise-card__editor">
                     <input
                       value={exercise.name}
                       onChange={(event) => updateExerciseName(exercise.id, event.target.value)}
@@ -930,124 +956,131 @@ export function WorkoutSection({
                       aria-label={`Exercise ${exerciseIndex + 1} target`}
                       placeholder="4 x 8-10"
                     />
-                    {exercise.notes ? <p className="muted">{exercise.notes}</p> : null}
                   </div>
-                </div>
-                <div className="workout-inline-actions">
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => moveExercise(exercise.id, "up")}
-                    disabled={exerciseIndex === 0}
-                    aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} up`}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => moveExercise(exercise.id, "down")}
-                    disabled={exerciseIndex === draftExercises.length - 1}
-                    aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} down`}
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={() => removeExercise(exercise.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
 
-              {previousExercise ? (
-                <div className="button-row">
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => applyPreviousSets(exercise.id, previousExercise)}
-                  >
-                    Use last sets
-                  </button>
-                </div>
-              ) : null}
-
-              <div className="set-grid">
-                {exercise.sets.map((set, setIndex) => (
-                  <div className="set-row" key={set.id}>
-                    <span className="set-label">Set {setIndex + 1}</span>
-                    <div className="set-field">
-                      <input
-                        type="number"
-                        min="0"
-                        inputMode="numeric"
-                        placeholder="Reps"
-                        value={set.reps}
-                        onChange={(event) =>
-                          updateSet(exercise.id, set.id, "reps", event.target.value)
-                        }
-                      />
-                      <span className="set-subtext">
-                        Last: {previousExercise?.sets?.[setIndex]?.reps ?? "--"}
-                      </span>
-                    </div>
-                    <div className="set-field">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        inputMode="decimal"
-                        placeholder="Weight"
-                        value={set.weight}
-                        onChange={(event) =>
-                          updateSet(exercise.id, set.id, "weight", event.target.value)
-                        }
-                      />
-                      <span className="set-subtext">
-                        Last: {previousExercise?.sets?.[setIndex]?.weight ?? "--"}
-                      </span>
-                    </div>
-                    <div className="set-row-actions">
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => moveSet(exercise.id, set.id, "up")}
-                        disabled={setIndex === 0}
-                        aria-label={`Move set ${setIndex + 1} up`}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => moveSet(exercise.id, set.id, "down")}
-                        disabled={setIndex === exercise.sets.length - 1}
-                        aria-label={`Move set ${setIndex + 1} down`}
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => removeSet(exercise.id, set.id)}
-                        aria-label={`Remove set ${setIndex + 1}`}
-                      >
-                        X
-                      </button>
-                    </div>
+                  <div className="workout-inline-actions">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => moveExercise(exercise.id, "up")}
+                      disabled={exerciseIndex === 0}
+                      aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} up`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => moveExercise(exercise.id, "down")}
+                      disabled={exerciseIndex === draftExercises.length - 1}
+                      aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} down`}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button danger-button"
+                      onClick={() => removeExercise(exercise.id)}
+                    >
+                      Remove
+                    </button>
                   </div>
-                ))}
-              </div>
 
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => addSet(exercise.id)}
-              >
-                Add set
-              </button>
+                  {previousExercise ? (
+                    <div className="button-row">
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => applyPreviousSets(exercise.id, previousExercise)}
+                      >
+                        Use last sets
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <div className="set-grid">
+                    {exercise.sets.map((set, setIndex) => (
+                      <div className="set-row" key={set.id}>
+                        <span className="set-label">Set {setIndex + 1}</span>
+                        <div className="set-field">
+                          <input
+                            type="number"
+                            min="0"
+                            inputMode="numeric"
+                            placeholder="Reps"
+                            value={set.reps}
+                            onChange={(event) =>
+                              updateSet(exercise.id, set.id, "reps", event.target.value)
+                            }
+                          />
+                          <span className="set-subtext">
+                            Last: {previousExercise?.sets?.[setIndex]?.reps ?? "--"}
+                          </span>
+                        </div>
+                        <div className="set-field">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            inputMode="decimal"
+                            placeholder="Weight"
+                            value={set.weight}
+                            onChange={(event) =>
+                              updateSet(exercise.id, set.id, "weight", event.target.value)
+                            }
+                          />
+                          <span className="set-subtext">
+                            Last: {previousExercise?.sets?.[setIndex]?.weight ?? "--"}
+                          </span>
+                        </div>
+                        <div className="set-row-actions">
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => moveSet(exercise.id, set.id, "up")}
+                            disabled={setIndex === 0}
+                            aria-label={`Move set ${setIndex + 1} up`}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => moveSet(exercise.id, set.id, "down")}
+                            disabled={setIndex === exercise.sets.length - 1}
+                            aria-label={`Move set ${setIndex + 1} down`}
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => removeSet(exercise.id, set.id)}
+                            aria-label={`Remove set ${setIndex + 1}`}
+                          >
+                            X
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => addSet(exercise.id)}
+                  >
+                    Add set
+                  </button>
+                </>
+              ) : (
+                <div className="exercise-card__collapsed-meta">
+                  <span>{exercise.sets.length} planned sets</span>
+                  <span>
+                    {exercise.sets.some((set) => set.reps || set.weight) ? "In progress" : "Tap to log"}
+                  </span>
+                </div>
+              )}
             </article>
           )})}
         </div>

@@ -1058,6 +1058,54 @@ button {
   gap: 14px;
 }
 
+.exercise-card__toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.exercise-card__summary {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.exercise-card__summary strong,
+.exercise-card__summary span,
+.exercise-card__summary p {
+  margin: 0;
+}
+
+.exercise-card__summary span {
+  color: var(--muted);
+}
+
+.exercise-card__chevron {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #f8fafc;
+}
+
+.exercise-card__editor {
+  display: grid;
+  gap: 8px;
+}
+
+.exercise-card__collapsed-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 .exercise-title-group {
   display: flex;
   gap: 12px;
@@ -1114,10 +1162,6 @@ button {
 }
 
 @media (max-width: 640px) {
-  .exercise-card .log-card__top {
-    display: grid;
-  }
-
   .exercise-title-group {
     width: 100%;
   }
@@ -1126,6 +1170,11 @@ button {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
+  }
+
+  .exercise-card__collapsed-meta {
+    display: grid;
+    gap: 4px;
   }
 
   .set-row {
