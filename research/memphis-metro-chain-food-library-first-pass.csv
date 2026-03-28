@@ -1,0 +1,52 @@
+chain,item_name,category,serving_size,calories,protein_g,carbs_g,fat_g,source_url,source_document_or_date
+Chick-fil-A,Spicy Chicken Biscuit,Breakfast,153g,450,19,44,22,https://www.chick-fil-a.com/catering/breakfast/spicy-chicken-biscuit,Chick-fil-A product nutrition page accessed 2026-03-27
+Chick-fil-A,Chick-fil-A Chick-n-Minis,Breakfast,127g,360,20,41,13,https://www.chick-fil-a.com/menu/breakfast/4-ct-chick-fil-a-chick-n-minis,Chick-fil-A product nutrition page accessed 2026-03-27
+Chick-fil-A,Egg White Grill,Breakfast,172g,300,27,29,8,https://www.chick-fil-a.com/menu/egg-white-grill,Chick-fil-A product nutrition page accessed 2026-03-27
+Chick-fil-A,8 ct Chick-fil-A Nuggets,Entree,113g,250,27,11,11,https://www.chick-fil-a.com/menu/entrees/8-ct-chick-fil-a-nuggets,Chick-fil-A product nutrition page accessed 2026-03-27
+Chick-fil-A,Spicy Chicken Sandwich,Entree,188g,450,28,45,19,https://www.chick-fil-a.com/menu/spicy-chicken-sandwich,Chick-fil-A product nutrition page accessed 2026-03-27
+Subway,"6"" Black Forest Ham",Sandwich,219g,270,18,41,4,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Buffalo Chicken (with Grilled Chicken)",Sandwich,248g,340,24,39,12,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Chicken & Bacon Ranch (with Grilled Chicken)",Sandwich,256g,510,36,39,27,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Italian BMT",Sandwich,213g,360,19,39,16,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Oven Roasted Turkey",Sandwich,218g,260,19,39,3,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Five Guys,Hamburger Patty,Burger component,65g,302,16,0,17,https://www.fiveguys.com/wp-content/uploads/2025/07/five-guys-us-nutrition-allergen-guide-english-1-final.pdf,Five Guys Nutrition and Allergen Chart US 01-2024
+Five Guys,Bun,Burger component,77g,240,7,39,9,https://www.fiveguys.com/wp-content/uploads/2025/07/five-guys-us-nutrition-allergen-guide-english-1-final.pdf,Five Guys Nutrition and Allergen Chart US 01-2024
+Five Guys,Little Five Guys Style Fries,Sides,227g,526,8,72,23,https://www.fiveguys.com/wp-content/uploads/2025/07/five-guys-us-nutrition-allergen-guide-english-1-final.pdf,Five Guys Nutrition and Allergen Chart US 01-2024
+Five Guys,Regular Five Guys Style Fries,Sides,411g,953,15,131,41,https://www.fiveguys.com/wp-content/uploads/2025/07/five-guys-us-nutrition-allergen-guide-english-1-final.pdf,Five Guys Nutrition and Allergen Chart US 01-2024
+Five Guys,Vanilla Shake Base,Shake,396g,670,13,84,32,https://www.fiveguys.com/wp-content/uploads/2025/07/five-guys-us-nutrition-allergen-guide-english-1-final.pdf,Five Guys Nutrition and Allergen Chart US 01-2024
+Whataburger,Taquito with Cheese & Bacon,Breakfast,1 item,400,20,29,23,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Breakfast On A Bun with Bacon,Breakfast,1 sandwich,360,18,35,16,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Honey Butter Chicken Biscuit,Breakfast,1 sandwich,580,13,52,36,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Whataburger Jr.,Burger,1 burger,310,14,37,11,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Whatachick'n Sandwich with Whatasauce,Chicken sandwich,1 sandwich,540,32,54,22,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Dunkin,Egg and Cheese on English Muffin,Breakfast sandwich,1 sandwich,340,14,38,15,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Dunkin,"Sausage, Egg and Cheese Wake-Up Wrap",Breakfast wrap,1 wrap,280,10,15,20,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Dunkin,"Sausage, Egg and Cheese on English Muffin",Breakfast sandwich,1 sandwich,560,21,40,35,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Dunkin,"Bacon, Egg and Cheese on a Plain Bagel",Breakfast sandwich,1 sandwich,540,24,67,19,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Dunkin,"Biscuit, Bacon, Egg and Cheese",Breakfast sandwich,1 sandwich,490,17,35,31,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Chick-fil-A,Chick-fil-A Chicken Biscuit,Breakfast,1 biscuit,460,19,45,23,https://www.chick-fil-a.com/menu/chick-fil-a-chicken-biscuit,Chick-fil-A product nutrition page accessed 2026-03-27
+Chick-fil-A,"Chicken, Egg & Cheese Biscuit",Breakfast,1 biscuit,550,27,48,28,https://www.chick-fil-a.com/menu/breakfast/chicken-egg-cheese-biscuit,Chick-fil-A product nutrition page accessed 2026-03-27
+Chick-fil-A,12 ct Grilled Nuggets,Entree,1 entree,200,38,2,4.5,https://www.chick-fil-a.com/menu/entrees/12-ct-grilled-nuggets,Chick-fil-A product nutrition page accessed 2026-03-27
+Chick-fil-A,Hash Brown Scramble Burrito,Breakfast,1 burrito,700,34,51,40,https://www.chick-fil-a.com/menu/breakfast/hash-brown-scramble-burrito,Chick-fil-A product nutrition page accessed 2026-03-27
+Subway,"6"" Cold Cut Combo",Sandwich,213g,280,17,38,10,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Meatball Marinara",Sandwich,205g,400,20,46,17,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Roast Beef",Sandwich,233g,300,22,41,5,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Sweet Onion Chicken Teriyaki",Sandwich,265g,330,24,52,4,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Subway,"6"" Tuna",Sandwich,223g,430,19,37,25,https://www.subway.com/-/media/USA/Documents/Nutrition/US_Nutrition_Values.pdf,Subway U.S. Nutrition Information PDF November 2021
+Whataburger,"Taquito with Cheese & Sausage",Breakfast,1 item,420,19,28,26,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,"Breakfast On A Bun with Sausage",Breakfast,1 sandwich,510,27,35,28,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,"Buttermilk Biscuit Sandwich with Bacon",Breakfast,1 sandwich,490,18,35,31,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Hashbrowns,Breakfast side,1 serving,190,2,21,11,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Whataburger,Burger,1 burger,590,29,62,25,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Double Meat Whataburger,Burger,1 burger,830,47,62,44,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,"Jalapeno & Cheese Whataburger",Burger,1 burger,680,34,63,32,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,"Bacon & Cheese Whataburger",Burger,1 burger,750,39,62,37,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Avocado Bacon Burger,Burger,1 burger,820,37,52,52,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Grilled Chicken Sandwich with Whatasauce,Chicken sandwich,1 sandwich,430,32,44,14,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Spicy Chicken Sandwich,Chicken sandwich,1 sandwich,550,31,50,26,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Whataburger Patty Melt,Sandwich,1 sandwich,940,49,45,61,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Whataburger,Justaburger,Kids burger,1 burger,300,14,35,11,https://wbimageserver.whataburger.com/Nutrition.pdf,Whataburger Nutrition PDF as of March 29 2021
+Dunkin,"Bacon, Egg and Cheese on English Muffin",Breakfast sandwich,1 sandwich,420,19,39,21,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Dunkin,"Egg and Cheese on a Plain Bagel",Breakfast sandwich,1 sandwich,460,19,66,13,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Dunkin,"Egg and Cheese Wake-Up Wrap",Breakfast wrap,1 wrap,180,7,14,10,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026
+Dunkin,"Bacon, Egg and Cheese Wake-Up Wrap",Breakfast wrap,1 wrap,220,11,13,15,https://www.dunkindonuts.com/content/dam/dd/pdf/nutrition.pdf,Dunkin Nutrition Guide updated 03-04-2026

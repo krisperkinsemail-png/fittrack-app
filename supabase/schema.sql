@@ -1,4 +1,5 @@
 create extension if not exists pgcrypto;
+create extension if not exists pg_trgm;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -80,11 +81,82 @@ create table if not exists public.custom_workout_systems (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.restaurant_library (
+  id text primary key,
+  brand text not null,
+  item_name text not null,
+  category text,
+  description text,
+  serving_amount numeric,
+  serving_unit text,
+  serving_label text,
+  calories integer not null,
+  fat_g numeric not null default 0,
+  carbs_g numeric not null default 0,
+  protein_g numeric not null default 0,
+  fiber_g numeric,
+  sugar_g numeric,
+  sodium_mg numeric,
+  cholesterol_mg numeric,
+  potassium_mg numeric,
+  source_type text not null,
+  source_date text,
+  source_detail text,
+  source_url text,
+  region text not null default 'US',
+  is_manual_override boolean not null default false,
+  search_text text generated always as (
+    lower(
+      coalesce(brand, '') || ' ' ||
+      coalesce(item_name, '') || ' ' ||
+      coalesce(category, '') || ' ' ||
+      coalesce(description, '') || ' ' ||
+      coalesce(serving_label, '')
+    )
+  ) stored,
+  normalized_search_text text generated always as (
+    trim(
+      regexp_replace(
+        lower(
+          replace(
+            replace(
+              replace(
+                replace(
+                  coalesce(brand, '') || ' ' ||
+                  coalesce(item_name, '') || ' ' ||
+                  coalesce(category, '') || ' ' ||
+                  coalesce(description, '') || ' ' ||
+                  coalesce(serving_label, ''),
+                  '''',
+                  ''
+                ),
+                '’',
+                ''
+              ),
+              '`',
+              ''
+            ),
+            '"',
+            ''
+          )
+        ),
+        '[^a-z0-9]+',
+        ' ',
+        'g'
+      )
+    )
+  ) stored
+);
+
 create index if not exists food_entries_user_id_date_idx on public.food_entries(user_id, date);
 create index if not exists meal_templates_user_id_idx on public.meal_templates(user_id);
 create index if not exists weight_entries_user_id_date_idx on public.weight_entries(user_id, date);
 create index if not exists workout_entries_user_id_date_idx on public.workout_entries(user_id, date);
 create index if not exists custom_workout_systems_user_id_idx on public.custom_workout_systems(user_id);
+create index if not exists restaurant_library_brand_item_idx on public.restaurant_library(brand, item_name);
+create index if not exists restaurant_library_search_text_idx on public.restaurant_library(search_text);
+create index if not exists restaurant_library_normalized_search_text_idx on public.restaurant_library(normalized_search_text);
+create index if not exists restaurant_library_normalized_search_trgm_idx on public.restaurant_library using gin (normalized_search_text gin_trgm_ops);
 
 alter table public.profiles enable row level security;
 alter table public.settings enable row level security;
@@ -93,6 +165,7 @@ alter table public.meal_templates enable row level security;
 alter table public.weight_entries enable row level security;
 alter table public.workout_entries enable row level security;
 alter table public.custom_workout_systems enable row level security;
+alter table public.restaurant_library enable row level security;
 
 create policy "profiles_select_own" on public.profiles for select using (auth.uid() = id);
 create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
@@ -127,3 +200,25 @@ create policy "custom_workout_systems_select_own" on public.custom_workout_syste
 create policy "custom_workout_systems_insert_own" on public.custom_workout_systems for insert with check (auth.uid() = user_id);
 create policy "custom_workout_systems_update_own" on public.custom_workout_systems for update using (auth.uid() = user_id);
 create policy "custom_workout_systems_delete_own" on public.custom_workout_systems for delete using (auth.uid() = user_id);
+
+create policy "restaurant_library_public_read" on public.restaurant_library for select using (true);
+
+create or replace function public.search_restaurant_library(search_query text, result_limit integer default 120)
+returns setof public.restaurant_library
+language sql
+stable
+as $$
+  select *
+  from public.restaurant_library
+  where normalized_search_text % search_query
+     or similarity(normalized_search_text, search_query) >= 0.18
+  order by
+    case when normalized_search_text like '%' || search_query || '%' then 1 else 0 end desc,
+    greatest(
+      similarity(normalized_search_text, search_query),
+      word_similarity(normalized_search_text, search_query)
+    ) desc,
+    brand asc,
+    item_name asc
+  limit greatest(1, least(result_limit, 200));
+$$;

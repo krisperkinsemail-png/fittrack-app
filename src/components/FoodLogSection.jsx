@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FOOD_LIBRARY } from "../lib/foodLibrary";
 import { loadFoodLibraryUsage, recordFoodLibraryUsage } from "../lib/libraryUsage";
+import { searchRestaurantLibrary } from "../lib/restaurantLibrary";
+import { computeSearchScore, isFuzzyMatch } from "../lib/search";
 
 const EMPTY_FORM = {
   foodName: "",
@@ -113,6 +115,10 @@ function inferSavedTemplateType(item) {
   return "meal";
 }
 
+function matchesSearch(item, term) {
+  return isFuzzyMatch(term, [item.name, item.brand, item.servingSize, item.description]);
+}
+
 export function FoodLogSection({
   selectedDate,
   entries,
@@ -131,6 +137,9 @@ export function FoodLogSection({
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
+  const [restaurantLibrary, setRestaurantLibrary] = useState([]);
+  const [restaurantStatus, setRestaurantStatus] = useState("idle");
+  const [restaurantError, setRestaurantError] = useState("");
 
   const totalCalories = useMemo(
     () => entries.reduce((sum, entry) => sum + entry.calories, 0),
@@ -145,6 +154,45 @@ export function FoodLogSection({
     return allEntries.filter((entry) => entry.date === previousDateString);
   }, [allEntries, selectedDate]);
 
+  useEffect(() => {
+    if (categoryFilter !== "restaurant") {
+      return;
+    }
+
+    let isMounted = true;
+    if (search.trim().length < 2) {
+      setRestaurantLibrary([]);
+      setRestaurantStatus("idle");
+      setRestaurantError("");
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    setRestaurantStatus("loading");
+    searchRestaurantLibrary(search)
+      .then((results) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setRestaurantLibrary(results);
+        setRestaurantStatus("ready");
+        setRestaurantError("");
+      })
+      .catch((error) => {
+        if (!isMounted) {
+          return;
+        }
+        setRestaurantStatus("error");
+        setRestaurantError(error.message || "Failed to load restaurant library.");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [categoryFilter, search]);
+
   const filteredLibrary = useMemo(() => {
     const savedMeals = mealTemplates.map((meal) => ({
       ...meal,
@@ -154,17 +202,33 @@ export function FoodLogSection({
       isScalable: false,
     }));
 
+    if (categoryFilter === "restaurant") {
+      return restaurantLibrary;
+    }
+
     return [...savedMeals, ...FOOD_LIBRARY.map((item) => ({ ...item, itemType: "food" }))]
       .filter((item) => {
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
-        const matchesSearch =
-          !search ||
-          item.name.toLowerCase().includes(search.toLowerCase()) ||
-          item.servingSize.toLowerCase().includes(search.toLowerCase());
-
-        return matchesCategory && matchesSearch;
+        return matchesCategory && matchesSearch(item, search);
       })
       .sort((left, right) => {
+        const rightScore = computeSearchScore(search, [
+          right.name,
+          right.brand,
+          right.servingSize,
+          right.description,
+        ]);
+        const leftScore = computeSearchScore(search, [
+          left.name,
+          left.brand,
+          left.servingSize,
+          left.description,
+        ]);
+
+        if (rightScore !== leftScore) {
+          return rightScore - leftScore;
+        }
+
         if (categoryFilter === "all") {
           const rightUsage = usageCounts[right.id] || 0;
           const leftUsage = usageCounts[left.id] || 0;
@@ -176,7 +240,7 @@ export function FoodLogSection({
 
         return left.name.localeCompare(right.name);
       });
-  }, [categoryFilter, mealTemplates, search, usageCounts]);
+  }, [categoryFilter, mealTemplates, restaurantLibrary, search, usageCounts]);
 
   function resetForm() {
     setForm(EMPTY_FORM);
@@ -599,12 +663,16 @@ export function FoodLogSection({
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Chicken, potato, yogurt..."
+              placeholder={
+                categoryFilter === "restaurant"
+                  ? "Search chain or item name..."
+                  : "Chicken, potato, yogurt..."
+              }
             />
           </label>
 
           <div className="button-row">
-            {["all", "protein", "carb", "fat", "meal"].map((category) => (
+            {["all", "protein", "carb", "fat", "meal", "restaurant"].map((category) => (
               <button
                 key={category}
                 type="button"
@@ -615,11 +683,35 @@ export function FoodLogSection({
                 }
                 onClick={() => setCategoryFilter(category)}
               >
-                {category === "all" ? "All" : category === "meal" ? "Meals" : category}
+                {category === "all"
+                  ? "All"
+                  : category === "meal"
+                    ? "Meals"
+                    : category === "restaurant"
+                      ? "Restaurants"
+                      : category}
               </button>
             ))}
           </div>
         </div>
+
+        {categoryFilter === "restaurant" && restaurantStatus === "loading" ? (
+          <div className="empty-panel">
+            <p>Loading restaurant library...</p>
+          </div>
+        ) : null}
+
+        {categoryFilter === "restaurant" && restaurantStatus === "error" ? (
+          <div className="empty-panel">
+            <p>{restaurantError}</p>
+          </div>
+        ) : null}
+
+        {categoryFilter === "restaurant" && restaurantStatus === "ready" && search.trim().length < 2 ? (
+          <div className="empty-panel">
+            <p>Search at least 2 characters to browse restaurant items.</p>
+          </div>
+        ) : null}
 
         <div className="food-library-grid">
           {filteredLibrary.map((item) => (
@@ -628,7 +720,9 @@ export function FoodLogSection({
                 <div>
                   <h3>{item.name}</h3>
                   <p className="muted">
-                    {item.servingSize} • {item.category}
+                    {item.brand ? `${item.brand} • ` : ""}
+                    {item.servingSize}
+                    {item.category ? ` • ${item.category}` : ""}
                   </p>
                 </div>
                 <strong>{item.calories} cal</strong>
@@ -660,6 +754,14 @@ export function FoodLogSection({
             </article>
           ))}
         </div>
+
+        {!filteredLibrary.length &&
+        categoryFilter !== "restaurant" &&
+        !(categoryFilter === "restaurant" && (restaurantStatus !== "ready" || search.trim().length < 2)) ? (
+          <div className="empty-panel">
+            <p>No library items match that search.</p>
+          </div>
+        ) : null}
       </section>
     </div>
   );
