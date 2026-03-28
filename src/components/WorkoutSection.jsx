@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAllWorkoutSystems } from "../lib/workoutTemplates";
+import { formatLongDate } from "../lib/date";
 
 const REST_PRESETS = [60, 90, 120, 180];
 
@@ -44,6 +45,19 @@ function normalizeExerciseName(value) {
   return value.trim().toLowerCase();
 }
 
+function startOfDay(dateString) {
+  return new Date(`${dateString}T12:00:00`);
+}
+
+function getDayDifference(leftDate, rightDate) {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((startOfDay(leftDate) - startOfDay(rightDate)) / msPerDay);
+}
+
+function getEntrySetCount(entry) {
+  return entry.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
+}
+
 export function WorkoutSection({
   selectedDate,
   entries,
@@ -72,6 +86,7 @@ export function WorkoutSection({
   const [restDuration, setRestDuration] = useState(90);
   const [timeLeft, setTimeLeft] = useState(90);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
   const selectedProgram = useMemo(
     () => workoutPrograms.find((program) => program.id === selectedProgramId) || workoutPrograms[0],
@@ -174,6 +189,90 @@ export function WorkoutSection({
       ])
     );
   }, [latestMatchingWorkout]);
+
+  const workoutInsights = useMemo(() => {
+    const sortedEntries = [...allEntries].sort((left, right) => new Date(right.date) - new Date(left.date));
+    const last30Entries = sortedEntries.filter((entry) => getDayDifference(selectedDate, entry.date) >= 0 && getDayDifference(selectedDate, entry.date) < 30);
+    const prior30Entries = sortedEntries.filter((entry) => getDayDifference(selectedDate, entry.date) >= 30 && getDayDifference(selectedDate, entry.date) < 60);
+    const last30Sets = last30Entries.reduce((sum, entry) => sum + getEntrySetCount(entry), 0);
+    const uniqueExercises = new Set(
+      last30Entries.flatMap((entry) => entry.exercises.map((exercise) => normalizeExerciseName(exercise.name)))
+    ).size;
+
+    const exerciseBestMap = new Map();
+
+    [...sortedEntries].reverse().forEach((entry) => {
+      entry.exercises.forEach((exercise) => {
+        const exerciseName = exercise.name.trim();
+        if (!exerciseName) {
+          return;
+        }
+
+        const bestSetWeight = Math.max(
+          0,
+          ...exercise.sets.map((set) => Number(set.weight || 0))
+        );
+        const current = exerciseBestMap.get(exerciseName) || {
+          exerciseName,
+          firstWeight: null,
+          latestWeight: null,
+          firstDate: null,
+          latestDate: null,
+        };
+
+        if (current.firstWeight === null) {
+          current.firstWeight = bestSetWeight;
+          current.firstDate = entry.date;
+        }
+
+        current.latestWeight = bestSetWeight;
+        current.latestDate = entry.date;
+        exerciseBestMap.set(exerciseName, current);
+      });
+    });
+
+    const improvedExercise = [...exerciseBestMap.values()]
+      .filter((exercise) => exercise.firstWeight !== null && exercise.latestWeight !== null)
+      .map((exercise) => ({
+        ...exercise,
+        improvement: exercise.latestWeight - exercise.firstWeight,
+      }))
+      .sort((left, right) => right.improvement - left.improvement)[0] || null;
+
+    const focusExercise = [...exerciseBestMap.values()]
+      .filter(
+        (exercise) =>
+          exercise.firstWeight !== null &&
+          exercise.latestWeight !== null &&
+          exercise.firstDate !== exercise.latestDate
+      )
+      .map((exercise) => ({
+        ...exercise,
+        improvement: exercise.latestWeight - exercise.firstWeight,
+      }))
+      .sort((left, right) => left.improvement - right.improvement)[0] || null;
+
+    const strongestRecentExercise = last30Entries
+      .flatMap((entry) =>
+        entry.exercises.map((exercise) => ({
+          name: exercise.name,
+          weight: Math.max(0, ...exercise.sets.map((set) => Number(set.weight || 0))),
+          date: entry.date,
+        }))
+      )
+      .sort((left, right) => right.weight - left.weight)[0] || null;
+
+    return {
+      totalSessions: sortedEntries.length,
+      last30Sessions: last30Entries.length,
+      prior30Sessions: prior30Entries.length,
+      last30Sets,
+      uniqueExercises,
+      improvedExercise,
+      focusExercise,
+      strongestRecentExercise,
+    };
+  }, [allEntries, selectedDate]);
 
   function addCustomExercise() {
     const trimmedName = customExerciseName.trim();
@@ -363,8 +462,17 @@ export function WorkoutSection({
           <div>
             <p className="eyebrow">Workout tracking</p>
             <h2>Build the session, then log each set cleanly</h2>
+            <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
           </div>
-          <p className="muted">Selected day: {selectedDate}</p>
+          <div className="workout-heading-actions">
+            <button
+              type="button"
+              className="secondary-button workout-insights-button"
+              onClick={() => setIsInsightsOpen(true)}
+            >
+              Growth metrics
+            </button>
+          </div>
         </div>
 
         <label>
@@ -780,6 +888,88 @@ export function WorkoutSection({
           </>
         ) : null}
       </section>
+
+      {isInsightsOpen ? (
+        <div
+          className="insights-modal-backdrop"
+          role="presentation"
+          onClick={() => setIsInsightsOpen(false)}
+        >
+          <section
+            className="insights-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="workout-insights-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Workout insights</p>
+                <h2 id="workout-insights-title">Growth metrics</h2>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setIsInsightsOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="compact-grid compact-grid--two">
+              <div className="summary-panel">
+                <span>Sessions in last 30 days</span>
+                <strong>{workoutInsights.last30Sessions}</strong>
+                <p className="muted">{workoutInsights.prior30Sessions} in the prior 30</p>
+              </div>
+              <div className="summary-panel">
+                <span>Total sets in last 30 days</span>
+                <strong>{workoutInsights.last30Sets}</strong>
+                <p className="muted">{workoutInsights.uniqueExercises} unique exercises</p>
+              </div>
+              <div className="summary-panel">
+                <span>Focus area</span>
+                <strong>{workoutInsights.focusExercise?.exerciseName || "Not enough history yet"}</strong>
+                <p className="muted">
+                  {workoutInsights.focusExercise
+                    ? `${Math.round(workoutInsights.focusExercise.improvement)} lb from ${workoutInsights.focusExercise.firstDate} to ${workoutInsights.focusExercise.latestDate}`
+                    : "This fills in once the same lift has been logged on multiple days."}
+                </p>
+              </div>
+              <div className="summary-panel">
+                <span>Total logged sessions</span>
+                <strong>{workoutInsights.totalSessions}</strong>
+                <p className="muted">Across your full workout history</p>
+              </div>
+            </div>
+
+            <div className="compact-grid compact-grid--two">
+              <div className="summary-panel">
+                <span>Best improvement</span>
+                <strong>
+                  {workoutInsights.improvedExercise?.exerciseName || "Not enough history yet"}
+                </strong>
+                <p className="muted">
+                  {workoutInsights.improvedExercise
+                    ? `${Math.round(workoutInsights.improvedExercise.improvement)} lb from ${workoutInsights.improvedExercise.firstDate} to ${workoutInsights.improvedExercise.latestDate}`
+                    : "Log the same lift on multiple dates to see progression."}
+                </p>
+              </div>
+              <div className="summary-panel">
+                <span>Strongest recent top set</span>
+                <strong>
+                  {workoutInsights.strongestRecentExercise?.name || "No recent set data"}
+                </strong>
+                <p className="muted">
+                  {workoutInsights.strongestRecentExercise
+                    ? `${Math.round(workoutInsights.strongestRecentExercise.weight)} lb on ${formatLongDate(workoutInsights.strongestRecentExercise.date)}`
+                    : "This fills in once you log weighted sets."}
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

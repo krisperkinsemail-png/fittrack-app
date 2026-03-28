@@ -17,12 +17,18 @@ export function sortByDateDescending(a, b) {
 }
 
 export function formatLongDate(dateString) {
-  return new Intl.DateTimeFormat(undefined, {
+  const date = new Date(`${dateString}T12:00:00`);
+  const parts = new Intl.DateTimeFormat(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(`${dateString}T12:00:00`));
+  }).formatToParts(date);
+  const day = date.getDate();
+
+  return parts
+    .map((part) => (part.type === "day" ? `${day}${getOrdinalSuffix(day)}` : part.value))
+    .join("");
 }
 
 export function formatShortDate(dateString) {
@@ -42,4 +48,21 @@ export function getLatestWeightEntry(entries) {
   }
 
   return [...entries].sort(sortByDateDescending)[0];
+}
+
+function getOrdinalSuffix(day) {
+  if (day >= 11 && day <= 13) {
+    return "th";
+  }
+
+  switch (day % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
 }

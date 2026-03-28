@@ -504,6 +504,59 @@ button {
   margin-top: 10px;
 }
 
+.workout-heading-actions {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+}
+
+.workout-insights-button {
+  min-width: 260px;
+  min-height: 84px;
+  padding: 20px 34px;
+  font-size: 1.05rem;
+  color: #ecf6ff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 46%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, #162131), #0f1724 78%);
+  border: 1px solid color-mix(in srgb, var(--accent) 58%, rgba(255, 255, 255, 0.18));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(6, 10, 18, 0.58),
+    0 14px 28px rgba(5, 9, 16, 0.42),
+    0 0 0 1px rgba(17, 24, 39, 0.18);
+  letter-spacing: 0.01em;
+  -webkit-text-stroke: 0.6px color-mix(in srgb, var(--accent) 62%, #c7e4ff);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 10px color-mix(in srgb, var(--accent) 24%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.34);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease,
+    filter 140ms ease;
+}
+
+.workout-insights-button:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 72%, rgba(255, 255, 255, 0.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(6, 10, 18, 0.62),
+    0 18px 34px rgba(5, 9, 16, 0.5),
+    0 0 0 1px rgba(31, 41, 55, 0.2);
+  filter: saturate(1.08);
+}
+
+.workout-insights-button:active {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 4px rgba(6, 10, 18, 0.42),
+    0 10px 20px rgba(5, 9, 16, 0.36);
+}
+
 .food-log-search {
   position: relative;
   display: grid;
@@ -682,6 +735,30 @@ button {
   gap: 12px;
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.insights-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: end center;
+  padding: 16px;
+  background: rgba(3, 7, 14, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.insights-modal {
+  width: min(100%, 760px);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  background: rgba(11, 17, 28, 0.98);
+  border: 1px solid rgba(96, 114, 139, 0.34);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
 }
 
 .log-card {
@@ -896,6 +973,11 @@ button:focus {
     align-items: start;
   }
 
+  .workout-heading-actions {
+    justify-content: center;
+    align-items: center;
+  }
+
   .food-log-search {
     justify-self: end;
   }
@@ -933,6 +1015,11 @@ button:focus {
   .inline-form {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
     align-items: end;
+  }
+
+  .insights-modal-backdrop {
+    place-items: center;
+    padding: 24px;
   }
 
   .mobile-tabs {
