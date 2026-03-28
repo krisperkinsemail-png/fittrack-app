@@ -16,13 +16,15 @@ export function DateNavigator({
         <button type="button" className="secondary-button" onClick={onPrevious}>
           Prev
         </button>
-        <button
-          type="button"
-          className={isTodaySelected ? "secondary-button" : "secondary-button is-selected-accent"}
-          onClick={onToday}
-        >
-          Today
-        </button>
+        {!isTodaySelected ? (
+          <button
+            type="button"
+            className="secondary-button is-selected-accent"
+            onClick={onToday}
+          >
+            Go Back to Today
+          </button>
+        ) : null}
         <button type="button" className="secondary-button" onClick={onNext}>
           Next
         </button>
