@@ -638,7 +638,7 @@ export function FoodLogSection({
 
   return (
     <div className="section-stack">
-      <section className="card">
+      <section className="card food-log-card">
         <div className="section-heading food-log-heading">
           <div>
             <p className="eyebrow">Food logging</p>

@@ -818,6 +818,17 @@ button {
   color: var(--muted);
 }
 
+.food-log-card input[type="text"],
+.food-log-card input:not([type]) {
+  color: var(--muted);
+}
+
+.food-log-card input[type="text"]::placeholder,
+.food-log-card input:not([type])::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
 .food-log-actions {
   margin-bottom: 10px;
 }
@@ -1060,6 +1071,12 @@ select {
   background: rgba(11, 17, 28, 0.96);
   color: var(--text);
   padding: 12px 14px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
 }
 
 input:focus,
