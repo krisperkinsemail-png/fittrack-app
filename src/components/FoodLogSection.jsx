@@ -401,6 +401,11 @@ export function FoodLogSection({
   function resetForm() {
     setForm(EMPTY_FORM);
     setSelectedPreset(null);
+    setQuickSearch("");
+    setQuickRestaurantSearch("");
+    setQuickSearchResults([]);
+    setQuickSearchStatus("idle");
+    setIsQuickSearchOpen(false);
   }
 
   function loadPreset(item) {
@@ -634,6 +639,7 @@ export function FoodLogSection({
       carbs: item.carbs,
       fat: item.fat,
     });
+    resetForm();
   }
 
   return (
