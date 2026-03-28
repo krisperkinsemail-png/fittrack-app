@@ -5,6 +5,7 @@ import { hasSupabaseConfig } from "../lib/supabase";
 import { hasMeaningfulLocalData, localStorageAdapter } from "../lib/storage.local";
 
 const SELECTED_DATE_KEY = "fittrack.selected-date.v1";
+const LAST_ACTIVE_DAY_KEY = "fittrack.last-active-day.v1";
 
 function getInitialSelectedDate() {
   const today = getToday();
@@ -15,7 +16,13 @@ function getInitialSelectedDate() {
 
   try {
     const savedDate = window.localStorage.getItem(SELECTED_DATE_KEY);
-    if (!savedDate || savedDate < today) {
+    const lastActiveDay = window.localStorage.getItem(LAST_ACTIVE_DAY_KEY);
+
+    if (!savedDate) {
+      return today;
+    }
+
+    if (lastActiveDay && savedDate === lastActiveDay && lastActiveDay < today) {
       return today;
     }
 
@@ -247,13 +254,7 @@ export function useFitTrackStore() {
   const [syncError, setSyncError] = useState("");
   const [localMigrationData, setLocalMigrationData] = useState(null);
   const lastCloudRefreshAtRef = useRef(0);
-
-  useEffect(() => {
-    const today = getToday();
-    if (state.selectedDate < today) {
-      dispatch({ type: "setSelectedDate", payload: today });
-    }
-  }, [state.selectedDate]);
+  const lastKnownTodayRef = useRef(getToday());
 
   useEffect(() => {
     let isMounted = true;
@@ -330,18 +331,20 @@ export function useFitTrackStore() {
 
     function handleFocus() {
       const today = getToday();
-      if (state.selectedDate < today) {
+      if (state.selectedDate === lastKnownTodayRef.current && lastKnownTodayRef.current < today) {
         dispatch({ type: "setSelectedDate", payload: today });
       }
+      lastKnownTodayRef.current = today;
       refreshFromCloud();
     }
 
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {
         const today = getToday();
-        if (state.selectedDate < today) {
+        if (state.selectedDate === lastKnownTodayRef.current && lastKnownTodayRef.current < today) {
           dispatch({ type: "setSelectedDate", payload: today });
         }
+        lastKnownTodayRef.current = today;
         refreshFromCloud();
       }
     }
@@ -378,6 +381,7 @@ export function useFitTrackStore() {
   useEffect(() => {
     try {
       window.localStorage.setItem(SELECTED_DATE_KEY, state.selectedDate);
+      window.localStorage.setItem(LAST_ACTIVE_DAY_KEY, getToday());
     } catch {
       // Ignore local selected-date persistence failures.
     }
