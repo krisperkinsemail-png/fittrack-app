@@ -14,11 +14,25 @@ export function WeightSection({
   function handleSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const nextWeight = Number(formData.get("weight"));
+    const nextNotes = String(formData.get("notes") || "").trim();
+
+    if (
+      currentEntry &&
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `You already logged ${currentEntry.weight} ${settings.weightUnit} for ${formatLongDate(
+          selectedDate
+        )}. Replace it with ${nextWeight} ${settings.weightUnit}?`
+      )
+    ) {
+      return;
+    }
 
     onSaveEntry({
       date: selectedDate,
-      weight: Number(formData.get("weight")),
-      notes: String(formData.get("notes") || "").trim(),
+      weight: nextWeight,
+      notes: nextNotes,
     });
 
     event.currentTarget.reset();
