@@ -639,7 +639,7 @@ button {
   justify-self: end;
   font-size: 1.4rem;
   line-height: 1;
-  color: var(--accent-strong);
+  color: #f8fafc;
 }
 
 .dashboard-fold-content {
