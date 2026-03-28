@@ -574,7 +574,7 @@ export function FoodLogSection({
           </div>
         </div>
 
-        <div className="button-row">
+        <div className="button-row food-log-actions">
           <button
             type="button"
             className="secondary-button"
