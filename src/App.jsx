@@ -171,7 +171,7 @@ export default function App() {
             }
             onClick={() => setActiveTab("dashboard")}
           >
-            Today's Snapshot
+            Data Snapshot
           </button>
         </div>
       </header>
@@ -179,6 +179,7 @@ export default function App() {
       <DateNavigator
         selectedDate={state.selectedDate}
         formattedDate={formatLongDate(state.selectedDate)}
+        isTodaySelected={state.selectedDate === getToday()}
         onPrevious={() => setSelectedDate(addDays(state.selectedDate, -1))}
         onNext={() => setSelectedDate(addDays(state.selectedDate, 1))}
         onToday={() => setSelectedDate(getToday())}

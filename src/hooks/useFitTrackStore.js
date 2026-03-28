@@ -4,32 +4,8 @@ import { createId, getToday } from "../lib/date";
 import { hasSupabaseConfig } from "../lib/supabase";
 import { hasMeaningfulLocalData, localStorageAdapter } from "../lib/storage.local";
 
-const SELECTED_DATE_KEY = "fittrack.selected-date.v1";
-const LAST_ACTIVE_DAY_KEY = "fittrack.last-active-day.v1";
-
 function getInitialSelectedDate() {
-  const today = getToday();
-
-  if (typeof window === "undefined") {
-    return today;
-  }
-
-  try {
-    const savedDate = window.localStorage.getItem(SELECTED_DATE_KEY);
-    const lastActiveDay = window.localStorage.getItem(LAST_ACTIVE_DAY_KEY);
-
-    if (!savedDate) {
-      return today;
-    }
-
-    if (lastActiveDay && savedDate === lastActiveDay && lastActiveDay < today) {
-      return today;
-    }
-
-    return savedDate;
-  } catch {
-    return today;
-  }
+  return getToday();
 }
 
 const initialState = {
@@ -83,7 +59,7 @@ function normalizeWorkoutEntry(entry) {
 
 function normalizeHydratedState(payload, currentState = initialState) {
   return {
-    selectedDate: payload.selectedDate || currentState.selectedDate,
+    selectedDate: currentState.selectedDate,
     settings:
       payload.settings !== undefined
         ? {
@@ -376,15 +352,6 @@ export function useFitTrackStore() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [state.selectedDate]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(SELECTED_DATE_KEY, state.selectedDate);
-      window.localStorage.setItem(LAST_ACTIVE_DAY_KEY, getToday());
-    } catch {
-      // Ignore local selected-date persistence failures.
-    }
   }, [state.selectedDate]);
 
   useEffect(() => {
