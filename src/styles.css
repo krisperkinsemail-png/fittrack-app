@@ -944,6 +944,24 @@ button {
   margin-top: 10px;
 }
 
+.custom-exercise-save-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.custom-exercise-save-toggle input {
+  width: 18px;
+  min-height: 18px;
+  margin: 0;
+  padding: 0;
+}
+
+.card .button-row + .list-stack {
+  margin-top: 10px;
+}
+
 .timer-readout {
   display: block;
   font-size: clamp(2rem, 10vw, 3.4rem);

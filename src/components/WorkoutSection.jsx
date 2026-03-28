@@ -3,6 +3,7 @@ import { getAllWorkoutSystems } from "../lib/workoutTemplates";
 import { formatLongDate } from "../lib/date";
 
 const REST_PRESETS = [60, 90, 120, 180];
+const CUSTOM_EXERCISE_BANK_KEY = "fittrack.custom-exercise-bank.v1";
 
 function createSet() {
   return {
@@ -77,7 +78,6 @@ export function WorkoutSection({
   const initialWorkouts = workoutPrograms[0].phases?.[0]?.workouts || workoutPrograms[0].workouts;
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(initialWorkouts[0].id);
   const [draftExercises, setDraftExercises] = useState(createWorkoutDraft(initialWorkouts[0]));
-  const [customExerciseName, setCustomExerciseName] = useState("");
   const [templateForm, setTemplateForm] = useState({
     systemName: "",
     workoutName: "",
@@ -89,6 +89,14 @@ export function WorkoutSection({
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [isProgramPickerOpen, setIsProgramPickerOpen] = useState(false);
   const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
+  const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
+  const [customExerciseBank, setCustomExerciseBank] = useState(() => loadCustomExerciseBank());
+  const [customExerciseForm, setCustomExerciseForm] = useState({
+    name: "",
+    target: "",
+    setCount: "3",
+    saveToBank: false,
+  });
   const audioContextRef = useRef(null);
   const previousTimeLeftRef = useRef(timeLeft);
 
@@ -296,8 +304,9 @@ export function WorkoutSection({
     };
   }, [allEntries, selectedDate]);
 
-  function addCustomExercise() {
-    const trimmedName = customExerciseName.trim();
+  function addCustomExerciseDraft({ name, target, setCount }) {
+    const trimmedName = name.trim();
+    const nextSetCount = Math.max(1, Number(setCount) || 1);
 
     if (!trimmedName) {
       return;
@@ -308,11 +317,58 @@ export function WorkoutSection({
       {
         id: crypto.randomUUID(),
         name: trimmedName,
-        target: "Custom",
-        sets: [createSet()],
+        target: target.trim() || "Custom",
+        sets: Array.from({ length: nextSetCount }, () => createSet()),
       },
     ]);
-    setCustomExerciseName("");
+  }
+
+  function resetCustomExerciseForm() {
+    setCustomExerciseForm({
+      name: "",
+      target: "",
+      setCount: "3",
+      saveToBank: false,
+    });
+  }
+
+  function handleApplyCustomExercise() {
+    const trimmedName = customExerciseForm.name.trim();
+    const nextSetCount = Math.max(1, Number(customExerciseForm.setCount) || 1);
+
+    if (!trimmedName) {
+      return;
+    }
+
+    addCustomExerciseDraft({
+      name: trimmedName,
+      target: customExerciseForm.target,
+      setCount: nextSetCount,
+    });
+
+    if (customExerciseForm.saveToBank) {
+      const nextBank = upsertCustomExercise(customExerciseBank, {
+        name: trimmedName,
+        target: customExerciseForm.target.trim() || "Custom",
+        setCount: nextSetCount,
+      });
+      setCustomExerciseBank(nextBank);
+      saveCustomExerciseBank(nextBank);
+    }
+
+    resetCustomExerciseForm();
+    setIsCustomExerciseModalOpen(false);
+  }
+
+  function handleUseSavedCustomExercise(exercise) {
+    addCustomExerciseDraft(exercise);
+    setIsCustomExerciseModalOpen(false);
+  }
+
+  function handleDeleteSavedCustomExercise(exerciseId) {
+    const nextBank = customExerciseBank.filter((exercise) => exercise.id !== exerciseId);
+    setCustomExerciseBank(nextBank);
+    saveCustomExerciseBank(nextBank);
   }
 
   function updateExerciseName(exerciseId, value) {
@@ -622,17 +678,13 @@ export function WorkoutSection({
           </div>
         ) : null}
 
-        <div className="inline-form">
-          <label>
+        <div className="button-row">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setIsCustomExerciseModalOpen(true)}
+          >
             Add custom exercise
-            <input
-              value={customExerciseName}
-              onChange={(event) => setCustomExerciseName(event.target.value)}
-              placeholder="Cable fly"
-            />
-          </label>
-          <button type="button" className="secondary-button" onClick={addCustomExercise}>
-            Add exercise
           </button>
         </div>
 
@@ -1114,6 +1166,156 @@ export function WorkoutSection({
           </section>
         </div>
       ) : null}
+
+      {isCustomExerciseModalOpen ? (
+        <div
+          className="insights-modal-backdrop"
+          role="presentation"
+          onClick={() => {
+            setIsCustomExerciseModalOpen(false);
+            resetCustomExerciseForm();
+          }}
+        >
+          <section
+            className="insights-modal workout-picker-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="custom-exercise-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Workout tracking</p>
+                <h2 id="custom-exercise-title">Add custom exercise</h2>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setIsCustomExerciseModalOpen(false);
+                  resetCustomExerciseForm();
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="muted">
+              This adds an exercise only to today&apos;s workout. It does not modify the workout
+              program template.
+            </p>
+
+            <div className="compact-grid compact-grid--two">
+              <label>
+                Exercise name
+                <input
+                  value={customExerciseForm.name}
+                  onChange={(event) =>
+                    setCustomExerciseForm((current) => ({ ...current, name: event.target.value }))
+                  }
+                  placeholder="Cable fly"
+                />
+              </label>
+              <label>
+                Number of sets
+                <input
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  value={customExerciseForm.setCount}
+                  onChange={(event) =>
+                    setCustomExerciseForm((current) => ({
+                      ...current,
+                      setCount: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <label>
+              Target
+              <input
+                value={customExerciseForm.target}
+                onChange={(event) =>
+                  setCustomExerciseForm((current) => ({ ...current, target: event.target.value }))
+                }
+                placeholder="3 x 10-12"
+              />
+            </label>
+
+            <label className="custom-exercise-save-toggle">
+              <input
+                type="checkbox"
+                checked={customExerciseForm.saveToBank}
+                onChange={(event) =>
+                  setCustomExerciseForm((current) => ({
+                    ...current,
+                    saveToBank: event.target.checked,
+                  }))
+                }
+              />
+              <span>Save to my exercise bank for later</span>
+            </label>
+
+            <div className="button-row">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={handleApplyCustomExercise}
+                disabled={!customExerciseForm.name.trim()}
+              >
+                Apply
+              </button>
+            </div>
+
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Saved exercises</p>
+                <h2>Exercise bank</h2>
+              </div>
+              <p className="muted">Reuse your custom lifts without typing them again.</p>
+            </div>
+
+            {customExerciseBank.length ? (
+              <div className="list-stack">
+                {customExerciseBank.map((exercise) => (
+                  <article className="log-card" key={exercise.id}>
+                    <div className="log-card__top">
+                      <div>
+                        <h3>{exercise.name}</h3>
+                        <p className="muted">
+                          {exercise.target} • {exercise.setCount} sets
+                        </p>
+                      </div>
+                    </div>
+                    <div className="button-row">
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => handleUseSavedCustomExercise(exercise)}
+                      >
+                        Add to today&apos;s workout
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-button danger-button"
+                        onClick={() => handleDeleteSavedCustomExercise(exercise.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-panel">
+                <p>No saved custom exercises yet.</p>
+              </div>
+            )}
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1155,4 +1357,44 @@ function playTimerAlarm(audioContextRef) {
     oscillator.start(startAt + offset);
     oscillator.stop(startAt + offset + 0.18);
   });
+}
+
+function loadCustomExerciseBank() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const savedValue = window.localStorage.getItem(CUSTOM_EXERCISE_BANK_KEY);
+    const parsed = savedValue ? JSON.parse(savedValue) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomExerciseBank(exercises) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(CUSTOM_EXERCISE_BANK_KEY, JSON.stringify(exercises));
+  } catch {
+    // Ignore custom exercise bank persistence failures.
+  }
+}
+
+function upsertCustomExercise(currentBank, exercise) {
+  const existing = currentBank.find(
+    (entry) => entry.name.trim().toLowerCase() === exercise.name.trim().toLowerCase()
+  );
+
+  if (existing) {
+    return currentBank.map((entry) =>
+      entry.id === existing.id ? { ...entry, ...exercise } : entry
+    );
+  }
+
+  return [{ id: crypto.randomUUID(), ...exercise }, ...currentBank];
 }
