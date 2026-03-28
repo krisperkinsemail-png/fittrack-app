@@ -227,6 +227,7 @@ export function FoodLogSection({
   const [quickSearchResults, setQuickSearchResults] = useState([]);
   const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
+  const [isDayHistoryOpen, setIsDayHistoryOpen] = useState(false);
   const [isQuickPicksOpen, setIsQuickPicksOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
@@ -240,6 +241,18 @@ export function FoodLogSection({
 
   const totalCalories = useMemo(
     () => entries.reduce((sum, entry) => sum + entry.calories, 0),
+    [entries]
+  );
+  const dayMacroTotals = useMemo(
+    () =>
+      entries.reduce(
+        (totals, entry) => ({
+          protein: totals.protein + entry.protein,
+          carbs: totals.carbs + entry.carbs,
+          fat: totals.fat + entry.fat,
+        }),
+        { protein: 0, carbs: 0, fat: 0 }
+      ),
     [entries]
   );
 
@@ -957,16 +970,30 @@ export function FoodLogSection({
       </section>
 
       <section className="card">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Day history</p>
-            <h2>{entries.length} entries</h2>
+        <button
+          type="button"
+          className="food-history-toggle"
+          onClick={() => setIsDayHistoryOpen((current) => !current)}
+          aria-expanded={isDayHistoryOpen}
+        >
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Day history</p>
+              <h2>{entries.length} entries</h2>
+            </div>
+            <div className="food-history-summary">
+              <p className="muted">{totalCalories} cal</p>
+              <p className="muted">
+                P {formatDecimal(dayMacroTotals.protein)} • C {formatDecimal(dayMacroTotals.carbs)} • F{" "}
+                {formatDecimal(dayMacroTotals.fat)}
+              </p>
+            </div>
           </div>
-          <p className="muted">{totalCalories} calories logged</p>
-        </div>
+          <span className="food-history-toggle__chevron">{isDayHistoryOpen ? "−" : "+"}</span>
+        </button>
 
-        {entries.length ? (
-          <div className="list-stack">
+        {isDayHistoryOpen ? entries.length ? (
+          <div className="food-history-content list-stack">
             {entries.map((entry) => (
               <article className="log-card" key={entry.id}>
                 <div className="log-card__top">
@@ -1123,10 +1150,10 @@ export function FoodLogSection({
             ))}
           </div>
         ) : (
-          <div className="empty-panel">
+          <div className="food-history-content empty-panel">
             <p>No food logged for this day.</p>
           </div>
-        )}
+        ) : null}
       </section>
 
       <section className="card">

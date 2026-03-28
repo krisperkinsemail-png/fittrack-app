@@ -1036,6 +1036,38 @@ button {
   gap: 14px;
 }
 
+.food-history-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.food-history-summary {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+.food-history-summary p {
+  margin: 0;
+}
+
+.food-history-toggle__chevron {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #f8fafc;
+}
+
+.food-history-content {
+  margin-top: 14px;
+}
+
 .form-grid + .food-library-card--toggle {
   margin-top: 12px;
 }
