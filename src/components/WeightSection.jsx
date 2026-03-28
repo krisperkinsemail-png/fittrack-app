@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatLongDate } from "../lib/date";
 import { WeightTrendChart } from "./WeightTrendChart";
 
@@ -11,6 +12,8 @@ export function WeightSection({
   onSaveEntry,
   onDeleteEntry,
 }) {
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
   function handleSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -139,37 +142,61 @@ export function WeightSection({
         </div>
 
         <WeightTrendChart entries={weightTrendSummary.smoothedEntries.slice(-8)} />
+      </section>
 
-        {entries.length ? (
-          <div className="list-stack">
-            {entries.map((entry) => (
-              <article className="log-card" key={entry.id}>
-                <div className="log-card__top">
-                  <div className="weight-history-header">
-                    <h3>{formatLongDate(entry.date)}</h3>
-                    {entry.notes ? <p className="muted weight-history-note">{entry.notes}</p> : null}
+      <section className="card">
+        <button
+          type="button"
+          className="weight-history-toggle"
+          onClick={() => setIsHistoryOpen((current) => !current)}
+          aria-expanded={isHistoryOpen}
+        >
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Weigh-in history</p>
+              <h2>{entries.length} entries</h2>
+            </div>
+            <p className="muted">
+              {entries.length
+                ? `Latest: ${entries[0].weight} ${settings.weightUnit}`
+                : "No weigh-ins yet"}
+            </p>
+          </div>
+          <span className="weight-history-toggle__chevron">{isHistoryOpen ? "−" : "+"}</span>
+        </button>
+
+        {isHistoryOpen ? (
+          entries.length ? (
+            <div className="weight-history-content list-stack">
+              {entries.map((entry) => (
+                <article className="log-card" key={entry.id}>
+                  <div className="log-card__top">
+                    <div className="weight-history-header">
+                      <h3>{formatLongDate(entry.date)}</h3>
+                      {entry.notes ? <p className="muted weight-history-note">{entry.notes}</p> : null}
+                    </div>
                   </div>
-                </div>
-                <strong className="weight-history-value">
-                  {entry.weight} {settings.weightUnit}
-                </strong>
-                <div className="button-row">
-                  <button
-                    type="button"
-                    className="secondary-button danger-button"
-                    onClick={() => onDeleteEntry(entry.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-panel">
-            <p>No weight entries yet.</p>
-          </div>
-        )}
+                  <strong className="weight-history-value">
+                    {entry.weight} {settings.weightUnit}
+                  </strong>
+                  <div className="button-row">
+                    <button
+                      type="button"
+                      className="secondary-button danger-button"
+                      onClick={() => onDeleteEntry(entry.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="weight-history-content empty-panel">
+              <p>No weight entries yet.</p>
+            </div>
+          )
+        ) : null}
       </section>
     </div>
   );

@@ -227,6 +227,7 @@ export function FoodLogSection({
   const [quickSearchResults, setQuickSearchResults] = useState([]);
   const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
+  const [isFoodLogOpen, setIsFoodLogOpen] = useState(false);
   const [isDayHistoryOpen, setIsDayHistoryOpen] = useState(false);
   const [isQuickPicksOpen, setIsQuickPicksOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -741,85 +742,102 @@ export function FoodLogSection({
   return (
     <div className="section-stack">
       <section className="card food-log-card">
-        <div className="section-heading food-log-heading">
-          <div>
-            <p className="eyebrow">Food logging</p>
-            <h2>Add food entry</h2>
-          </div>
-          <div className="food-log-search" ref={quickSearchRef}>
-            <p className="eyebrow">Quick Search</p>
-            <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
-            <div className="food-log-search__fields">
-              <label className="food-log-search__label">
-                <span className="sr-only">Search foods</span>
-                <input
-                  value={quickSearch}
-                  onChange={(event) => {
-                    setQuickSearch(event.target.value);
-                    setIsQuickSearchOpen(true);
-                  }}
-                  onFocus={() => setIsQuickSearchOpen(true)}
-                  placeholder="Food"
-                />
-              </label>
-              <label className="food-log-search__label">
-                <span className="sr-only">Search restaurant</span>
-                <input
-                  value={quickRestaurantSearch}
-                  onChange={(event) => {
-                    setQuickRestaurantSearch(event.target.value);
-                    setIsQuickSearchOpen(true);
-                  }}
-                  onFocus={() => setIsQuickSearchOpen(true)}
-                  placeholder="Restaurant"
-                />
-              </label>
+        <button
+          type="button"
+          className="food-log-toggle"
+          onClick={() => setIsFoodLogOpen((current) => !current)}
+          aria-expanded={isFoodLogOpen}
+        >
+          <div className="section-heading food-log-heading">
+            <div>
+              <p className="eyebrow">Food logging</p>
+              <h2>Add food entry</h2>
             </div>
-            {isQuickSearchOpen &&
-            (quickSearch.trim().length >= 2 || quickRestaurantSearch.trim().length >= 2) ? (
-              <div className="food-log-search__dropdown">
-                {quickSearchResults.length ? (
-                  <div className="food-log-search__results">
-                    {quickSearchResults.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className="food-log-search__result"
-                        onClick={() => loadPreset(item)}
-                      >
-                        <span>
-                          <strong>{item.name}</strong>
-                          <small>
-                            {item.brand ? `${item.brand} • ` : ""}
-                            {item.servingSize}
-                          </small>
-                        </span>
-                        <span>{item.calories} cal</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : quickSearchStatus === "loading" ? (
-                  <div className="food-log-search__empty">Searching...</div>
-                ) : (
-                  <div className="food-log-search__empty">No matches found.</div>
-                )}
-              </div>
-            ) : null}
+            <div className="food-log-toggle__summary">
+              <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
+              <p className="muted">Tap to add food</p>
+            </div>
           </div>
-        </div>
+          <span className="food-log-toggle__chevron">{isFoodLogOpen ? "−" : "+"}</span>
+        </button>
 
-        <div className="button-row food-log-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={copyYesterday}
-            disabled={!previousDayEntries.length}
-          >
-            Copy yesterday
-          </button>
-        </div>
+        {isFoodLogOpen ? (
+          <>
+            <div className="food-log-content">
+              <div className="food-log-search" ref={quickSearchRef}>
+                <p className="eyebrow">Quick Search</p>
+                <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
+                <div className="food-log-search__fields">
+                  <label className="food-log-search__label">
+                    <span className="sr-only">Search foods</span>
+                    <input
+                      value={quickSearch}
+                      onChange={(event) => {
+                        setQuickSearch(event.target.value);
+                        setIsQuickSearchOpen(true);
+                      }}
+                      onFocus={() => setIsQuickSearchOpen(true)}
+                      placeholder="Food"
+                    />
+                  </label>
+                  <label className="food-log-search__label">
+                    <span className="sr-only">Search restaurant</span>
+                    <input
+                      value={quickRestaurantSearch}
+                      onChange={(event) => {
+                        setQuickRestaurantSearch(event.target.value);
+                        setIsQuickSearchOpen(true);
+                      }}
+                      onFocus={() => setIsQuickSearchOpen(true)}
+                      placeholder="Restaurant"
+                    />
+                  </label>
+                </div>
+                {isQuickSearchOpen &&
+                (quickSearch.trim().length >= 2 || quickRestaurantSearch.trim().length >= 2) ? (
+                  <div className="food-log-search__dropdown">
+                    {quickSearchResults.length ? (
+                      <div className="food-log-search__results">
+                        {quickSearchResults.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className="food-log-search__result"
+                            onClick={() => loadPreset(item)}
+                          >
+                            <span>
+                              <strong>{item.name}</strong>
+                              <small>
+                                {item.brand ? `${item.brand} • ` : ""}
+                                {item.servingSize}
+                              </small>
+                            </span>
+                            <span>{item.calories} cal</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : quickSearchStatus === "loading" ? (
+                      <div className="food-log-search__empty">Searching...</div>
+                    ) : (
+                      <div className="food-log-search__empty">No matches found.</div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            </div>
 
-        <form className="form-grid" onSubmit={handleSubmit}>
+            <div className="button-row food-log-actions">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={copyYesterday}
+                disabled={!previousDayEntries.length}
+              >
+                Copy yesterday
+              </button>
+            </div>
+
+            <form className="form-grid food-log-content" onSubmit={handleSubmit}>
           <label>
             Food name
             <input
@@ -966,7 +984,9 @@ export function FoodLogSection({
               Add Meal + Save
             </button>
           </div>
-        </form>
+            </form>
+          </>
+        ) : null}
       </section>
 
       <section className="card">

@@ -1048,6 +1048,38 @@ button {
   padding: 0;
 }
 
+.food-log-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.food-log-toggle__summary {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+.food-log-toggle__summary p {
+  margin: 0;
+}
+
+.food-log-toggle__chevron {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #f8fafc;
+}
+
+.food-log-content {
+  margin-top: 14px;
+}
+
 .food-history-summary {
   display: grid;
   gap: 4px;
@@ -1065,6 +1097,28 @@ button {
 }
 
 .food-history-content {
+  margin-top: 14px;
+}
+
+.weight-history-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.weight-history-toggle__chevron {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #f8fafc;
+}
+
+.weight-history-content {
   margin-top: 14px;
 }
 
