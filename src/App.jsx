@@ -183,24 +183,6 @@ export default function App() {
         onToday={() => setSelectedDate(new Date().toISOString().slice(0, 10))}
       />
 
-      {syncStatus !== "local" ? (
-        <section className="card sync-card">
-          <div className="sync-row">
-            <strong>
-              {syncStatus === "saving"
-                ? "Cloud sync in progress"
-                : syncStatus === "synced"
-                  ? "Cloud sync active"
-                  : "Cloud sync issue"}
-            </strong>
-            <span className={syncStatus === "error" ? "sync-pill sync-pill--error" : "sync-pill"}>
-              {syncStatus}
-            </span>
-          </div>
-          {syncError ? <p className="muted">{syncError}</p> : null}
-        </section>
-      ) : null}
-
       {localMigrationData ? (
         <section className="card sync-card">
           <div className="section-heading">
@@ -227,18 +209,37 @@ export default function App() {
 
       <main className="content-grid">
         <section className={activeTab === "dashboard" ? "section is-active" : "section"}>
-          <DashboardSection
-            selectedDate={state.selectedDate}
-            formattedDate={formatLongDate(state.selectedDate)}
-            dailyTotals={dailyTotals}
-            remaining={remaining}
-            settings={state.settings}
-            latestWeight={latestWeight}
-            weightTrendSummary={weightTrendSummary}
-            weightGoalProgress={weightGoalProgress}
-            complianceSummary={complianceSummary}
-            onUpdateSettings={updateSettings}
-          />
+          <div className="section-stack">
+            <DashboardSection
+              selectedDate={state.selectedDate}
+              formattedDate={formatLongDate(state.selectedDate)}
+              dailyTotals={dailyTotals}
+              remaining={remaining}
+              settings={state.settings}
+              latestWeight={latestWeight}
+              weightTrendSummary={weightTrendSummary}
+              weightGoalProgress={weightGoalProgress}
+              complianceSummary={complianceSummary}
+              onUpdateSettings={updateSettings}
+            />
+            {syncStatus !== "local" ? (
+              <section className="card sync-card">
+                <div className="sync-row">
+                  <strong>
+                    {syncStatus === "saving"
+                      ? "Cloud sync in progress"
+                      : syncStatus === "synced"
+                        ? "Cloud sync active"
+                        : "Cloud sync issue"}
+                  </strong>
+                  <span className={syncStatus === "error" ? "sync-pill sync-pill--error" : "sync-pill"}>
+                    {syncStatus}
+                  </span>
+                </div>
+                {syncError ? <p className="muted">{syncError}</p> : null}
+              </section>
+            ) : null}
+          </div>
         </section>
 
         <section className={activeTab === "food" ? "section is-active" : "section"}>
