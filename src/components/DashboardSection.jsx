@@ -15,6 +15,16 @@ function formatRemaining(value, unit) {
   return `${formattedValue} ${unit} over`;
 }
 
+function formatDelta(value, unit) {
+  const rounded = Math.round(Number(value || 0) * 10) / 10;
+  if (rounded === 0) {
+    return `Same as yesterday`;
+  }
+
+  const prefix = rounded > 0 ? "+" : "";
+  return `${prefix}${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} ${unit} vs yesterday`;
+}
+
 export function DashboardSection({
   selectedDate,
   formattedDate,
@@ -25,6 +35,8 @@ export function DashboardSection({
   weightTrendSummary,
   weightGoalProgress,
   complianceSummary,
+  nutritionAverages,
+  workoutSnapshot,
   onUpdateSettings,
 }) {
   const progressItems = [
@@ -105,6 +117,42 @@ export function DashboardSection({
                 : `${4 - targetsHitCount} target${4 - targetsHitCount === 1 ? "" : "s"} still outside range.`}
             </p>
           </div>
+          <div className="summary-panel">
+            <span>Compliance score</span>
+            <strong>{complianceSummary.score}%</strong>
+            <p className="muted">
+              {complianceSummary.label}. Based on how close calories and macros are to target.
+            </p>
+          </div>
+        </div>
+
+        <div className="summary-grid dashboard-summary-grid">
+          <div className="summary-panel">
+            <span>7-day average calories</span>
+            <strong>{formatMetricValue(nutritionAverages.weeklyAverage.calories)}</strong>
+            <p className="muted">Daily average across the last 7 selected days</p>
+          </div>
+          <div className="summary-panel">
+            <span>7-day average protein</span>
+            <strong>{formatMetricValue(nutritionAverages.weeklyAverage.protein)}g</strong>
+            <p className="muted">
+              Carbs {formatMetricValue(nutritionAverages.weeklyAverage.carbs)}g • Fat {formatMetricValue(nutritionAverages.weeklyAverage.fat)}g
+            </p>
+          </div>
+          <div className="summary-panel">
+            <span>Calories vs yesterday</span>
+            <strong>{formatDelta(dailyTotals.calories - nutritionAverages.yesterdayTotals.calories, "cal")}</strong>
+            <p className="muted">
+              Protein {formatDelta(dailyTotals.protein - nutritionAverages.yesterdayTotals.protein, "g")}
+            </p>
+          </div>
+          <div className="summary-panel">
+            <span>Carbs and fat vs yesterday</span>
+            <strong>{formatDelta(dailyTotals.carbs - nutritionAverages.yesterdayTotals.carbs, "g")}</strong>
+            <p className="muted">
+              Fat {formatDelta(dailyTotals.fat - nutritionAverages.yesterdayTotals.fat, "g")}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -167,6 +215,42 @@ export function DashboardSection({
         </div>
 
         <WeightTrendChart entries={weightTrendSummary.smoothedEntries.slice(-8)} />
+      </section>
+
+      <section className="card">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Workout progress</p>
+            <h2>Training momentum</h2>
+          </div>
+          <p className="muted">Pulled from workouts saved on or before {formattedDate}.</p>
+        </div>
+
+        <div className="summary-grid">
+          <div className="summary-panel">
+            <span>Last workout</span>
+            <strong>{workoutSnapshot.lastWorkout?.workoutName || "No workouts yet"}</strong>
+            <p className="muted">
+              {workoutSnapshot.lastWorkout ? workoutSnapshot.lastWorkout.date : "Save a workout to start tracking."}
+            </p>
+          </div>
+          <div className="summary-panel">
+            <span>Sessions last 30 days</span>
+            <strong>{workoutSnapshot.sessionsLast30}</strong>
+            <p className="muted">
+              {workoutSnapshot.totalSetsLast30} sets across {workoutSnapshot.uniqueExercisesLast30} exercises
+            </p>
+          </div>
+          <div className="summary-panel">
+            <span>Strongest recorded set</span>
+            <strong>{workoutSnapshot.strongestSet ? `${formatMetricValue(workoutSnapshot.strongestSet.weight)} lb` : "--"}</strong>
+            <p className="muted">
+              {workoutSnapshot.strongestSet
+                ? `${workoutSnapshot.strongestSet.exerciseName} on ${workoutSnapshot.strongestSet.date}`
+                : "Log more workouts to surface your top lift."}
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="card">

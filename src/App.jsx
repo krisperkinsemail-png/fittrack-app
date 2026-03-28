@@ -148,6 +148,101 @@ export default function App() {
     };
   }, [dailyTotals, state.settings]);
 
+  const nutritionAverages = useMemo(() => {
+    const dateKeys = Array.from({ length: 7 }, (_, index) => addDays(state.selectedDate, index - 6));
+    const totalsByDate = new Map(
+      dateKeys.map((date) => [
+        date,
+        { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      ])
+    );
+
+    state.foodEntries.forEach((entry) => {
+      if (!totalsByDate.has(entry.date)) {
+        return;
+      }
+
+      const current = totalsByDate.get(entry.date);
+      totalsByDate.set(entry.date, {
+        calories: current.calories + entry.calories,
+        protein: current.protein + entry.protein,
+        carbs: current.carbs + entry.carbs,
+        fat: current.fat + entry.fat,
+      });
+    });
+
+    const sums = [...totalsByDate.values()].reduce(
+      (totals, dayTotals) => ({
+        calories: totals.calories + dayTotals.calories,
+        protein: totals.protein + dayTotals.protein,
+        carbs: totals.carbs + dayTotals.carbs,
+        fat: totals.fat + dayTotals.fat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+
+    const yesterdayDate = addDays(state.selectedDate, -1);
+    const yesterdayTotals = totalsByDate.get(yesterdayDate) || {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+    };
+
+    return {
+      weeklyAverage: {
+        calories: sums.calories / 7,
+        protein: sums.protein / 7,
+        carbs: sums.carbs / 7,
+        fat: sums.fat / 7,
+      },
+      yesterdayDate,
+      yesterdayTotals,
+    };
+  }, [state.foodEntries, state.selectedDate]);
+
+  const workoutSnapshot = useMemo(() => {
+    const eligibleEntries = state.workoutEntries
+      .filter((entry) => entry.date <= state.selectedDate)
+      .sort(sortByDateDescending);
+    const last30Entries = eligibleEntries.filter((entry) => {
+      const dayDiff = Math.floor(
+        (new Date(`${state.selectedDate}T12:00:00`) - new Date(`${entry.date}T12:00:00`)) /
+          (24 * 60 * 60 * 1000)
+      );
+      return dayDiff >= 0 && dayDiff < 30;
+    });
+
+    const strongestSet = eligibleEntries
+      .flatMap((entry) =>
+        entry.exercises.flatMap((exercise) =>
+          exercise.sets.map((set) => ({
+            exerciseName: exercise.name,
+            weight: Number(set.weight || 0),
+            reps: Number(set.reps || 0),
+            date: entry.date,
+          }))
+        )
+      )
+      .filter((set) => Number.isFinite(set.weight) && set.weight > 0)
+      .sort((left, right) => right.weight - left.weight)[0] || null;
+
+    const uniqueExercises = new Set(
+      last30Entries.flatMap((entry) => entry.exercises.map((exercise) => exercise.name.trim().toLowerCase()))
+    );
+
+    return {
+      lastWorkout: eligibleEntries[0] || null,
+      sessionsLast30: last30Entries.length,
+      totalSetsLast30: last30Entries.reduce(
+        (sum, entry) => sum + entry.exercises.reduce((exerciseSum, exercise) => exerciseSum + exercise.sets.length, 0),
+        0
+      ),
+      uniqueExercisesLast30: uniqueExercises.size,
+      strongestSet,
+    };
+  }, [state.selectedDate, state.workoutEntries]);
+
   return (
     <div className="app-shell theme-shell" data-accent={state.settings.accentColor}>
       <header className="topbar">
@@ -222,6 +317,8 @@ export default function App() {
               weightTrendSummary={weightTrendSummary}
               weightGoalProgress={weightGoalProgress}
               complianceSummary={complianceSummary}
+              nutritionAverages={nutritionAverages}
+              workoutSnapshot={workoutSnapshot}
               onUpdateSettings={updateSettings}
             />
             {syncStatus !== "local" ? (
