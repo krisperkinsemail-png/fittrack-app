@@ -693,6 +693,13 @@ button {
   gap: 10px;
 }
 
+.inline-edit-panel {
+  display: grid;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(96, 114, 139, 0.18);
+}
+
 .log-card__top {
   display: flex;
   justify-content: space-between;

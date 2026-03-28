@@ -159,6 +159,8 @@ export function FoodLogSection({
 }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState(EMPTY_FORM);
+  const [editingPreset, setEditingPreset] = useState(null);
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [search, setSearch] = useState("");
   const [quickSearch, setQuickSearch] = useState("");
@@ -397,7 +399,6 @@ export function FoodLogSection({
 
   function resetForm() {
     setForm(EMPTY_FORM);
-    setEditingId(null);
     setSelectedPreset(null);
   }
 
@@ -421,7 +422,6 @@ export function FoodLogSection({
       carbs: String(item.carbs),
       fat: String(item.fat),
     });
-    setEditingId(null);
   }
 
   function buildPayload() {
@@ -471,12 +471,7 @@ export function FoodLogSection({
     }
 
     const payload = buildPayload();
-
-    if (editingId) {
-      onUpdateEntry(editingId, payload);
-    } else {
-      onAddEntry(payload);
-    }
+    onAddEntry(payload);
 
     if (saveTemplateType) {
       saveTemplate(payload, saveTemplateType);
@@ -509,19 +504,96 @@ export function FoodLogSection({
   }
 
   function startEdit(entry) {
+    const scalablePreset = getScalablePreset({
+      id: entry.id,
+      name: entry.foodName,
+      servingSize: entry.servingSize,
+      calories: entry.calories,
+      protein: entry.protein,
+      carbs: entry.carbs,
+      fat: entry.fat,
+    });
+
     setEditingId(entry.id);
-    setSelectedPreset(null);
-    setForm({
+    setEditingPreset(scalablePreset);
+    setEditForm({
       foodName: entry.foodName,
       servingSize: entry.servingSize,
-      servingAmount: "",
-      servingUnit: "",
-      servingNote: "",
+      servingAmount: scalablePreset?.baseAmount ? String(scalablePreset.baseAmount) : "",
+      servingUnit: scalablePreset?.baseUnit || "",
+      servingNote: scalablePreset?.servingNote || "",
       calories: String(entry.calories),
       protein: String(entry.protein),
       carbs: String(entry.carbs),
       fat: String(entry.fat),
     });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditingPreset(null);
+    setEditForm(EMPTY_FORM);
+  }
+
+  function handleEditServingAmountChange(value) {
+    if (!editingPreset?.isScalable) {
+      setEditForm((current) => ({ ...current, servingAmount: value }));
+      return;
+    }
+
+    if (value === "") {
+      setEditForm((current) => ({
+        ...current,
+        servingAmount: "",
+        calories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
+      }));
+      return;
+    }
+
+    const scaled = scalePreset(editingPreset, value);
+    setEditForm((current) => ({
+      ...current,
+      servingAmount: value,
+      ...scaled,
+    }));
+  }
+
+  function canSaveEditForm() {
+    return (
+      editForm.foodName.trim() &&
+      (editingPreset?.isScalable
+        ? Number(editForm.servingAmount) > 0 && editForm.servingUnit.trim()
+        : editForm.servingSize.trim()) &&
+      editForm.calories !== "" &&
+      editForm.protein !== "" &&
+      editForm.carbs !== "" &&
+      editForm.fat !== ""
+    );
+  }
+
+  function saveEdit() {
+    if (!editingId || !canSaveEditForm()) {
+      return;
+    }
+
+    const servingSize = editingPreset?.isScalable
+      ? formatServing(editForm.servingAmount, editForm.servingUnit, editForm.servingNote)
+      : editForm.servingSize.trim();
+
+    onUpdateEntry(editingId, {
+      date: selectedDate,
+      foodName: editForm.foodName.trim(),
+      servingSize,
+      calories: Number(editForm.calories),
+      protein: Number(editForm.protein),
+      carbs: Number(editForm.carbs),
+      fat: Number(editForm.fat),
+    });
+
+    cancelEdit();
   }
 
   function handleServingAmountChange(value) {
@@ -569,7 +641,7 @@ export function FoodLogSection({
         <div className="section-heading food-log-heading">
           <div>
             <p className="eyebrow">Food logging</p>
-            <h2>{editingId ? "Edit food entry" : "Add food entry"}</h2>
+            <h2>Add food entry</h2>
           </div>
           <div className="food-log-search" ref={quickSearchRef}>
             <p className="muted">Selected day: {selectedDate}</p>
@@ -789,11 +861,6 @@ export function FoodLogSection({
             >
               Add Meal + Save
             </button>
-            {editingId ? (
-              <button type="button" className="secondary-button" onClick={resetForm}>
-                Cancel
-              </button>
-            ) : null}
           </div>
         </form>
       </section>
@@ -854,6 +921,113 @@ export function FoodLogSection({
                     Delete
                   </button>
                 </div>
+                {editingId === entry.id ? (
+                  <div className="inline-edit-panel">
+                    {editingPreset?.isScalable ? (
+                      <>
+                        <div className="compact-grid compact-grid--two">
+                          <label>
+                            Quantity
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              step="0.1"
+                              value={editForm.servingAmount}
+                              onChange={(event) => handleEditServingAmountChange(event.target.value)}
+                            />
+                          </label>
+                          <label>
+                            Unit
+                            <input value={editForm.servingUnit} readOnly />
+                          </label>
+                        </div>
+                        <p className="muted">
+                          Auto-scaling from base serving: {editingPreset.servingSize}
+                        </p>
+                      </>
+                    ) : (
+                      <label>
+                        Serving size
+                        <input
+                          value={editForm.servingSize}
+                          onChange={(event) =>
+                            setEditForm((current) => ({ ...current, servingSize: event.target.value }))
+                          }
+                        />
+                      </label>
+                    )}
+
+                    <div className="compact-grid">
+                      <label>
+                        Calories
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min="0"
+                          value={editForm.calories}
+                          onChange={(event) =>
+                            setEditForm((current) => ({ ...current, calories: event.target.value }))
+                          }
+                          disabled={editingPreset?.isScalable}
+                        />
+                      </label>
+                      <label>
+                        Protein (g)
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          value={editForm.protein}
+                          onChange={(event) =>
+                            setEditForm((current) => ({ ...current, protein: event.target.value }))
+                          }
+                          disabled={editingPreset?.isScalable}
+                        />
+                      </label>
+                      <label>
+                        Carbs (g)
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          value={editForm.carbs}
+                          onChange={(event) =>
+                            setEditForm((current) => ({ ...current, carbs: event.target.value }))
+                          }
+                          disabled={editingPreset?.isScalable}
+                        />
+                      </label>
+                      <label>
+                        Fat (g)
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          value={editForm.fat}
+                          onChange={(event) =>
+                            setEditForm((current) => ({ ...current, fat: event.target.value }))
+                          }
+                          disabled={editingPreset?.isScalable}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="button-row">
+                      <button
+                        type="button"
+                        className="primary-button"
+                        onClick={saveEdit}
+                        disabled={!canSaveEditForm()}
+                      >
+                        Save
+                      </button>
+                      <button type="button" className="secondary-button" onClick={cancelEdit}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>
