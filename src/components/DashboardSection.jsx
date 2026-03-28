@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { WeightTrendChart } from "./WeightTrendChart";
 
 function formatMetricValue(value) {
@@ -39,6 +40,7 @@ export function DashboardSection({
   workoutSnapshot,
   onUpdateSettings,
 }) {
+  const [openSection, setOpenSection] = useState(null);
   const progressItems = [
     {
       label: "Calories",
@@ -74,204 +76,264 @@ export function DashboardSection({
     return Math.abs(item.current - item.target) / item.target <= tolerance;
   }).length;
 
+  function toggleSection(sectionId) {
+    setOpenSection((current) => (current === sectionId ? null : sectionId));
+  }
+
   return (
     <div className="section-stack">
-      <section className="card">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Dashboard</p>
-            <h2>Daily snapshot</h2>
+      <section className="card dashboard-section-card">
+        <button
+          type="button"
+          className="dashboard-fold-toggle"
+          onClick={() => toggleSection("nutrition")}
+          aria-expanded={openSection === "nutrition"}
+        >
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Dashboard</p>
+              <h2>Daily snapshot</h2>
+            </div>
+            <p className="muted">Everything below reflects {formattedDate}.</p>
           </div>
-          <p className="muted">Everything below reflects {formattedDate}.</p>
-        </div>
+          <div className="dashboard-fold-summary">
+            <strong>{targetsHitCount}/4 targets</strong>
+            <span>{complianceSummary.score}% compliance</span>
+          </div>
+          <span className="dashboard-fold-chevron">{openSection === "nutrition" ? "−" : "+"}</span>
+        </button>
 
-        <div className="progress-grid" aria-label="Daily target progress">
-          {progressItems.map((item) => {
-            const percent = item.target > 0 ? Math.min((item.current / item.target) * 100, 100) : 0;
-            const remainingValue = item.target - item.current;
+        <div className={openSection === "nutrition" ? "dashboard-fold-content is-open" : "dashboard-fold-content"}>
+          <div className="progress-grid" aria-label="Daily target progress">
+            {progressItems.map((item) => {
+              const percent = item.target > 0 ? Math.min((item.current / item.target) * 100, 100) : 0;
+              const remainingValue = item.target - item.current;
 
-            return (
-              <article className="progress-card" key={item.label}>
-                <div className="progress-card__top">
-                  <strong>{item.label}</strong>
-                  <span>{Math.round(percent)}%</span>
-                </div>
-                <div className="progress-track" aria-hidden="true">
-                  <div className="progress-fill" style={{ width: `${percent}%` }} />
-                </div>
-                <p className="muted">
-                  {item.helper} • {formatRemaining(remainingValue, item.label === "Calories" ? "cal" : "g")}
-                </p>
-              </article>
-            );
-          })}
-        </div>
+              return (
+                <article className="progress-card" key={item.label}>
+                  <div className="progress-card__top">
+                    <strong>{item.label}</strong>
+                    <span>{Math.round(percent)}%</span>
+                  </div>
+                  <div className="progress-track" aria-hidden="true">
+                    <div className="progress-fill" style={{ width: `${percent}%` }} />
+                  </div>
+                  <p className="muted">
+                    {item.helper} • {formatRemaining(remainingValue, item.label === "Calories" ? "cal" : "g")}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
 
-        <div className="summary-grid dashboard-summary-grid">
-          <div className="summary-panel">
-            <span>Targets Hit</span>
-            <strong>{targetsHitCount}/4</strong>
-            <p className="muted">
-              {targetsHitCount === 4
-                ? "All daily targets are within range."
-                : `${4 - targetsHitCount} target${4 - targetsHitCount === 1 ? "" : "s"} still outside range.`}
-            </p>
+          <div className="summary-grid dashboard-summary-grid">
+            <div className="summary-panel">
+              <span>Targets Hit</span>
+              <strong>{targetsHitCount}/4</strong>
+              <p className="muted">
+                {targetsHitCount === 4
+                  ? "All daily targets are within range."
+                  : `${4 - targetsHitCount} target${4 - targetsHitCount === 1 ? "" : "s"} still outside range.`}
+              </p>
+            </div>
+            <div className="summary-panel">
+              <span>Compliance score</span>
+              <strong>{complianceSummary.score}%</strong>
+              <p className="muted">
+                {complianceSummary.label}. Based on how close calories and macros are to target.
+              </p>
+            </div>
           </div>
-          <div className="summary-panel">
-            <span>Compliance score</span>
-            <strong>{complianceSummary.score}%</strong>
-            <p className="muted">
-              {complianceSummary.label}. Based on how close calories and macros are to target.
-            </p>
-          </div>
-        </div>
 
-        <div className="summary-grid dashboard-summary-grid">
-          <div className="summary-panel">
-            <span>7-day average calories</span>
-            <strong>{formatMetricValue(nutritionAverages.weeklyAverage.calories)}</strong>
-            <p className="muted">Daily average across the last 7 selected days</p>
-          </div>
-          <div className="summary-panel">
-            <span>7-day average protein</span>
-            <strong>{formatMetricValue(nutritionAverages.weeklyAverage.protein)}g</strong>
-            <p className="muted">
-              Carbs {formatMetricValue(nutritionAverages.weeklyAverage.carbs)}g • Fat {formatMetricValue(nutritionAverages.weeklyAverage.fat)}g
-            </p>
-          </div>
-          <div className="summary-panel">
-            <span>Calories vs yesterday</span>
-            <strong>{formatDelta(dailyTotals.calories - nutritionAverages.yesterdayTotals.calories, "cal")}</strong>
-            <p className="muted">
-              Protein {formatDelta(dailyTotals.protein - nutritionAverages.yesterdayTotals.protein, "g")}
-            </p>
-          </div>
-          <div className="summary-panel">
-            <span>Carbs and fat vs yesterday</span>
-            <strong>{formatDelta(dailyTotals.carbs - nutritionAverages.yesterdayTotals.carbs, "g")}</strong>
-            <p className="muted">
-              Fat {formatDelta(dailyTotals.fat - nutritionAverages.yesterdayTotals.fat, "g")}
-            </p>
+          <div className="summary-grid dashboard-summary-grid">
+            <div className="summary-panel">
+              <span>7-day average calories</span>
+              <strong>{formatMetricValue(nutritionAverages.weeklyAverage.calories)}</strong>
+              <p className="muted">Daily average across the last 7 selected days</p>
+            </div>
+            <div className="summary-panel">
+              <span>7-day average protein</span>
+              <strong>{formatMetricValue(nutritionAverages.weeklyAverage.protein)}g</strong>
+              <p className="muted">
+                Carbs {formatMetricValue(nutritionAverages.weeklyAverage.carbs)}g • Fat {formatMetricValue(nutritionAverages.weeklyAverage.fat)}g
+              </p>
+            </div>
+            <div className="summary-panel">
+              <span>Calories vs yesterday</span>
+              <strong>{formatDelta(dailyTotals.calories - nutritionAverages.yesterdayTotals.calories, "cal")}</strong>
+              <p className="muted">
+                Protein {formatDelta(dailyTotals.protein - nutritionAverages.yesterdayTotals.protein, "g")}
+              </p>
+            </div>
+            <div className="summary-panel">
+              <span>Carbs and fat vs yesterday</span>
+              <strong>{formatDelta(dailyTotals.carbs - nutritionAverages.yesterdayTotals.carbs, "g")}</strong>
+              <p className="muted">
+                Fat {formatDelta(dailyTotals.fat - nutritionAverages.yesterdayTotals.fat, "g")}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="card">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Body weight</p>
-            <h2>Current status</h2>
-          </div>
-          <p className="muted">
-            Goal: {settings.weightGoal || "Not set"} {settings.weightUnit}
-          </p>
-        </div>
-
-        <div className="summary-grid">
-          <div className="summary-panel">
-            <span>Latest weight</span>
-            <strong>
-              {latestWeight ? `${latestWeight.weight} ${settings.weightUnit}` : "--"}
-            </strong>
-          </div>
-          <div className="summary-panel">
-            <span>Trend weight</span>
-            <strong>
-              {weightTrendSummary.latestTrendWeight !== null
-                ? `${weightTrendSummary.latestTrendWeight} ${settings.weightUnit}`
-                : "--"}
-            </strong>
-          </div>
-          <div className="summary-panel">
-            <span>Recent trend</span>
-            <strong>
-              {weightTrendSummary.weeklyChange !== null
-                ? `${weightTrendSummary.weeklyChange > 0 ? "+" : ""}${weightTrendSummary.weeklyChange} ${settings.weightUnit}/wk`
-                : "Need more data"}
-            </strong>
-          </div>
-          <div className="summary-panel">
-            <span>Goal progress</span>
-            <strong>
-              {weightGoalProgress.progressPercent !== null
-                ? `${weightGoalProgress.progressPercent}%`
-                : "Set goal"}
-            </strong>
+      <section className="card dashboard-section-card">
+        <button
+          type="button"
+          className="dashboard-fold-toggle"
+          onClick={() => toggleSection("weight")}
+          aria-expanded={openSection === "weight"}
+        >
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Body weight</p>
+              <h2>Current status</h2>
+            </div>
             <p className="muted">
-              {weightGoalProgress.remainingToGoal !== null
-                ? `${Math.abs(weightGoalProgress.remainingToGoal)} ${settings.weightUnit} remaining`
-                : "Add goal and weigh-ins"}
+              Goal: {settings.weightGoal || "Not set"} {settings.weightUnit}
             </p>
           </div>
-          <div className="summary-panel">
-            <span>ETA</span>
-            <strong>
-              {weightGoalProgress.estimatedWeeks !== null
-                ? `${weightGoalProgress.estimatedWeeks} weeks`
-                : "--"}
-            </strong>
-            <p className="muted">Based on current smoothed weekly trend</p>
+          <div className="dashboard-fold-summary">
+            <strong>{latestWeight ? `${latestWeight.weight} ${settings.weightUnit}` : "--"}</strong>
+            <span>Latest weigh-in</span>
           </div>
-        </div>
+          <span className="dashboard-fold-chevron">{openSection === "weight" ? "−" : "+"}</span>
+        </button>
 
-        <WeightTrendChart entries={weightTrendSummary.smoothedEntries.slice(-8)} />
+        <div className={openSection === "weight" ? "dashboard-fold-content is-open" : "dashboard-fold-content"}>
+          <div className="summary-grid">
+            <div className="summary-panel">
+              <span>Latest weight</span>
+              <strong>
+                {latestWeight ? `${latestWeight.weight} ${settings.weightUnit}` : "--"}
+              </strong>
+            </div>
+            <div className="summary-panel">
+              <span>Trend weight</span>
+              <strong>
+                {weightTrendSummary.latestTrendWeight !== null
+                  ? `${weightTrendSummary.latestTrendWeight} ${settings.weightUnit}`
+                  : "--"}
+              </strong>
+            </div>
+            <div className="summary-panel">
+              <span>Recent trend</span>
+              <strong>
+                {weightTrendSummary.weeklyChange !== null
+                  ? `${weightTrendSummary.weeklyChange > 0 ? "+" : ""}${weightTrendSummary.weeklyChange} ${settings.weightUnit}/wk`
+                  : "Need more data"}
+              </strong>
+            </div>
+            <div className="summary-panel">
+              <span>Goal progress</span>
+              <strong>
+                {weightGoalProgress.progressPercent !== null
+                  ? `${weightGoalProgress.progressPercent}%`
+                  : "Set goal"}
+              </strong>
+              <p className="muted">
+                {weightGoalProgress.remainingToGoal !== null
+                  ? `${Math.abs(weightGoalProgress.remainingToGoal)} ${settings.weightUnit} remaining`
+                  : "Add goal and weigh-ins"}
+              </p>
+            </div>
+            <div className="summary-panel">
+              <span>ETA</span>
+              <strong>
+                {weightGoalProgress.estimatedWeeks !== null
+                  ? `${weightGoalProgress.estimatedWeeks} weeks`
+                  : "--"}
+              </strong>
+              <p className="muted">Based on current smoothed weekly trend</p>
+            </div>
+          </div>
+
+          <WeightTrendChart entries={weightTrendSummary.smoothedEntries.slice(-8)} />
+        </div>
       </section>
 
-      <section className="card">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Workout progress</p>
-            <h2>Training momentum</h2>
+      <section className="card dashboard-section-card">
+        <button
+          type="button"
+          className="dashboard-fold-toggle"
+          onClick={() => toggleSection("workouts")}
+          aria-expanded={openSection === "workouts"}
+        >
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Workout progress</p>
+              <h2>Training momentum</h2>
+            </div>
+            <p className="muted">Pulled from workouts saved on or before {formattedDate}.</p>
           </div>
-          <p className="muted">Pulled from workouts saved on or before {formattedDate}.</p>
-        </div>
-
-        <div className="summary-grid">
-          <div className="summary-panel">
-            <span>Last workout</span>
-            <strong>{workoutSnapshot.lastWorkout?.workoutName || "No workouts yet"}</strong>
-            <p className="muted">
-              {workoutSnapshot.lastWorkout ? workoutSnapshot.lastWorkout.date : "Save a workout to start tracking."}
-            </p>
-          </div>
-          <div className="summary-panel">
-            <span>Sessions last 30 days</span>
+          <div className="dashboard-fold-summary">
             <strong>{workoutSnapshot.sessionsLast30}</strong>
-            <p className="muted">
-              {workoutSnapshot.totalSetsLast30} sets across {workoutSnapshot.uniqueExercisesLast30} exercises
-            </p>
+            <span>sessions in the last 30 days</span>
           </div>
-          <div className="summary-panel">
-            <span>Strongest recorded set</span>
-            <strong>{workoutSnapshot.strongestSet ? `${formatMetricValue(workoutSnapshot.strongestSet.weight)} lb` : "--"}</strong>
-            <p className="muted">
-              {workoutSnapshot.strongestSet
-                ? `${workoutSnapshot.strongestSet.exerciseName} on ${workoutSnapshot.strongestSet.date}`
-                : "Log more workouts to surface your top lift."}
-            </p>
+          <span className="dashboard-fold-chevron">{openSection === "workouts" ? "−" : "+"}</span>
+        </button>
+
+        <div className={openSection === "workouts" ? "dashboard-fold-content is-open" : "dashboard-fold-content"}>
+          <div className="summary-grid">
+            <div className="summary-panel">
+              <span>Last workout</span>
+              <strong>{workoutSnapshot.lastWorkout?.workoutName || "No workouts yet"}</strong>
+              <p className="muted">
+                {workoutSnapshot.lastWorkout ? workoutSnapshot.lastWorkout.date : "Save a workout to start tracking."}
+              </p>
+            </div>
+            <div className="summary-panel">
+              <span>Sessions last 30 days</span>
+              <strong>{workoutSnapshot.sessionsLast30}</strong>
+              <p className="muted">
+                {workoutSnapshot.totalSetsLast30} sets across {workoutSnapshot.uniqueExercisesLast30} exercises
+              </p>
+            </div>
+            <div className="summary-panel">
+              <span>Strongest recorded set</span>
+              <strong>{workoutSnapshot.strongestSet ? `${formatMetricValue(workoutSnapshot.strongestSet.weight)} lb` : "--"}</strong>
+              <p className="muted">
+                {workoutSnapshot.strongestSet
+                  ? `${workoutSnapshot.strongestSet.exerciseName} on ${workoutSnapshot.strongestSet.date}`
+                  : "Log more workouts to surface your top lift."}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="card">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Appearance</p>
-            <h2>Theme color</h2>
+      <section className="card dashboard-section-card">
+        <button
+          type="button"
+          className="dashboard-fold-toggle"
+          onClick={() => toggleSection("appearance")}
+          aria-expanded={openSection === "appearance"}
+        >
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Appearance</p>
+              <h2>Theme color</h2>
+            </div>
+            <p className="muted">Choose the accent used across charts, buttons, and highlights.</p>
           </div>
-          <p className="muted">Choose the accent used across charts, buttons, and highlights.</p>
-        </div>
+          <div className="dashboard-fold-summary">
+            <strong>{settings.accentColor}</strong>
+            <span>Current theme</span>
+          </div>
+          <span className="dashboard-fold-chevron">{openSection === "appearance" ? "−" : "+"}</span>
+        </button>
 
-        <label>
-          Accent color
-          <select
-            value={settings.accentColor}
-            onChange={(event) => onUpdateSettings({ accentColor: event.target.value })}
-          >
-            <option value="blue">Blue</option>
-            <option value="purple">Purple</option>
-          </select>
-        </label>
+        <div className={openSection === "appearance" ? "dashboard-fold-content is-open" : "dashboard-fold-content"}>
+          <label>
+            Accent color
+            <select
+              value={settings.accentColor}
+              onChange={(event) => onUpdateSettings({ accentColor: event.target.value })}
+            >
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+            </select>
+          </label>
+        </div>
       </section>
     </div>
   );

@@ -604,6 +604,49 @@ button {
   margin-top: 10px;
 }
 
+.dashboard-section-card {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-fold-toggle {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.dashboard-fold-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.dashboard-fold-summary strong,
+.dashboard-fold-summary span {
+  margin: 0;
+}
+
+.dashboard-fold-summary strong {
+  font-size: 1rem;
+}
+
+.dashboard-fold-chevron {
+  justify-self: end;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--accent-strong);
+}
+
+.dashboard-fold-content {
+  display: grid;
+  gap: 14px;
+}
+
 .summary-grid {
   margin-bottom: 10px;
 }
@@ -1330,7 +1373,7 @@ button:focus {
   color: #f8fafc;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 900px) {
   .app-shell {
     padding-left: 24px;
     padding-right: 24px;
@@ -1437,5 +1480,19 @@ button:focus {
 
   .food-library-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-fold-chevron {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .dashboard-fold-content {
+    display: none;
+  }
+
+  .dashboard-fold-content.is-open {
+    display: grid;
   }
 }
