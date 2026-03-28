@@ -983,34 +983,35 @@ export function WorkoutSection({
                         <span className="set-label">Set {setIndex + 1}</span>
                         <div className="set-field">
                           <input
-                            type="number"
-                            min="0"
+                            type="text"
                             inputMode="numeric"
-                            placeholder="Reps"
+                            pattern="[0-9]*"
+                            placeholder={
+                              previousExercise?.sets?.[setIndex]?.reps !== undefined
+                                ? `Last: ${previousExercise.sets[setIndex].reps}`
+                                : "Reps"
+                            }
                             value={set.reps}
                             onChange={(event) =>
                               updateSet(exercise.id, set.id, "reps", event.target.value)
                             }
                           />
-                          <span className="set-subtext">
-                            Last: {previousExercise?.sets?.[setIndex]?.reps ?? "--"}
-                          </span>
                         </div>
                         <div className="set-field">
                           <input
-                            type="number"
-                            min="0"
-                            step="0.5"
+                            type="text"
                             inputMode="decimal"
-                            placeholder="Weight"
+                            pattern="[0-9]*[.,]?[0-9]*"
+                            placeholder={
+                              previousExercise?.sets?.[setIndex]?.weight !== undefined
+                                ? `Last: ${previousExercise.sets[setIndex].weight}`
+                                : "Weight"
+                            }
                             value={set.weight}
                             onChange={(event) =>
                               updateSet(exercise.id, set.id, "weight", event.target.value)
                             }
                           />
-                          <span className="set-subtext">
-                            Last: {previousExercise?.sets?.[setIndex]?.weight ?? "--"}
-                          </span>
                         </div>
                         <div className="set-row-actions">
                           <button
@@ -1501,9 +1502,9 @@ export function WorkoutSection({
               <label>
                 Number of sets
                 <input
-                  type="number"
-                  min="1"
+                  type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
                   value={customExerciseForm.setCount}
                   onChange={(event) =>
                     setCustomExerciseForm((current) => ({
