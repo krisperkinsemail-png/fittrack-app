@@ -110,11 +110,21 @@ export default function App() {
     );
   }, [selectedFoodEntries]);
 
+  const numericTargets = useMemo(
+    () => ({
+      calories: Number(state.settings.calorieTarget) || 0,
+      protein: Number(state.settings.proteinTarget) || 0,
+      carbs: Number(state.settings.carbsTarget) || 0,
+      fat: Number(state.settings.fatTarget) || 0,
+    }),
+    [state.settings]
+  );
+
   const remaining = {
-    calories: state.settings.calorieTarget - dailyTotals.calories,
-    protein: state.settings.proteinTarget - dailyTotals.protein,
-    carbs: state.settings.carbsTarget - dailyTotals.carbs,
-    fat: state.settings.fatTarget - dailyTotals.fat,
+    calories: numericTargets.calories > 0 ? numericTargets.calories - dailyTotals.calories : null,
+    protein: numericTargets.protein > 0 ? numericTargets.protein - dailyTotals.protein : null,
+    carbs: numericTargets.carbs > 0 ? numericTargets.carbs - dailyTotals.carbs : null,
+    fat: numericTargets.fat > 0 ? numericTargets.fat - dailyTotals.fat : null,
   };
 
   const latestWeight = getLatestWeightEntry(state.weightEntries);
@@ -128,17 +138,22 @@ export default function App() {
   );
   const complianceSummary = useMemo(() => {
     const metrics = [
-      { current: dailyTotals.calories, target: state.settings.calorieTarget, tolerance: 0.1 },
-      { current: dailyTotals.protein, target: state.settings.proteinTarget, tolerance: 0.15 },
-      { current: dailyTotals.carbs, target: state.settings.carbsTarget, tolerance: 0.15 },
-      { current: dailyTotals.fat, target: state.settings.fatTarget, tolerance: 0.15 },
+      { current: dailyTotals.calories, target: numericTargets.calories, tolerance: 0.1 },
+      { current: dailyTotals.protein, target: numericTargets.protein, tolerance: 0.15 },
+      { current: dailyTotals.carbs, target: numericTargets.carbs, tolerance: 0.15 },
+      { current: dailyTotals.fat, target: numericTargets.fat, tolerance: 0.15 },
     ];
 
-    const metricScores = metrics.map(({ current, target, tolerance }) => {
-      if (target <= 0) {
-        return 100;
-      }
+    const activeMetrics = metrics.filter(({ target }) => target > 0);
 
+    if (!activeMetrics.length) {
+      return {
+        score: 0,
+        label: "Set targets",
+      };
+    }
+
+    const metricScores = activeMetrics.map(({ current, target, tolerance }) => {
       const deltaRatio = Math.abs(current - target) / target;
       return Math.max(0, Math.round((1 - deltaRatio / tolerance) * 100));
     });
@@ -151,7 +166,7 @@ export default function App() {
       score,
       label: score >= 85 ? "On target" : score >= 60 ? "Close" : "Needs adjustment",
     };
-  }, [dailyTotals, state.settings]);
+  }, [dailyTotals, numericTargets]);
 
   useEffect(() => {
     if (!undoToast) {

@@ -6,40 +6,53 @@ function cloneState(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function mapNullableNumber(value) {
+  return value ?? "";
+}
+
+function toNullableNumber(value) {
+  if (value === "" || value === null || value === undefined) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
 function mapSettingsRow(row) {
   if (!row) {
     return null;
   }
 
   return {
-    calorieTarget: row.calorie_target,
-    proteinTarget: row.protein_target,
-    carbsTarget: row.carbs_target,
-    fatTarget: row.fat_target,
+    calorieTarget: mapNullableNumber(row.calorie_target),
+    proteinTarget: mapNullableNumber(row.protein_target),
+    carbsTarget: mapNullableNumber(row.carbs_target),
+    fatTarget: mapNullableNumber(row.fat_target),
     macroTargetMode: row.macro_target_mode || "grams",
     proteinPercent: row.protein_percent ?? 35,
     carbsPercent: row.carbs_percent ?? 40,
     fatPercent: row.fat_percent ?? 25,
-    weightGoal: row.weight_goal ?? "",
-    weightUnit: row.weight_unit,
-    accentColor: row.accent_color,
+    weightGoal: mapNullableNumber(row.weight_goal),
+    weightUnit: row.weight_unit || "lb",
+    accentColor: row.accent_color || "blue",
   };
 }
 
 function mapSettingsToRow(userId, settings) {
   return {
     user_id: userId,
-    calorie_target: settings.calorieTarget,
-    protein_target: settings.proteinTarget,
-    carbs_target: settings.carbsTarget,
-    fat_target: settings.fatTarget,
+    calorie_target: toNullableNumber(settings.calorieTarget),
+    protein_target: toNullableNumber(settings.proteinTarget),
+    carbs_target: toNullableNumber(settings.carbsTarget),
+    fat_target: toNullableNumber(settings.fatTarget),
     macro_target_mode: settings.macroTargetMode || "grams",
     protein_percent: settings.proteinPercent ?? 35,
     carbs_percent: settings.carbsPercent ?? 40,
     fat_percent: settings.fatPercent ?? 25,
-    weight_goal: settings.weightGoal || null,
-    weight_unit: settings.weightUnit,
-    accent_color: settings.accentColor,
+    weight_goal: toNullableNumber(settings.weightGoal),
+    weight_unit: settings.weightUnit || "lb",
+    accent_color: settings.accentColor || "blue",
   };
 }
 
@@ -190,7 +203,11 @@ async function syncCollection(table, userId, previousRows, nextRows, mapper) {
   }
 
   if (deletedIds.length) {
-    const { error } = await supabase.from(table).delete().in("id", deletedIds);
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq("user_id", userId)
+      .in("id", deletedIds);
     if (error) {
       throw error;
     }
@@ -214,12 +231,32 @@ export const supabaseStorageAdapter = {
 
     const [settingsResult, foodResult, mealResult, weightResult, workoutResult, customSystemResult] =
       await Promise.all([
-        supabase.from("settings").select("*").maybeSingle(),
-        supabase.from("food_entries").select("*").order("date", { ascending: false }),
-        supabase.from("meal_templates").select("*").order("updated_at", { ascending: false }),
-        supabase.from("weight_entries").select("*").order("date", { ascending: false }),
-        supabase.from("workout_entries").select("*").order("date", { ascending: false }),
-        supabase.from("custom_workout_systems").select("*").order("updated_at", { ascending: false }),
+        supabase.from("settings").select("*").eq("user_id", session.user.id).maybeSingle(),
+        supabase
+          .from("food_entries")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("date", { ascending: false }),
+        supabase
+          .from("meal_templates")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("updated_at", { ascending: false }),
+        supabase
+          .from("weight_entries")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("date", { ascending: false }),
+        supabase
+          .from("workout_entries")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("date", { ascending: false }),
+        supabase
+          .from("custom_workout_systems")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("updated_at", { ascending: false }),
       ]);
 
     for (const result of [

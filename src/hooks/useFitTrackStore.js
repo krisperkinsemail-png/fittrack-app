@@ -16,10 +16,10 @@ function getInitialSelectedDate() {
 const initialState = {
   selectedDate: getInitialSelectedDate(),
   settings: {
-    calorieTarget: 2200,
-    proteinTarget: 180,
-    carbsTarget: 220,
-    fatTarget: 70,
+    calorieTarget: "",
+    proteinTarget: "",
+    carbsTarget: "",
+    fatTarget: "",
     macroTargetMode: "grams",
     proteinPercent: 35,
     carbsPercent: 40,

@@ -2,11 +2,19 @@ import { useState } from "react";
 import { WeightTrendChart } from "./WeightTrendChart";
 
 function formatMetricValue(value) {
+  if (value === "" || value === null || value === undefined) {
+    return "--";
+  }
+
   const rounded = Math.round(Number(value || 0) * 10) / 10;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
 function formatRemaining(value, unit) {
+  if (value === null || value === undefined) {
+    return "Set target";
+  }
+
   const formattedValue = formatMetricValue(Math.abs(value));
 
   if (value >= 0) {
@@ -122,6 +130,7 @@ export function DashboardSection({
             {progressItems.map((item) => {
               const percent = item.target > 0 ? Math.min((item.current / item.target) * 100, 100) : 0;
               const remainingValue = item.target - item.current;
+              const hasTarget = Number(item.target) > 0;
 
               return (
                 <article className="progress-card" key={item.label}>
@@ -133,7 +142,11 @@ export function DashboardSection({
                     <div className="progress-fill" style={{ width: `${percent}%` }} />
                   </div>
                   <p className="muted">
-                    {item.helper} • {formatRemaining(remainingValue, item.label === "Calories" ? "cal" : "g")}
+                    {item.helper} •{" "}
+                    {formatRemaining(
+                      hasTarget ? remainingValue : null,
+                      item.label === "Calories" ? "cal" : "g"
+                    )}
                   </p>
                 </article>
               );
@@ -154,7 +167,10 @@ export function DashboardSection({
               <span>Compliance score</span>
               <strong>{complianceSummary.score}%</strong>
               <p className="muted">
-                {complianceSummary.label}. Based on how close calories and macros are to target.
+                {complianceSummary.label}.
+                {complianceSummary.label === "Set targets"
+                  ? " Add calorie and macro goals to start scoring compliance."
+                  : " Based on how close calories and macros are to target."}
               </p>
             </div>
           </div>

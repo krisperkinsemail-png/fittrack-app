@@ -5,6 +5,15 @@ function roundMacroGrams(calories, percent, caloriesPerGram) {
   return Math.round((Number(calories) * Number(percent || 0)) / 100 / caloriesPerGram);
 }
 
+function parseOptionalNumber(value) {
+  if (value === "" || value === null || value === undefined) {
+    return "";
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : "";
+}
+
 export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
   const [form, setForm] = useState(settings);
   const { session, signOut, hasCloud } = useAuth();
@@ -42,28 +51,33 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
     const nextSettings =
       form.macroTargetMode === "percentages"
         ? {
-            calorieTarget: Number(form.calorieTarget),
-            proteinTarget: calculatedTargets.proteinTarget,
-            carbsTarget: calculatedTargets.carbsTarget,
-            fatTarget: calculatedTargets.fatTarget,
+            calorieTarget: parseOptionalNumber(form.calorieTarget),
+            proteinTarget:
+              form.calorieTarget === "" ? "" : parseOptionalNumber(calculatedTargets.proteinTarget),
+            carbsTarget:
+              form.calorieTarget === "" ? "" : parseOptionalNumber(calculatedTargets.carbsTarget),
+            fatTarget:
+              form.calorieTarget === "" ? "" : parseOptionalNumber(calculatedTargets.fatTarget),
             macroTargetMode: "percentages",
             proteinPercent: macroPercents.proteinPercent,
             carbsPercent: macroPercents.carbsPercent,
             fatPercent: macroPercents.fatPercent,
-            weightGoal: form.weightGoal ? Number(form.weightGoal) : "",
+            weightGoal: parseOptionalNumber(form.weightGoal),
             weightUnit: form.weightUnit,
+            accentColor: form.accentColor,
           }
         : {
-            calorieTarget: Number(form.calorieTarget),
-            proteinTarget: Number(form.proteinTarget),
-            carbsTarget: Number(form.carbsTarget),
-            fatTarget: Number(form.fatTarget),
+            calorieTarget: parseOptionalNumber(form.calorieTarget),
+            proteinTarget: parseOptionalNumber(form.proteinTarget),
+            carbsTarget: parseOptionalNumber(form.carbsTarget),
+            fatTarget: parseOptionalNumber(form.fatTarget),
             macroTargetMode: "grams",
             proteinPercent: macroPercents.proteinPercent,
             carbsPercent: macroPercents.carbsPercent,
             fatPercent: macroPercents.fatPercent,
-            weightGoal: form.weightGoal ? Number(form.weightGoal) : "",
+            weightGoal: parseOptionalNumber(form.weightGoal),
             weightUnit: form.weightUnit,
+            accentColor: form.accentColor,
           };
 
     onSave(nextSettings);
@@ -88,7 +102,7 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
               min="0"
               value={form.calorieTarget}
               onChange={(event) => setForm({ ...form, calorieTarget: event.target.value })}
-              required
+              placeholder="2200"
             />
           </label>
 
@@ -194,7 +208,7 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
                   min="0"
                   value={form.proteinTarget}
                   onChange={(event) => setForm({ ...form, proteinTarget: event.target.value })}
-                  required
+                  placeholder="180"
                 />
               </label>
 
@@ -205,7 +219,7 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
                   min="0"
                   value={form.carbsTarget}
                   onChange={(event) => setForm({ ...form, carbsTarget: event.target.value })}
-                  required
+                  placeholder="220"
                 />
               </label>
 
@@ -216,7 +230,7 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
                   min="0"
                   value={form.fatTarget}
                   onChange={(event) => setForm({ ...form, fatTarget: event.target.value })}
-                  required
+                  placeholder="70"
                 />
               </label>
             </div>
