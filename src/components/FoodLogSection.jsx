@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { FOOD_LIBRARY } from "../lib/foodLibrary";
 import { loadFoodLibraryUsage, recordFoodLibraryUsage } from "../lib/libraryUsage";
 import { searchRestaurantLibrary } from "../lib/restaurantLibrary";
@@ -140,6 +140,7 @@ export function FoodLogSection({
   const [restaurantLibrary, setRestaurantLibrary] = useState([]);
   const [restaurantStatus, setRestaurantStatus] = useState("idle");
   const [restaurantError, setRestaurantError] = useState("");
+  const deferredSearch = useDeferredValue(search);
 
   const totalCalories = useMemo(
     () => entries.reduce((sum, entry) => sum + entry.calories, 0),
@@ -160,7 +161,9 @@ export function FoodLogSection({
     }
 
     let isMounted = true;
-    if (search.trim().length < 2) {
+    const trimmedSearch = deferredSearch.trim();
+
+    if (trimmedSearch.length < 2) {
       setRestaurantLibrary([]);
       setRestaurantStatus("idle");
       setRestaurantError("");
@@ -170,28 +173,35 @@ export function FoodLogSection({
     }
 
     setRestaurantStatus("loading");
-    searchRestaurantLibrary(search)
+    const timeoutId = window.setTimeout(() => {
+      searchRestaurantLibrary(trimmedSearch)
       .then((results) => {
         if (!isMounted) {
           return;
         }
 
-        setRestaurantLibrary(results);
-        setRestaurantStatus("ready");
-        setRestaurantError("");
+        startTransition(() => {
+          setRestaurantLibrary(results);
+          setRestaurantStatus("ready");
+          setRestaurantError("");
+        });
       })
       .catch((error) => {
         if (!isMounted) {
           return;
         }
-        setRestaurantStatus("error");
-        setRestaurantError(error.message || "Failed to load restaurant library.");
+        startTransition(() => {
+          setRestaurantStatus("error");
+          setRestaurantError(error.message || "Failed to load restaurant library.");
+        });
       });
+    }, 180);
 
     return () => {
       isMounted = false;
+      window.clearTimeout(timeoutId);
     };
-  }, [categoryFilter, search]);
+  }, [categoryFilter, deferredSearch]);
 
   const filteredLibrary = useMemo(() => {
     const savedMeals = mealTemplates.map((meal) => ({
@@ -225,7 +235,7 @@ export function FoodLogSection({
           left.description,
         ]);
 
-        if (rightScore !== leftScore) {
+        if (search && rightScore !== leftScore) {
           return rightScore - leftScore;
         }
 

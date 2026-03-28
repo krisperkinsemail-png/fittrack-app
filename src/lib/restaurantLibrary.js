@@ -2,6 +2,31 @@ import { hasSupabaseConfig, supabase } from "./supabase";
 import { computeSearchScore, isFuzzyMatch, normalizeSearchQuery } from "./search";
 
 let fallbackLibraryPromise = null;
+const queryCache = new Map();
+const MAX_CACHE_ENTRIES = 60;
+
+function getCachedQuery(query) {
+  if (!queryCache.has(query)) {
+    return null;
+  }
+
+  const value = queryCache.get(query);
+  queryCache.delete(query);
+  queryCache.set(query, value);
+  return value;
+}
+
+function setCachedQuery(query, results) {
+  queryCache.set(query, results);
+  if (queryCache.size <= MAX_CACHE_ENTRIES) {
+    return;
+  }
+
+  const oldestKey = queryCache.keys().next().value;
+  if (oldestKey) {
+    queryCache.delete(oldestKey);
+  }
+}
 
 function formatServingSize(item) {
   return [item.serving_amount, item.serving_unit, item.serving_label].filter(Boolean).join(" ").trim();
@@ -23,6 +48,17 @@ function mapRestaurantRow(row) {
     sourceType: row.source_type || "",
     sourceDate: row.source_date || "",
   };
+}
+
+function dedupeRestaurantRows(rows) {
+  const seen = new Set();
+  return rows.filter((row) => {
+    if (seen.has(row.id)) {
+      return false;
+    }
+    seen.add(row.id);
+    return true;
+  });
 }
 
 async function loadFallbackLibrary() {
@@ -68,20 +104,54 @@ export async function searchRestaurantLibrary(query) {
     return [];
   }
 
+  const normalized = normalizeSearchQuery(trimmed);
+  const cached = getCachedQuery(normalized);
+  if (cached) {
+    return cached;
+  }
+
   if (hasSupabaseConfig) {
-    const normalized = normalizeSearchQuery(trimmed);
-    const { data, error } = await supabase.rpc("search_restaurant_library", {
+    const fastResult = await supabase
+      .from("restaurant_library")
+      .select(
+        "id, brand, item_name, category, description, serving_amount, serving_unit, serving_label, calories, protein_g, carbs_g, fat_g, source_type, source_date"
+      )
+      .or(
+        `normalized_search_text.ilike.%${normalized}%,brand.ilike.%${trimmed}%,item_name.ilike.%${trimmed}%`
+      )
+      .order("brand")
+      .order("item_name")
+      .limit(40);
+
+    if (!fastResult.error && fastResult.data?.length >= 12) {
+      const mapped = fastResult.data.map(mapRestaurantRow);
+      setCachedQuery(normalized, mapped);
+      return mapped;
+    }
+
+    const fuzzyResult = await supabase.rpc("search_restaurant_library", {
       search_query: normalized,
-      result_limit: 120,
+      result_limit: 80,
     });
 
-    if (!error && data) {
-      return data.map(mapRestaurantRow);
+    if (!fuzzyResult.error && fuzzyResult.data) {
+      const merged = dedupeRestaurantRows([
+        ...(fastResult.error || !fastResult.data ? [] : fastResult.data),
+        ...fuzzyResult.data,
+      ]).map(mapRestaurantRow);
+      setCachedQuery(normalized, merged);
+      return merged;
+    }
+
+    if (!fastResult.error && fastResult.data) {
+      const mapped = fastResult.data.map(mapRestaurantRow);
+      setCachedQuery(normalized, mapped);
+      return mapped;
     }
   }
 
   const library = await loadFallbackLibrary();
-  return library
+  const results = library
     .filter((item) => matchesSearch(item, trimmed))
     .sort((left, right) => {
       const rightScore = computeSearchScore(trimmed, [
@@ -102,5 +172,7 @@ export async function searchRestaurantLibrary(query) {
       const brandSort = left.brand.localeCompare(right.brand);
       return brandSort || left.name.localeCompare(right.name);
     })
-    .slice(0, 120);
+    .slice(0, 80);
+  setCachedQuery(normalized, results);
+  return results;
 }
