@@ -87,6 +87,8 @@ export function WorkoutSection({
   const [timeLeft, setTimeLeft] = useState(90);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [isProgramPickerOpen, setIsProgramPickerOpen] = useState(false);
+  const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
 
   const selectedProgram = useMemo(
     () => workoutPrograms.find((program) => program.id === selectedProgramId) || workoutPrograms[0],
@@ -455,6 +457,23 @@ export function WorkoutSection({
     return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
   }
 
+  function handleProgramChange(programId) {
+    setSelectedProgramId(programId);
+    setIsProgramPickerOpen(false);
+    setIsWorkoutPickerOpen(false);
+  }
+
+  function handlePhaseChange(phaseId) {
+    setSelectedPhaseId(phaseId);
+    setIsProgramPickerOpen(false);
+    setIsWorkoutPickerOpen(false);
+  }
+
+  function handleWorkoutChange(workoutId) {
+    setSelectedWorkoutId(workoutId);
+    setIsWorkoutPickerOpen(false);
+  }
+
   return (
     <div className="section-stack">
       <section className="card">
@@ -475,56 +494,29 @@ export function WorkoutSection({
           </div>
         </div>
 
-        <label>
-          Program
-          <select value={selectedProgramId} onChange={(event) => setSelectedProgramId(event.target.value)}>
-            {workoutPrograms.map((program) => (
-              <option key={program.id} value={program.id}>
-                {program.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {selectedProgram.phases?.length ? (
-          <label>
-            Mesocycle block
-            <select value={selectedPhaseId || ""} onChange={(event) => setSelectedPhaseId(event.target.value)}>
-              {selectedProgram.phases.map((phase) => (
-                <option key={phase.id} value={phase.id}>
-                  {phase.name} • {phase.summary}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-
-        <div className="workout-picker-header">
-          <div>
-            <p className="eyebrow">Select workout</p>
-            <h3>{selectedPhase ? `${selectedProgram.name} • ${selectedPhase.name}` : selectedProgram.name}</h3>
-          </div>
-          <p className="muted">
-            Switching workouts reloads the active template automatically.
-          </p>
-        </div>
-
-        <div className="workout-system-grid">
-          {availableWorkouts.map((workout) => (
-            <button
-              key={workout.id}
-              type="button"
-              className={
-                workout.id === selectedWorkoutId
-                  ? "workout-chip workout-chip--selected"
-                  : "workout-chip"
-              }
-              onClick={() => setSelectedWorkoutId(workout.id)}
-            >
-              <strong>{workout.name}</strong>
-              <span>{workout.phaseSummary || workout.summary}</span>
-            </button>
-          ))}
+        <div className="workout-selector-grid">
+          <button
+            type="button"
+            className="summary-panel workout-selector-card"
+            onClick={() => setIsProgramPickerOpen(true)}
+          >
+            <span>Program</span>
+            <strong>{selectedProgram.name}</strong>
+            <p className="muted">
+              {selectedPhase ? selectedPhase.name : selectedProgram.description || "Choose program"}
+            </p>
+          </button>
+          <button
+            type="button"
+            className="summary-panel workout-selector-card"
+            onClick={() => setIsWorkoutPickerOpen(true)}
+          >
+            <span>Workout</span>
+            <strong>{selectedWorkout.name}</strong>
+            <p className="muted">
+              {selectedWorkout.summary || "Switching workouts reloads the active template automatically."}
+            </p>
+          </button>
         </div>
 
         <div className="summary-grid">
@@ -966,6 +958,135 @@ export function WorkoutSection({
                     : "This fills in once you log weighted sets."}
                 </p>
               </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {isProgramPickerOpen ? (
+        <div
+          className="insights-modal-backdrop"
+          role="presentation"
+          onClick={() => setIsProgramPickerOpen(false)}
+        >
+          <section
+            className="insights-modal workout-picker-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="workout-program-picker-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Workout tracking</p>
+                <h2 id="workout-program-picker-title">Select program</h2>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setIsProgramPickerOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="workout-system-grid">
+              {workoutPrograms.map((program) => (
+                <button
+                  key={program.id}
+                  type="button"
+                  className={
+                    program.id === selectedProgramId
+                      ? "workout-chip workout-chip--selected"
+                      : "workout-chip"
+                  }
+                  onClick={() => handleProgramChange(program.id)}
+                >
+                  <strong>{program.name}</strong>
+                  <span>{program.description || "Workout program"}</span>
+                </button>
+              ))}
+            </div>
+
+            {selectedProgram.phases?.length ? (
+              <>
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">Mesocycle block</p>
+                    <h2>Choose block</h2>
+                  </div>
+                  <p className="muted">This determines which workout list is available next.</p>
+                </div>
+                <div className="workout-system-grid">
+                  {selectedProgram.phases.map((phase) => (
+                    <button
+                      key={phase.id}
+                      type="button"
+                      className={
+                        phase.id === selectedPhaseId
+                          ? "workout-chip workout-chip--selected"
+                          : "workout-chip"
+                      }
+                      onClick={() => handlePhaseChange(phase.id)}
+                    >
+                      <strong>{phase.name}</strong>
+                      <span>{phase.summary}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </section>
+        </div>
+      ) : null}
+
+      {isWorkoutPickerOpen ? (
+        <div
+          className="insights-modal-backdrop"
+          role="presentation"
+          onClick={() => setIsWorkoutPickerOpen(false)}
+        >
+          <section
+            className="insights-modal workout-picker-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="workout-picker-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Workout tracking</p>
+                <h2 id="workout-picker-title">Select workout</h2>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setIsWorkoutPickerOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="muted">
+              {selectedPhase ? `${selectedProgram.name} • ${selectedPhase.name}` : selectedProgram.name}
+            </p>
+
+            <div className="workout-system-grid">
+              {availableWorkouts.map((workout) => (
+                <button
+                  key={workout.id}
+                  type="button"
+                  className={
+                    workout.id === selectedWorkoutId
+                      ? "workout-chip workout-chip--selected"
+                      : "workout-chip"
+                  }
+                  onClick={() => handleWorkoutChange(workout.id)}
+                >
+                  <strong>{workout.name}</strong>
+                  <span>{workout.phaseSummary || workout.summary}</span>
+                </button>
+              ))}
             </div>
           </section>
         </div>

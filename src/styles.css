@@ -701,6 +701,13 @@ button {
   gap: 12px;
 }
 
+.workout-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 6px 0 4px;
+}
+
 .food-library-grid {
   margin-top: 10px;
 }
@@ -723,6 +730,43 @@ button {
   align-self: stretch;
   align-items: center;
   justify-content: center;
+}
+
+.workout-selector-card {
+  width: 100%;
+  min-height: 132px;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(96, 114, 139, 0.22);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.workout-selector-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 42%, rgba(96, 114, 139, 0.22));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.workout-selector-card p {
+  margin: 0;
+}
+
+.workout-selector-card span,
+.workout-selector-card strong {
+  margin: 0;
+}
+
+.workout-picker-modal {
+  width: min(100%, 720px);
 }
 
 .workout-insights-button {
