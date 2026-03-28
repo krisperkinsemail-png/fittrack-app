@@ -16,6 +16,8 @@ const EMPTY_FORM = {
   fat: "",
 };
 
+const QUICK_SEARCH_LIMIT = 50;
+
 function formatDecimal(value) {
   const rounded = Math.round(value * 10) / 10;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
@@ -265,7 +267,7 @@ export function FoodLogSection({
         return left.item.name.localeCompare(right.item.name);
       })
       .map(({ item }) => item)
-      .slice(0, 6);
+      .slice(0, QUICK_SEARCH_LIMIT);
 
     setQuickSearchResults(localMatches);
     setQuickSearchStatus(localMatches.length ? "ready" : "loading");
@@ -290,7 +292,7 @@ export function FoodLogSection({
             }
             mergedResults.push(item);
             seen.add(item.id);
-            if (mergedResults.length >= 8) {
+            if (mergedResults.length >= QUICK_SEARCH_LIMIT) {
               break;
             }
           }
