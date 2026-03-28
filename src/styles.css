@@ -991,6 +991,13 @@ button {
   flex: 1;
 }
 
+.workout-inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .exercise-index,
 .set-label {
   color: var(--muted);
@@ -1012,6 +1019,13 @@ button {
   grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
+}
+
+.set-row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .set-field {

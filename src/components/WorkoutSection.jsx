@@ -60,6 +60,23 @@ function getEntrySetCount(entry) {
   return entry.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
 }
 
+function moveItem(items, fromIndex, toIndex) {
+  if (
+    fromIndex === toIndex ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= items.length ||
+    toIndex >= items.length
+  ) {
+    return items;
+  }
+
+  const nextItems = [...items];
+  const [movedItem] = nextItems.splice(fromIndex, 1);
+  nextItems.splice(toIndex, 0, movedItem);
+  return nextItems;
+}
+
 export function WorkoutSection({
   selectedDate,
   entries,
@@ -471,6 +488,18 @@ export function WorkoutSection({
     updateDraft((current) => current.filter((exercise) => exercise.id !== exerciseId));
   }
 
+  function moveExercise(exerciseId, direction) {
+    updateDraft((current) => {
+      const currentIndex = current.findIndex((exercise) => exercise.id === exerciseId);
+      if (currentIndex === -1) {
+        return current;
+      }
+
+      const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      return moveItem(current, currentIndex, nextIndex);
+    });
+  }
+
   function applyPreviousSets(exerciseId, previousExercise) {
     updateDraft((current) =>
       current.map((exercise) =>
@@ -628,6 +657,27 @@ export function WorkoutSection({
     setSavedWorkoutDraft(null);
     setIsDraftActive(false);
     setDraftExercises(createWorkoutDraft(selectedWorkout));
+  }
+
+  function moveSet(exerciseId, setId, direction) {
+    updateDraft((current) =>
+      current.map((exercise) => {
+        if (exercise.id !== exerciseId) {
+          return exercise;
+        }
+
+        const currentIndex = exercise.sets.findIndex((set) => set.id === setId);
+        if (currentIndex === -1) {
+          return exercise;
+        }
+
+        const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+        return {
+          ...exercise,
+          sets: moveItem(exercise.sets, currentIndex, nextIndex),
+        };
+      })
+    );
   }
 
   return (
@@ -823,13 +873,33 @@ export function WorkoutSection({
                     {exercise.notes ? <p className="muted">{exercise.notes}</p> : null}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="secondary-button danger-button"
-                  onClick={() => removeExercise(exercise.id)}
-                >
-                  Remove
-                </button>
+                <div className="workout-inline-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => moveExercise(exercise.id, "up")}
+                    disabled={exerciseIndex === 0}
+                    aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} up`}
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => moveExercise(exercise.id, "down")}
+                    disabled={exerciseIndex === draftExercises.length - 1}
+                    aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} down`}
+                  >
+                    Down
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button danger-button"
+                    onClick={() => removeExercise(exercise.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
 
               {previousExercise ? (
@@ -879,13 +949,34 @@ export function WorkoutSection({
                         Last: {previousExercise?.sets?.[setIndex]?.weight ?? "--"}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => removeSet(exercise.id, set.id)}
-                    >
-                      X
-                    </button>
+                    <div className="set-row-actions">
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => moveSet(exercise.id, set.id, "up")}
+                        disabled={setIndex === 0}
+                        aria-label={`Move set ${setIndex + 1} up`}
+                      >
+                        Up
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => moveSet(exercise.id, set.id, "down")}
+                        disabled={setIndex === exercise.sets.length - 1}
+                        aria-label={`Move set ${setIndex + 1} down`}
+                      >
+                        Down
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => removeSet(exercise.id, set.id)}
+                        aria-label={`Remove set ${setIndex + 1}`}
+                      >
+                        X
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
