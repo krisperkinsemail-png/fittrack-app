@@ -88,6 +88,12 @@ export function DashboardSection({
     setOpenSection((current) => (current === sectionId ? null : sectionId));
   }
 
+  function handleThemeToggle() {
+    onUpdateSettings({
+      accentColor: settings.accentColor === "purple" ? "blue" : "purple",
+    });
+  }
+
   return (
     <div className="section-stack">
       <section className="card dashboard-section-card">
@@ -313,35 +319,21 @@ export function DashboardSection({
         <button
           type="button"
           className="dashboard-fold-toggle"
-          onClick={() => toggleSection("appearance")}
-          aria-expanded={openSection === "appearance"}
+          onClick={handleThemeToggle}
         >
           <div className="section-heading">
             <div>
               <p className="eyebrow">Appearance</p>
               <h2>Theme color</h2>
             </div>
-            <p className="muted">Choose the accent used across charts, buttons, and highlights.</p>
+            <p className="muted">Tap to switch between blue and purple accents.</p>
           </div>
           <div className="dashboard-fold-summary">
             <strong>{formatThemeLabel(settings.accentColor)}</strong>
-            <span>Current theme</span>
+            <span>Tap to change</span>
           </div>
-          <span className="dashboard-fold-chevron">{openSection === "appearance" ? "−" : "+"}</span>
+          <span className="dashboard-fold-chevron">↺</span>
         </button>
-
-        <div className={openSection === "appearance" ? "dashboard-fold-content is-open" : "dashboard-fold-content"}>
-          <label>
-            Accent color
-            <select
-              value={settings.accentColor}
-              onChange={(event) => onUpdateSettings({ accentColor: event.target.value })}
-            >
-              <option value="blue">Blue</option>
-              <option value="purple">Purple</option>
-            </select>
-          </label>
-        </div>
       </section>
     </div>
   );
