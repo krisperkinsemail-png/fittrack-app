@@ -4,6 +4,7 @@ import { formatLongDate } from "../lib/date";
 
 const REST_PRESETS = [60, 90, 120, 180];
 const CUSTOM_EXERCISE_BANK_KEY = "fittrack.custom-exercise-bank.v1";
+const WORKOUT_DRAFTS_KEY = "fittrack.workout-drafts.v1";
 
 function createSet() {
   return {
@@ -91,6 +92,8 @@ export function WorkoutSection({
   const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
   const [customExerciseBank, setCustomExerciseBank] = useState(() => loadCustomExerciseBank());
+  const [savedWorkoutDraft, setSavedWorkoutDraft] = useState(null);
+  const [isDraftActive, setIsDraftActive] = useState(false);
   const [customExerciseForm, setCustomExerciseForm] = useState({
     name: "",
     target: "",
@@ -148,8 +151,12 @@ export function WorkoutSection({
   }, [selectedPhaseId, selectedPhase]);
 
   useEffect(() => {
-    setDraftExercises(createWorkoutDraft(selectedWorkout));
-  }, [selectedWorkout]);
+    const templateDraft = createWorkoutDraft(selectedWorkout);
+    const nextSavedDraft = loadWorkoutDraft(selectedDate, selectedWorkout.id);
+    setDraftExercises(templateDraft);
+    setSavedWorkoutDraft(nextSavedDraft);
+    setIsDraftActive(false);
+  }, [selectedDate, selectedWorkout]);
 
   useEffect(() => {
     setTemplateForm({
@@ -198,6 +205,11 @@ export function WorkoutSection({
       plannedSets,
     };
   }, [draftExercises]);
+
+  const isDraftDirty = useMemo(
+    () => hasDraftChanges(draftExercises, selectedWorkout),
+    [draftExercises, selectedWorkout]
+  );
 
   const latestMatchingWorkout = useMemo(
     () =>
@@ -304,6 +316,36 @@ export function WorkoutSection({
     };
   }, [allEntries, selectedDate]);
 
+  useEffect(() => {
+    if (!isDraftActive) {
+      return;
+    }
+
+    if (!isDraftDirty) {
+      clearWorkoutDraft(selectedDate, selectedWorkout.id);
+      setSavedWorkoutDraft(null);
+      setIsDraftActive(false);
+      return;
+    }
+
+    const nextDraft = {
+      date: selectedDate,
+      workoutId: selectedWorkout.id,
+      workoutName: selectedWorkout.name,
+      exercises: cloneWorkoutDraft(draftExercises),
+      updatedAt: new Date().toISOString(),
+    };
+    saveWorkoutDraft(nextDraft);
+    setSavedWorkoutDraft(nextDraft);
+  }, [draftExercises, isDraftActive, isDraftDirty, selectedDate, selectedWorkout]);
+
+  function updateDraft(updater) {
+    setIsDraftActive(true);
+    setDraftExercises((current) =>
+      typeof updater === "function" ? updater(current) : updater
+    );
+  }
+
   function addCustomExerciseDraft({ name, target, setCount }) {
     const trimmedName = name.trim();
     const nextSetCount = Math.max(1, Number(setCount) || 1);
@@ -312,7 +354,7 @@ export function WorkoutSection({
       return;
     }
 
-    setDraftExercises((current) => [
+    updateDraft((current) => [
       ...current,
       {
         id: crypto.randomUUID(),
@@ -372,7 +414,7 @@ export function WorkoutSection({
   }
 
   function updateExerciseName(exerciseId, value) {
-    setDraftExercises((current) =>
+    updateDraft((current) =>
       current.map((exercise) =>
         exercise.id === exerciseId ? { ...exercise, name: value } : exercise
       )
@@ -380,7 +422,7 @@ export function WorkoutSection({
   }
 
   function updateExerciseTarget(exerciseId, value) {
-    setDraftExercises((current) =>
+    updateDraft((current) =>
       current.map((exercise) =>
         exercise.id === exerciseId ? { ...exercise, target: value } : exercise
       )
@@ -388,7 +430,7 @@ export function WorkoutSection({
   }
 
   function addSet(exerciseId) {
-    setDraftExercises((current) =>
+    updateDraft((current) =>
       current.map((exercise) =>
         exercise.id === exerciseId
           ? { ...exercise, sets: [...exercise.sets, createSet()] }
@@ -398,7 +440,7 @@ export function WorkoutSection({
   }
 
   function removeSet(exerciseId, setId) {
-    setDraftExercises((current) =>
+    updateDraft((current) =>
       current.map((exercise) => {
         if (exercise.id !== exerciseId) {
           return exercise;
@@ -411,7 +453,7 @@ export function WorkoutSection({
   }
 
   function updateSet(exerciseId, setId, field, value) {
-    setDraftExercises((current) =>
+    updateDraft((current) =>
       current.map((exercise) =>
         exercise.id === exerciseId
           ? {
@@ -426,11 +468,11 @@ export function WorkoutSection({
   }
 
   function removeExercise(exerciseId) {
-    setDraftExercises((current) => current.filter((exercise) => exercise.id !== exerciseId));
+    updateDraft((current) => current.filter((exercise) => exercise.id !== exerciseId));
   }
 
   function applyPreviousSets(exerciseId, previousExercise) {
-    setDraftExercises((current) =>
+    updateDraft((current) =>
       current.map((exercise) =>
         exercise.id === exerciseId
           ? {
@@ -473,6 +515,9 @@ export function WorkoutSection({
       exercises,
     });
 
+    clearWorkoutDraft(selectedDate, selectedWorkout.id);
+    setSavedWorkoutDraft(null);
+    setIsDraftActive(false);
     setDraftExercises(createWorkoutDraft(selectedWorkout));
   }
 
@@ -548,6 +593,41 @@ export function WorkoutSection({
   function handleWorkoutChange(workoutId) {
     setSelectedWorkoutId(workoutId);
     setIsWorkoutPickerOpen(false);
+  }
+
+  function handleResumeDraft() {
+    if (!savedWorkoutDraft) {
+      return;
+    }
+
+    setDraftExercises(cloneWorkoutDraft(savedWorkoutDraft.exercises));
+    setIsDraftActive(true);
+  }
+
+  function handleFinishLater() {
+    if (!isDraftDirty) {
+      return;
+    }
+
+    const nextDraft = {
+      date: selectedDate,
+      workoutId: selectedWorkout.id,
+      workoutName: selectedWorkout.name,
+      exercises: cloneWorkoutDraft(draftExercises),
+      updatedAt: new Date().toISOString(),
+    };
+
+    saveWorkoutDraft(nextDraft);
+    setSavedWorkoutDraft(nextDraft);
+    setIsDraftActive(false);
+    setDraftExercises(createWorkoutDraft(selectedWorkout));
+  }
+
+  function handleDiscardDraft() {
+    clearWorkoutDraft(selectedDate, selectedWorkout.id);
+    setSavedWorkoutDraft(null);
+    setIsDraftActive(false);
+    setDraftExercises(createWorkoutDraft(selectedWorkout));
   }
 
   return (
@@ -678,6 +758,35 @@ export function WorkoutSection({
           </div>
         ) : null}
 
+        {savedWorkoutDraft && !isDraftActive ? (
+          <div className="summary-panel">
+            <span>Saved draft available</span>
+            <strong>{savedWorkoutDraft.workoutName}</strong>
+            <p className="muted">
+              Last saved {formatDateTime(savedWorkoutDraft.updatedAt)}. Resume where you left off or
+              discard it.
+            </p>
+            <div className="button-row">
+              <button type="button" className="primary-button" onClick={handleResumeDraft}>
+                Resume draft
+              </button>
+              <button type="button" className="secondary-button" onClick={handleDiscardDraft}>
+                Discard draft
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {isDraftActive && isDraftDirty ? (
+          <div className="summary-panel">
+            <span>Draft status</span>
+            <strong>Saved automatically</strong>
+            <p className="muted">
+              Your progress for {formatLongDate(selectedDate)} is being kept as you build.
+            </p>
+          </div>
+        ) : null}
+
         <div className="button-row">
           <button
             type="button"
@@ -792,9 +901,19 @@ export function WorkoutSection({
           )})}
         </div>
 
-        <button type="button" className="primary-button" onClick={handleSaveWorkout}>
-          Save completed workout
-        </button>
+        <div className="button-row">
+          <button type="button" className="primary-button" onClick={handleSaveWorkout}>
+            Save completed workout
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={handleFinishLater}
+            disabled={!isDraftDirty}
+          >
+            Finish later
+          </button>
+        </div>
       </section>
 
       <section className="card">
@@ -1397,4 +1516,102 @@ function upsertCustomExercise(currentBank, exercise) {
   }
 
   return [{ id: crypto.randomUUID(), ...exercise }, ...currentBank];
+}
+
+function normalizeDraftForCompare(exercises) {
+  return exercises.map((exercise) => ({
+    name: exercise.name.trim(),
+    target: (exercise.target || "").trim(),
+    notes: (exercise.notes || "").trim(),
+    sets: exercise.sets.map((set) => ({
+      reps: String(set.reps ?? ""),
+      weight: String(set.weight ?? ""),
+    })),
+  }));
+}
+
+function createTemplateDraftForCompare(workout) {
+  return workout.exercises.map((exercise) => ({
+    name: exercise.name.trim(),
+    target: (exercise.target || "").trim(),
+    notes: (exercise.notes || "").trim(),
+    sets: Array.from({ length: exercise.defaultSets || 1 }, () => ({
+      reps: "",
+      weight: "",
+    })),
+  }));
+}
+
+function hasDraftChanges(draftExercises, workout) {
+  return (
+    JSON.stringify(normalizeDraftForCompare(draftExercises)) !==
+    JSON.stringify(createTemplateDraftForCompare(workout))
+  );
+}
+
+function cloneWorkoutDraft(exercises) {
+  return exercises.map((exercise) => ({
+    ...exercise,
+    sets: exercise.sets.map((set) => ({ ...set })),
+  }));
+}
+
+function loadAllWorkoutDrafts() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const savedValue = window.localStorage.getItem(WORKOUT_DRAFTS_KEY);
+    const parsed = savedValue ? JSON.parse(savedValue) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAllWorkoutDrafts(drafts) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(WORKOUT_DRAFTS_KEY, JSON.stringify(drafts));
+  } catch {
+    // Ignore workout draft persistence failures.
+  }
+}
+
+function getWorkoutDraftKey(date, workoutId) {
+  return `${date}::${workoutId}`;
+}
+
+function loadWorkoutDraft(date, workoutId) {
+  const drafts = loadAllWorkoutDrafts();
+  return drafts[getWorkoutDraftKey(date, workoutId)] || null;
+}
+
+function saveWorkoutDraft(draft) {
+  const drafts = loadAllWorkoutDrafts();
+  drafts[getWorkoutDraftKey(draft.date, draft.workoutId)] = draft;
+  saveAllWorkoutDrafts(drafts);
+}
+
+function clearWorkoutDraft(date, workoutId) {
+  const drafts = loadAllWorkoutDrafts();
+  delete drafts[getWorkoutDraftKey(date, workoutId)];
+  saveAllWorkoutDrafts(drafts);
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "recently";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
