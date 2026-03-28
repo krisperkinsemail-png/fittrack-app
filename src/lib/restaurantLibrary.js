@@ -68,6 +68,22 @@ function dedupeRestaurantRows(rows) {
   });
 }
 
+function applyBrandIntentFilter(query, items) {
+  const normalizedQuery = normalizeSearchQuery(query);
+  const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+
+  if (queryTokens.length < 2) {
+    return items;
+  }
+
+  const brandMatches = items.filter((item) => {
+    const brandMeta = getSearchMeta(query, [item.brand || ""]);
+    return brandMeta.tier >= 2;
+  });
+
+  return brandMatches.length ? brandMatches : items;
+}
+
 async function loadFallbackLibrary() {
   if (!fallbackLibraryPromise) {
     fallbackLibraryPromise = fetch("/restaurant-library.json")
@@ -131,7 +147,10 @@ export async function searchRestaurantLibrary(query) {
       .limit(40);
 
     if (!fastResult.error && fastResult.data?.length) {
-      const mapped = fastResult.data.filter((row) => !shouldExcludeRestaurantRow(row)).map(mapRestaurantRow);
+      const mapped = applyBrandIntentFilter(
+        trimmed,
+        fastResult.data.filter((row) => !shouldExcludeRestaurantRow(row)).map(mapRestaurantRow)
+      );
       setCachedQuery(normalized, mapped);
       return mapped;
     }
@@ -142,40 +161,52 @@ export async function searchRestaurantLibrary(query) {
     });
 
     if (!fuzzyResult.error && fuzzyResult.data) {
-      const merged = dedupeRestaurantRows([
-        ...(fastResult.error || !fastResult.data ? [] : fastResult.data),
-        ...fuzzyResult.data,
-      ])
-        .filter((row) => !shouldExcludeRestaurantRow(row))
-        .map(mapRestaurantRow);
+      const merged = applyBrandIntentFilter(
+        trimmed,
+        dedupeRestaurantRows([
+          ...(fastResult.error || !fastResult.data ? [] : fastResult.data),
+          ...fuzzyResult.data,
+        ])
+          .filter((row) => !shouldExcludeRestaurantRow(row))
+          .map(mapRestaurantRow)
+      );
       setCachedQuery(normalized, merged);
       return merged;
     }
 
     if (!fastResult.error && fastResult.data) {
-      const mapped = fastResult.data.filter((row) => !shouldExcludeRestaurantRow(row)).map(mapRestaurantRow);
+      const mapped = applyBrandIntentFilter(
+        trimmed,
+        fastResult.data.filter((row) => !shouldExcludeRestaurantRow(row)).map(mapRestaurantRow)
+      );
       setCachedQuery(normalized, mapped);
       return mapped;
     }
   }
 
   const library = await loadFallbackLibrary();
-  const results = library
-    .filter((item) => !shouldExcludeRestaurantRow(item))
-    .map((item) => ({ item, meta: getSearchMeta(trimmed, [item.name, item.brand, item.description, item.servingSize]) }))
-    .filter(({ meta }) => meta.tier > 0)
-    .sort((left, right) => {
-      if (right.meta.tier !== left.meta.tier) {
-        return right.meta.tier - left.meta.tier;
-      }
-      if (right.meta.score !== left.meta.score) {
-        return right.meta.score - left.meta.score;
-      }
-      const brandSort = left.item.brand.localeCompare(right.item.brand);
-      return brandSort || left.item.name.localeCompare(right.item.name);
-    })
-    .map(({ item }) => item)
-    .slice(0, 80);
+  const results = applyBrandIntentFilter(
+    trimmed,
+    library
+      .filter((item) => !shouldExcludeRestaurantRow(item))
+      .map((item) => ({
+        item,
+        meta: getSearchMeta(trimmed, [item.name, item.brand, item.description, item.servingSize]),
+      }))
+      .filter(({ meta }) => meta.tier > 0)
+      .sort((left, right) => {
+        if (right.meta.tier !== left.meta.tier) {
+          return right.meta.tier - left.meta.tier;
+        }
+        if (right.meta.score !== left.meta.score) {
+          return right.meta.score - left.meta.score;
+        }
+        const brandSort = left.item.brand.localeCompare(right.item.brand);
+        return brandSort || left.item.name.localeCompare(right.item.name);
+      })
+      .map(({ item }) => item)
+      .slice(0, 80)
+  );
   setCachedQuery(normalized, results);
   return results;
 }

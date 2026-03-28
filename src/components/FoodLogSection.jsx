@@ -146,6 +146,64 @@ function getQuickSearchMeta(item, foodTerm, restaurantTerm) {
   };
 }
 
+function getSourcePriority(item) {
+  switch (item.itemType) {
+    case "saved-food":
+      return 0;
+    case "food":
+      return 1;
+    case "meal":
+      return 2;
+    case "restaurant":
+      return 3;
+    default:
+      return 4;
+  }
+}
+
+function compareItems(left, right, search = "", usageCounts = {}) {
+  const leftMeta = search ? getItemSearchMeta(left, search) : { tier: 0, score: 0 };
+  const rightMeta = search ? getItemSearchMeta(right, search) : { tier: 0, score: 0 };
+
+  if (search && rightMeta.tier !== leftMeta.tier) {
+    return rightMeta.tier - leftMeta.tier;
+  }
+
+  if (search && rightMeta.score !== leftMeta.score) {
+    return rightMeta.score - leftMeta.score;
+  }
+
+  const leftPriority = getSourcePriority(left);
+  const rightPriority = getSourcePriority(right);
+  if (leftPriority !== rightPriority) {
+    return leftPriority - rightPriority;
+  }
+
+  const rightUsage = usageCounts[right.id] || 0;
+  const leftUsage = usageCounts[left.id] || 0;
+  if (rightUsage !== leftUsage) {
+    return rightUsage - leftUsage;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
+function hasRestaurantIntent(foodTerm, restaurantTerm, restaurantMatches = []) {
+  if (restaurantTerm.length >= 2) {
+    return true;
+  }
+
+  if (foodTerm.length < 2) {
+    return false;
+  }
+
+  return restaurantMatches.some((item) => {
+    const brandMeta = getSearchMeta(foodTerm, [item.brand || ""]);
+    const nameMeta = getSearchMeta(foodTerm, [item.name || ""]);
+    return brandMeta.tier >= 3 || nameMeta.tier >= 3;
+  });
+}
+
 export function FoodLogSection({
   selectedDate,
   entries,
@@ -269,6 +327,7 @@ export function FoodLogSection({
     const trimmedSearch = deferredQuickSearch.trim();
     const trimmedRestaurantSearch = deferredQuickRestaurantSearch.trim();
     const hasEnoughInput = trimmedSearch.length >= 2 || trimmedRestaurantSearch.length >= 2;
+    const restaurantOnlyMode = trimmedRestaurantSearch.length >= 2;
 
     if (!isQuickSearchOpen || !hasEnoughInput) {
       setQuickSearchResults([]);
@@ -280,45 +339,67 @@ export function FoodLogSection({
 
     let isMounted = true;
 
-    const localMatches = quickPickLibrary
-      .map((item) => ({ item, meta: getQuickSearchMeta(item, trimmedSearch, trimmedRestaurantSearch) }))
-      .filter(({ meta, item }) => {
-        if (trimmedRestaurantSearch && !item.brand) {
-          return false;
-        }
-        return meta.tier >= 2;
-      })
-      .sort((left, right) => {
-        if (right.meta.tier !== left.meta.tier) {
-          return right.meta.tier - left.meta.tier;
-        }
+    const localMatches = restaurantOnlyMode
+      ? []
+      : quickPickLibrary
+          .map((item) => ({ item, meta: getQuickSearchMeta(item, trimmedSearch, trimmedRestaurantSearch) }))
+          .filter(({ meta, item }) => {
+            if (trimmedRestaurantSearch && !item.brand) {
+              return false;
+            }
+            return meta.tier >= 2;
+          })
+          .sort((left, right) => {
+            if (right.meta.tier !== left.meta.tier) {
+              return right.meta.tier - left.meta.tier;
+            }
 
-        if (right.meta.score !== left.meta.score) {
-          return right.meta.score - left.meta.score;
-        }
+            if (right.meta.score !== left.meta.score) {
+              return right.meta.score - left.meta.score;
+            }
 
-        return left.item.name.localeCompare(right.item.name);
-      })
-      .map(({ item }) => item)
-      .slice(0, QUICK_SEARCH_LIMIT);
+            return compareItems(left.item, right.item, trimmedSearch, usageCounts);
+          })
+          .map(({ item }) => item)
+          .slice(0, QUICK_SEARCH_LIMIT);
 
     setQuickSearchResults(localMatches);
     setQuickSearchStatus(localMatches.length ? "ready" : "loading");
 
     const timeoutId = window.setTimeout(() => {
-      searchRestaurantLibrary(trimmedSearch || trimmedRestaurantSearch)
+      searchRestaurantLibrary(trimmedRestaurantSearch || trimmedSearch)
         .then((restaurantMatches) => {
           if (!isMounted) {
             return;
           }
 
+          const restaurantIntent = hasRestaurantIntent(
+            trimmedSearch,
+            trimmedRestaurantSearch,
+            restaurantMatches
+          );
+          if (!restaurantIntent) {
+            startTransition(() => {
+              setQuickSearchResults(localMatches);
+              setQuickSearchStatus("ready");
+            });
+            return;
+          }
+
           const seen = new Set(localMatches.map((item) => item.id));
           const mergedResults = [...localMatches];
-          const strictRestaurantMatches = restaurantMatches.filter(
-            (item) => getQuickSearchMeta(item, trimmedSearch, trimmedRestaurantSearch).tier >= 2
-          );
+          const strictRestaurantMatches = restaurantMatches.filter((item) => {
+            const brandMeta = trimmedRestaurantSearch
+              ? getSearchMeta(trimmedRestaurantSearch, [item.brand || ""])
+              : { tier: 3 };
+            const foodMeta = trimmedSearch
+              ? getSearchMeta(trimmedSearch, [item.name, item.servingSize, item.description])
+              : { tier: 3 };
 
-          const sourceResults = localMatches.length ? strictRestaurantMatches : restaurantMatches;
+            return brandMeta.tier >= 2 && foodMeta.tier >= 2;
+          });
+
+          const sourceResults = strictRestaurantMatches;
           for (const item of sourceResults) {
             if (seen.has(item.id)) {
               continue;
@@ -342,7 +423,7 @@ export function FoodLogSection({
               return rightMeta.score - leftMeta.score;
             }
 
-            return left.name.localeCompare(right.name);
+            return compareItems(left, right, trimmedSearch, usageCounts);
           });
 
           startTransition(() => {
@@ -362,7 +443,13 @@ export function FoodLogSection({
       isMounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [deferredQuickRestaurantSearch, deferredQuickSearch, isQuickSearchOpen, quickPickLibrary]);
+  }, [
+    deferredQuickRestaurantSearch,
+    deferredQuickSearch,
+    isQuickSearchOpen,
+    quickPickLibrary,
+    usageCounts,
+  ]);
 
   const filteredLibrary = useMemo(() => {
     if (categoryFilter === "restaurant") {
@@ -384,16 +471,7 @@ export function FoodLogSection({
           return right.meta.score - left.meta.score;
         }
 
-        if (categoryFilter === "all") {
-          const rightUsage = usageCounts[right.item.id] || 0;
-          const leftUsage = usageCounts[left.item.id] || 0;
-
-          if (rightUsage !== leftUsage) {
-            return rightUsage - leftUsage;
-          }
-        }
-
-        return left.item.name.localeCompare(right.item.name);
+        return compareItems(left.item, right.item, search, usageCounts);
       })
       .map(({ item }) => item);
   }, [categoryFilter, quickPickLibrary, restaurantLibrary, search, usageCounts]);
