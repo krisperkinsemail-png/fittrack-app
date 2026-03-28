@@ -729,6 +729,7 @@ export function FoodLogSection({
             <h2>Add food entry</h2>
           </div>
           <div className="food-log-search" ref={quickSearchRef}>
+            <p className="eyebrow">Quick Search</p>
             <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
             <div className="food-log-search__fields">
               <label className="food-log-search__label">
