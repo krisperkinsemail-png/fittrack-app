@@ -1025,6 +1025,11 @@ button {
   justify-content: flex-end;
 }
 
+.workout-inline-actions .secondary-button,
+.set-row-actions .secondary-button {
+  min-width: 0;
+}
+
 .exercise-index,
 .set-label {
   color: var(--muted);
@@ -1053,6 +1058,37 @@ button {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .exercise-card .log-card__top {
+    display: grid;
+  }
+
+  .exercise-title-group {
+    width: 100%;
+  }
+
+  .workout-inline-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .set-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .set-label {
+    grid-column: 1 / -1;
+  }
+
+  .set-row-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .set-field {

@@ -941,7 +941,7 @@ export function WorkoutSection({
                     disabled={exerciseIndex === 0}
                     aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} up`}
                   >
-                    Up
+                    ↑
                   </button>
                   <button
                     type="button"
@@ -950,7 +950,7 @@ export function WorkoutSection({
                     disabled={exerciseIndex === draftExercises.length - 1}
                     aria-label={`Move ${exercise.name || `exercise ${exerciseIndex + 1}`} down`}
                   >
-                    Down
+                    ↓
                   </button>
                   <button
                     type="button"
@@ -1017,7 +1017,7 @@ export function WorkoutSection({
                         disabled={setIndex === 0}
                         aria-label={`Move set ${setIndex + 1} up`}
                       >
-                        Up
+                        ↑
                       </button>
                       <button
                         type="button"
@@ -1026,7 +1026,7 @@ export function WorkoutSection({
                         disabled={setIndex === exercise.sets.length - 1}
                         aria-label={`Move set ${setIndex + 1} down`}
                       >
-                        Down
+                        ↓
                       </button>
                       <button
                         type="button"
