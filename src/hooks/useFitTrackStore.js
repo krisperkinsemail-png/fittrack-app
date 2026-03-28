@@ -2,7 +2,12 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { appStorage, storageCapabilities } from "../lib/storage";
 import { createId, getToday } from "../lib/date";
 import { hasSupabaseConfig } from "../lib/supabase";
-import { hasMeaningfulLocalData, localStorageAdapter } from "../lib/storage.local";
+import {
+  getStoredAccentColor,
+  hasMeaningfulLocalData,
+  localStorageAdapter,
+  persistAccentColor,
+} from "../lib/storage.local";
 
 function getInitialSelectedDate() {
   return getToday();
@@ -21,7 +26,7 @@ const initialState = {
     fatPercent: 25,
     weightGoal: "",
     weightUnit: "lb",
-    accentColor: "blue",
+    accentColor: getStoredAccentColor() || "blue",
   },
   foodEntries: [],
   mealTemplates: [],
@@ -241,6 +246,10 @@ export function useFitTrackStore() {
       setLastSyncedAt(Date.now());
     }
   }
+
+  useEffect(() => {
+    persistAccentColor(state.settings.accentColor);
+  }, [state.settings.accentColor]);
 
   useEffect(() => {
     let isMounted = true;

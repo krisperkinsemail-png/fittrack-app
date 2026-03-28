@@ -1,4 +1,5 @@
 const STORAGE_KEY = "fittrack.app.v1";
+const THEME_KEY = "fittrack.theme-accent.v1";
 
 export function hasMeaningfulLocalData(snapshot) {
   if (!snapshot) {
@@ -28,8 +29,46 @@ export const localStorageAdapter = {
   async save(state) {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (state?.settings?.accentColor) {
+        window.localStorage.setItem(THEME_KEY, state.settings.accentColor);
+      }
     } catch (error) {
       console.error("Failed to save FitTrack data to localStorage.", error);
     }
   },
 };
+
+export function getStoredAccentColor() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const directAccent = window.localStorage.getItem(THEME_KEY);
+    if (directAccent) {
+      return directAccent;
+    }
+
+    const snapshot = window.localStorage.getItem(STORAGE_KEY);
+    if (!snapshot) {
+      return null;
+    }
+
+    return JSON.parse(snapshot)?.settings?.accentColor || null;
+  } catch (error) {
+    console.error("Failed to load FitTrack accent color from localStorage.", error);
+    return null;
+  }
+}
+
+export function persistAccentColor(accentColor) {
+  if (typeof window === "undefined" || !accentColor) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(THEME_KEY, accentColor);
+  } catch (error) {
+    console.error("Failed to persist FitTrack accent color to localStorage.", error);
+  }
+}
