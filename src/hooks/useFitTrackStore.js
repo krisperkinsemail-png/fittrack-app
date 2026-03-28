@@ -465,6 +465,25 @@ export function useFitTrackStore() {
           });
       }
     },
+    restoreFoodEntry: (entry) => {
+      const nextEntries = state.foodEntries.some((item) => item.id === entry.id)
+        ? state.foodEntries
+        : [entry, ...state.foodEntries];
+      dispatch({ type: "hydrate", payload: { foodEntries: nextEntries } });
+      if (storageCapabilities.supportsGranularSync) {
+        setSyncStatus("saving");
+        appStorage
+          .syncFoodEntries(nextEntries)
+          .then(() => {
+            setSyncStatus("synced");
+            setSyncError("");
+          })
+          .catch((error) => {
+            setSyncStatus("error");
+            setSyncError(error.message || "Failed to sync food entries.");
+          });
+      }
+    },
     addMealTemplate: (meal) => {
       const existing = state.mealTemplates.find(
         (entry) =>
@@ -595,6 +614,26 @@ export function useFitTrackStore() {
           });
       }
     },
+    restoreWeightEntry: (entry) => {
+      const existing = state.weightEntries.find((item) => item.id === entry.id || item.date === entry.date);
+      const nextWeights = existing
+        ? state.weightEntries.map((item) => (item.id === existing.id ? entry : item))
+        : [entry, ...state.weightEntries];
+      dispatch({ type: "hydrate", payload: { weightEntries: nextWeights } });
+      if (storageCapabilities.supportsGranularSync) {
+        setSyncStatus("saving");
+        appStorage
+          .syncWeightEntries(nextWeights)
+          .then(() => {
+            setSyncStatus("synced");
+            setSyncError("");
+          })
+          .catch((error) => {
+            setSyncStatus("error");
+            setSyncError(error.message || "Failed to sync weight entries.");
+          });
+      }
+    },
     addWorkoutEntry: (entry) => {
       const nextEntries = [{ id: createId(), ...entry }, ...state.workoutEntries];
       dispatch({ type: "hydrate", payload: { workoutEntries: nextEntries } });
@@ -614,6 +653,25 @@ export function useFitTrackStore() {
     },
     deleteWorkoutEntry: (id) => {
       const nextEntries = state.workoutEntries.filter((entry) => entry.id !== id);
+      dispatch({ type: "hydrate", payload: { workoutEntries: nextEntries } });
+      if (storageCapabilities.supportsGranularSync) {
+        setSyncStatus("saving");
+        appStorage
+          .syncWorkoutEntries(nextEntries)
+          .then(() => {
+            setSyncStatus("synced");
+            setSyncError("");
+          })
+          .catch((error) => {
+            setSyncStatus("error");
+            setSyncError(error.message || "Failed to sync workout entries.");
+          });
+      }
+    },
+    restoreWorkoutEntry: (entry) => {
+      const nextEntries = state.workoutEntries.some((item) => item.id === entry.id)
+        ? state.workoutEntries
+        : [entry, ...state.workoutEntries];
       dispatch({ type: "hydrate", payload: { workoutEntries: nextEntries } });
       if (storageCapabilities.supportsGranularSync) {
         setSyncStatus("saving");

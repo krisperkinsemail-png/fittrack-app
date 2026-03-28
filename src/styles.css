@@ -541,6 +541,33 @@ button {
   gap: 8px;
 }
 
+.undo-toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 25;
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(10, 16, 26, 0.96);
+  border: 1px solid rgba(96, 114, 139, 0.34);
+  box-shadow: var(--shadow);
+}
+
+.undo-toast p {
+  margin: 0;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.undo-toast__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .tab-button {
   width: 100%;
   border-radius: 999px;
@@ -1351,6 +1378,13 @@ button:focus {
 
   .mobile-tabs {
     position: static;
+  }
+
+  .undo-toast {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: min(380px, calc(100vw - 48px));
   }
 
   .tab-button {

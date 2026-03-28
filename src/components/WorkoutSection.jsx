@@ -111,6 +111,7 @@ export function WorkoutSection({
   const [customExerciseBank, setCustomExerciseBank] = useState(() => loadCustomExerciseBank());
   const [savedWorkoutDraft, setSavedWorkoutDraft] = useState(null);
   const [isDraftActive, setIsDraftActive] = useState(false);
+  const [removedExerciseUndo, setRemovedExerciseUndo] = useState(null);
   const [customExerciseForm, setCustomExerciseForm] = useState({
     name: "",
     target: "",
@@ -173,6 +174,7 @@ export function WorkoutSection({
     setDraftExercises(templateDraft);
     setSavedWorkoutDraft(nextSavedDraft);
     setIsDraftActive(false);
+    setRemovedExerciseUndo(null);
   }, [selectedDate, selectedWorkout]);
 
   useEffect(() => {
@@ -334,6 +336,18 @@ export function WorkoutSection({
   }, [allEntries, selectedDate]);
 
   useEffect(() => {
+    if (!removedExerciseUndo) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setRemovedExerciseUndo(null);
+    }, 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [removedExerciseUndo]);
+
+  useEffect(() => {
     if (!isDraftActive) {
       return;
     }
@@ -485,7 +499,19 @@ export function WorkoutSection({
   }
 
   function removeExercise(exerciseId) {
-    updateDraft((current) => current.filter((exercise) => exercise.id !== exerciseId));
+    updateDraft((current) => {
+      const removedIndex = current.findIndex((exercise) => exercise.id === exerciseId);
+      if (removedIndex === -1) {
+        return current;
+      }
+
+      const removedExercise = current[removedIndex];
+      setRemovedExerciseUndo({
+        exercise: removedExercise,
+        index: removedIndex,
+      });
+      return current.filter((exercise) => exercise.id !== exerciseId);
+    });
   }
 
   function moveExercise(exerciseId, direction) {
@@ -656,7 +682,22 @@ export function WorkoutSection({
     clearWorkoutDraft(selectedDate, selectedWorkout.id);
     setSavedWorkoutDraft(null);
     setIsDraftActive(false);
+    setRemovedExerciseUndo(null);
     setDraftExercises(createWorkoutDraft(selectedWorkout));
+  }
+
+  function handleUndoRemoveExercise() {
+    if (!removedExerciseUndo) {
+      return;
+    }
+
+    updateDraft((current) => {
+      const nextDraft = [...current];
+      const insertIndex = Math.min(removedExerciseUndo.index, nextDraft.length);
+      nextDraft.splice(insertIndex, 0, removedExerciseUndo.exercise);
+      return nextDraft;
+    });
+    setRemovedExerciseUndo(null);
   }
 
   function moveSet(exerciseId, setId, direction) {
@@ -834,6 +875,25 @@ export function WorkoutSection({
             <p className="muted">
               Your progress for {formatLongDate(selectedDate)} is being kept as you build.
             </p>
+          </div>
+        ) : null}
+
+        {removedExerciseUndo ? (
+          <div className="summary-panel">
+            <span>Exercise removed</span>
+            <strong>{removedExerciseUndo.exercise.name || "Custom exercise"}</strong>
+            <div className="button-row">
+              <button type="button" className="secondary-button" onClick={handleUndoRemoveExercise}>
+                Undo remove
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setRemovedExerciseUndo(null)}
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         ) : null}
 

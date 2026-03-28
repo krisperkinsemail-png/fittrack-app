@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardSection } from "./components/DashboardSection";
 import { useAuth } from "./components/AuthGate";
 import { DateNavigator } from "./components/DateNavigator";
@@ -32,13 +32,16 @@ export default function App() {
     addFoodEntry,
     updateFoodEntry,
     deleteFoodEntry,
+    restoreFoodEntry,
     addMealTemplate,
     deleteMealTemplate,
     addFoodEntries,
     addWeightEntry,
     deleteWeightEntry,
+    restoreWeightEntry,
     addWorkoutEntry,
     deleteWorkoutEntry,
+    restoreWorkoutEntry,
     saveCustomWorkoutSystem,
     deleteCustomWorkoutSystem,
     updateSettings,
@@ -51,6 +54,7 @@ export default function App() {
   } = useFitTrackStore();
 
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [undoToast, setUndoToast] = useState(null);
   const firstName = useMemo(() => {
     const metadataName = session?.user?.user_metadata?.first_name || session?.user?.user_metadata?.name;
     if (metadataName) {
@@ -148,6 +152,18 @@ export default function App() {
     };
   }, [dailyTotals, state.settings]);
 
+  useEffect(() => {
+    if (!undoToast) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setUndoToast(null);
+    }, 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [undoToast]);
+
   const nutritionAverages = useMemo(() => {
     const dateKeys = Array.from({ length: 7 }, (_, index) => addDays(state.selectedDate, index - 6));
     const totalsByDate = new Map(
@@ -242,6 +258,43 @@ export default function App() {
       strongestSet,
     };
   }, [state.selectedDate, state.workoutEntries]);
+
+  function showUndoToast(message, onUndo) {
+    setUndoToast({
+      message,
+      onUndo,
+    });
+  }
+
+  function handleDeleteFoodEntry(id) {
+    const deletedEntry = state.foodEntries.find((entry) => entry.id === id);
+    if (!deletedEntry) {
+      return;
+    }
+
+    deleteFoodEntry(id);
+    showUndoToast(`Deleted ${deletedEntry.name}`, () => restoreFoodEntry(deletedEntry));
+  }
+
+  function handleDeleteWeightEntry(id) {
+    const deletedEntry = state.weightEntries.find((entry) => entry.id === id);
+    if (!deletedEntry) {
+      return;
+    }
+
+    deleteWeightEntry(id);
+    showUndoToast(`Deleted weight for ${deletedEntry.date}`, () => restoreWeightEntry(deletedEntry));
+  }
+
+  function handleDeleteWorkoutEntry(id) {
+    const deletedEntry = state.workoutEntries.find((entry) => entry.id === id);
+    if (!deletedEntry) {
+      return;
+    }
+
+    deleteWorkoutEntry(id);
+    showUndoToast(`Deleted ${deletedEntry.workoutName}`, () => restoreWorkoutEntry(deletedEntry));
+  }
 
   return (
     <div className="app-shell theme-shell" data-accent={state.settings.accentColor}>
@@ -350,7 +403,7 @@ export default function App() {
             onAddEntry={addFoodEntry}
             onAddEntries={addFoodEntries}
             onUpdateEntry={updateFoodEntry}
-            onDeleteEntry={deleteFoodEntry}
+            onDeleteEntry={handleDeleteFoodEntry}
             onSaveMeal={addMealTemplate}
             onDeleteMeal={deleteMealTemplate}
           />
@@ -365,7 +418,7 @@ export default function App() {
             weightTrendSummary={weightTrendSummary}
             weightGoalProgress={weightGoalProgress}
             onSaveEntry={addWeightEntry}
-            onDeleteEntry={deleteWeightEntry}
+            onDeleteEntry={handleDeleteWeightEntry}
           />
         </section>
 
@@ -377,7 +430,7 @@ export default function App() {
             allEntries={state.workoutEntries}
             customSystems={state.customWorkoutSystems}
             onAddEntry={addWorkoutEntry}
-            onDeleteEntry={deleteWorkoutEntry}
+            onDeleteEntry={handleDeleteWorkoutEntry}
             onSaveSystem={saveCustomWorkoutSystem}
             onDeleteSystem={deleteCustomWorkoutSystem}
           />
@@ -392,6 +445,32 @@ export default function App() {
           />
         </section>
       </main>
+
+      {undoToast ? (
+        <div className="undo-toast" role="status" aria-live="polite">
+          <p>{undoToast.message}</p>
+          <div className="undo-toast__actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                undoToast.onUndo();
+                setUndoToast(null);
+              }}
+            >
+              Undo
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setUndoToast(null)}
+              aria-label="Dismiss undo message"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
