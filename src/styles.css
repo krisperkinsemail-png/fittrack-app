@@ -529,7 +529,8 @@ button {
 
 .food-log-search__results {
   display: grid;
-  overflow: hidden;
+  overflow: auto;
+  max-height: min(320px, 50vh);
 }
 
 .food-log-search__result {
@@ -875,6 +876,15 @@ button:focus {
   .topbar-heading-row {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
+  }
+
+  .food-log-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .food-log-search {
+    justify-self: end;
   }
 
   .landing-feature-grid,

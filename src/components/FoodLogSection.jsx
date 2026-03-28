@@ -1,4 +1,4 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { FOOD_LIBRARY } from "../lib/foodLibrary";
 import { loadFoodLibraryUsage, recordFoodLibraryUsage } from "../lib/libraryUsage";
 import { searchRestaurantLibrary } from "../lib/restaurantLibrary";
@@ -138,6 +138,7 @@ export function FoodLogSection({
   const [quickSearch, setQuickSearch] = useState("");
   const [quickSearchResults, setQuickSearchResults] = useState([]);
   const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
+  const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
   const [restaurantLibrary, setRestaurantLibrary] = useState([]);
@@ -145,6 +146,7 @@ export function FoodLogSection({
   const [restaurantError, setRestaurantError] = useState("");
   const deferredSearch = useDeferredValue(search);
   const deferredQuickSearch = useDeferredValue(quickSearch);
+  const quickSearchRef = useRef(null);
 
   const totalCalories = useMemo(
     () => entries.reduce((sum, entry) => sum + entry.calories, 0),
@@ -220,10 +222,25 @@ export function FoodLogSection({
   }, [mealTemplates]);
 
   useEffect(() => {
+    function handlePointerDown(event) {
+      if (!quickSearchRef.current?.contains(event.target)) {
+        setIsQuickSearchOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, []);
+
+  useEffect(() => {
     const trimmedSearch = deferredQuickSearch.trim();
-    if (trimmedSearch.length < 2) {
+    if (!isQuickSearchOpen || trimmedSearch.length < 2) {
       setQuickSearchResults([]);
-      setQuickSearchStatus("idle");
+      if (trimmedSearch.length < 2) {
+        setQuickSearchStatus("idle");
+      }
       return;
     }
 
@@ -293,7 +310,7 @@ export function FoodLogSection({
       isMounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [deferredQuickSearch, quickPickLibrary]);
+  }, [deferredQuickSearch, isQuickSearchOpen, quickPickLibrary]);
 
   const filteredLibrary = useMemo(() => {
     if (categoryFilter === "restaurant") {
@@ -349,6 +366,7 @@ export function FoodLogSection({
     setQuickSearch(item.name);
     setQuickSearchResults([]);
     setQuickSearchStatus("idle");
+    setIsQuickSearchOpen(false);
     setForm({
       foodName: item.name,
       servingSize: item.servingSize,
@@ -505,22 +523,26 @@ export function FoodLogSection({
   return (
     <div className="section-stack">
       <section className="card">
-        <div className="section-heading">
+        <div className="section-heading food-log-heading">
           <div>
             <p className="eyebrow">Food logging</p>
             <h2>{editingId ? "Edit food entry" : "Add food entry"}</h2>
           </div>
-          <div className="food-log-search">
+          <div className="food-log-search" ref={quickSearchRef}>
             <p className="muted">Selected day: {selectedDate}</p>
             <label className="food-log-search__label">
               <span className="sr-only">Search foods</span>
               <input
                 value={quickSearch}
-                onChange={(event) => setQuickSearch(event.target.value)}
+                onChange={(event) => {
+                  setQuickSearch(event.target.value);
+                  setIsQuickSearchOpen(true);
+                }}
+                onFocus={() => setIsQuickSearchOpen(true)}
                 placeholder="Search foods or restaurants..."
               />
             </label>
-            {quickSearch.trim().length >= 2 ? (
+            {isQuickSearchOpen && quickSearch.trim().length >= 2 ? (
               <div className="food-log-search__dropdown">
                 {quickSearchResults.length ? (
                   <div className="food-log-search__results">
