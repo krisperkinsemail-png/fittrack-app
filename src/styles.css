@@ -500,6 +500,72 @@ button {
   margin-top: 10px;
 }
 
+.food-log-search {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  width: min(100%, 340px);
+}
+
+.food-log-search__label {
+  gap: 0;
+}
+
+.food-log-search__dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+}
+
+.food-log-search__results,
+.food-log-search__empty {
+  border-radius: var(--radius-lg);
+  background: rgba(11, 17, 28, 0.98);
+  border: 1px solid rgba(96, 114, 139, 0.34);
+  box-shadow: var(--shadow);
+}
+
+.food-log-search__results {
+  display: grid;
+  overflow: hidden;
+}
+
+.food-log-search__result {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 0;
+  padding: 12px 14px;
+  border-radius: 0;
+  border-top: 1px solid rgba(96, 114, 139, 0.18);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.food-log-search__result:first-child {
+  border-top: 0;
+}
+
+.food-log-search__result strong,
+.food-log-search__result small {
+  display: block;
+}
+
+.food-log-search__result small {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.food-log-search__empty {
+  padding: 12px 14px;
+  color: var(--muted);
+}
+
 .workout-chip,
 .exercise-card,
 .timer-panel,
@@ -692,6 +758,18 @@ label {
   gap: 8px;
   font-size: 0.95rem;
   font-weight: 600;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 input,

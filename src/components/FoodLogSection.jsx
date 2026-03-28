@@ -135,12 +135,16 @@ export function FoodLogSection({
   const [editingId, setEditingId] = useState(null);
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [search, setSearch] = useState("");
+  const [quickSearch, setQuickSearch] = useState("");
+  const [quickSearchResults, setQuickSearchResults] = useState([]);
+  const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
   const [restaurantLibrary, setRestaurantLibrary] = useState([]);
   const [restaurantStatus, setRestaurantStatus] = useState("idle");
   const [restaurantError, setRestaurantError] = useState("");
   const deferredSearch = useDeferredValue(search);
+  const deferredQuickSearch = useDeferredValue(quickSearch);
 
   const totalCalories = useMemo(
     () => entries.reduce((sum, entry) => sum + entry.calories, 0),
@@ -203,7 +207,7 @@ export function FoodLogSection({
     };
   }, [categoryFilter, deferredSearch]);
 
-  const filteredLibrary = useMemo(() => {
+  const quickPickLibrary = useMemo(() => {
     const savedMeals = mealTemplates.map((meal) => ({
       ...meal,
       templateType: inferSavedTemplateType(meal),
@@ -212,11 +216,91 @@ export function FoodLogSection({
       isScalable: false,
     }));
 
+    return [...savedMeals, ...FOOD_LIBRARY.map((item) => ({ ...item, itemType: "food" }))];
+  }, [mealTemplates]);
+
+  useEffect(() => {
+    const trimmedSearch = deferredQuickSearch.trim();
+    if (trimmedSearch.length < 2) {
+      setQuickSearchResults([]);
+      setQuickSearchStatus("idle");
+      return;
+    }
+
+    let isMounted = true;
+
+    const localMatches = quickPickLibrary
+      .filter((item) => matchesSearch(item, trimmedSearch))
+      .sort((left, right) => {
+        const rightScore = computeSearchScore(trimmedSearch, [
+          right.name,
+          right.brand,
+          right.servingSize,
+          right.description,
+        ]);
+        const leftScore = computeSearchScore(trimmedSearch, [
+          left.name,
+          left.brand,
+          left.servingSize,
+          left.description,
+        ]);
+
+        if (rightScore !== leftScore) {
+          return rightScore - leftScore;
+        }
+
+        return left.name.localeCompare(right.name);
+      })
+      .slice(0, 6);
+
+    setQuickSearchResults(localMatches);
+    setQuickSearchStatus("loading");
+
+    const timeoutId = window.setTimeout(() => {
+      searchRestaurantLibrary(trimmedSearch)
+        .then((restaurantMatches) => {
+          if (!isMounted) {
+            return;
+          }
+
+          const seen = new Set(localMatches.map((item) => item.id));
+          const mergedResults = [...localMatches];
+          for (const item of restaurantMatches) {
+            if (seen.has(item.id)) {
+              continue;
+            }
+            mergedResults.push(item);
+            seen.add(item.id);
+            if (mergedResults.length >= 8) {
+              break;
+            }
+          }
+
+          startTransition(() => {
+            setQuickSearchResults(mergedResults);
+            setQuickSearchStatus("ready");
+          });
+        })
+        .catch(() => {
+          if (!isMounted) {
+            return;
+          }
+          setQuickSearchStatus("ready");
+        });
+    }, 150);
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [deferredQuickSearch, quickPickLibrary]);
+
+  const filteredLibrary = useMemo(() => {
     if (categoryFilter === "restaurant") {
       return restaurantLibrary;
     }
 
-    return [...savedMeals, ...FOOD_LIBRARY.map((item) => ({ ...item, itemType: "food" }))]
+    return quickPickLibrary
       .filter((item) => {
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
         return matchesCategory && matchesSearch(item, search);
@@ -250,7 +334,7 @@ export function FoodLogSection({
 
         return left.name.localeCompare(right.name);
       });
-  }, [categoryFilter, mealTemplates, restaurantLibrary, search, usageCounts]);
+  }, [categoryFilter, quickPickLibrary, restaurantLibrary, search, usageCounts]);
 
   function resetForm() {
     setForm(EMPTY_FORM);
@@ -262,6 +346,9 @@ export function FoodLogSection({
     const scalablePreset = getScalablePreset(item);
     setUsageCounts(recordFoodLibraryUsage(item.id));
     setSelectedPreset(scalablePreset);
+    setQuickSearch(item.name);
+    setQuickSearchResults([]);
+    setQuickSearchStatus("idle");
     setForm({
       foodName: item.name,
       servingSize: item.servingSize,
@@ -423,7 +510,46 @@ export function FoodLogSection({
             <p className="eyebrow">Food logging</p>
             <h2>{editingId ? "Edit food entry" : "Add food entry"}</h2>
           </div>
-          <p className="muted">Selected day: {selectedDate}</p>
+          <div className="food-log-search">
+            <p className="muted">Selected day: {selectedDate}</p>
+            <label className="food-log-search__label">
+              <span className="sr-only">Search foods</span>
+              <input
+                value={quickSearch}
+                onChange={(event) => setQuickSearch(event.target.value)}
+                placeholder="Search foods or restaurants..."
+              />
+            </label>
+            {quickSearch.trim().length >= 2 ? (
+              <div className="food-log-search__dropdown">
+                {quickSearchResults.length ? (
+                  <div className="food-log-search__results">
+                    {quickSearchResults.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="food-log-search__result"
+                        onClick={() => loadPreset(item)}
+                      >
+                        <span>
+                          <strong>{item.name}</strong>
+                          <small>
+                            {item.brand ? `${item.brand} • ` : ""}
+                            {item.servingSize}
+                          </small>
+                        </span>
+                        <span>{item.calories} cal</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : quickSearchStatus === "loading" ? (
+                  <div className="food-log-search__empty">Searching...</div>
+                ) : (
+                  <div className="food-log-search__empty">No matches found.</div>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="button-row">
