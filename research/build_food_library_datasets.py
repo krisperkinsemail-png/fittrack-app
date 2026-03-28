@@ -63,6 +63,29 @@ EXCLUDED_RESTAURANT_CATEGORY_TERMS = {
     "drink",
 }
 
+TACO_BELL_MENU_LABELS = {
+    "value menu",
+    "online exclusive",
+    "specialties",
+}
+
+TACO_BELL_VARIANT_PREFIXES = {
+    "quesadilla",
+    "breakfast quesadilla",
+    "breakfast crunchwrap",
+    "cheesy toasted breakfast burrito",
+    "grande toasted breakfast burrito",
+    "hash brown toasted breakfast burrito",
+    "burrito supreme",
+    "chalupa supreme",
+    "crunchwrap supreme",
+    "nachos bellgrande",
+    "power menu bowl",
+    "quesarito",
+    "soft taco",
+    "soft taco supreme",
+}
+
 
 def col_to_index(cell_ref: str) -> int:
     letters = "".join(ch for ch in cell_ref if ch.isalpha())
@@ -133,6 +156,29 @@ def should_exclude_restaurant_row(row: Dict[str, str]) -> bool:
     return category in EXCLUDED_RESTAURANT_CATEGORY_TERMS
 
 
+def normalize_taco_bell_item_name(item_name: str) -> str:
+    if " - " not in item_name:
+        return item_name
+
+    prefix, suffix = [clean_text(part) for part in item_name.split(" - ", 1)]
+    normalized_prefix = prefix.lower()
+    normalized_suffix = suffix.lower()
+
+    if normalized_suffix in TACO_BELL_MENU_LABELS:
+        return prefix
+
+    if normalized_prefix not in TACO_BELL_VARIANT_PREFIXES:
+        return item_name
+
+    return f"{suffix} {prefix}"
+
+
+def normalize_item_name(brand: str, item_name: str) -> str:
+    if brand == "Taco Bell":
+        return normalize_taco_bell_item_name(item_name)
+    return item_name
+
+
 def load_annual_rows(path: Path) -> List[Dict[str, str]]:
     rows = list(parse_xlsx_rows(path))
     if not rows:
@@ -145,7 +191,7 @@ def load_annual_rows(path: Path) -> List[Dict[str, str]]:
         row = raw_row + [""] * (len(header) - len(raw_row))
         source = {header[i]: row[i] for i in range(len(header))}
         brand = clean_text(source.get("restaurant", ""))
-        item_name = clean_text(source.get("item_name", ""))
+        item_name = normalize_item_name(brand, clean_text(source.get("item_name", "")))
         if not brand or not item_name:
             continue
         annual_rows.append(
@@ -193,7 +239,10 @@ def load_memphis_rows(path: Path) -> List[Dict[str, str]]:
                 {
                     "id": f"memphis-{index}",
                     "brand": clean_text(row.get("chain", "")),
-                    "item_name": clean_text(row.get("item_name", "")),
+                    "item_name": normalize_item_name(
+                        clean_text(row.get("chain", "")),
+                        clean_text(row.get("item_name", "")),
+                    ),
                     "category": clean_text(row.get("category", "")),
                     "description": "",
                     "serving_amount": "",
