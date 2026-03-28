@@ -62,7 +62,7 @@ function getScalablePreset(item) {
     return item;
   }
 
-  if (item.itemType !== "saved-food") {
+  if (!item?.servingSize?.trim()) {
     return null;
   }
 
