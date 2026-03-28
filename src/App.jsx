@@ -48,6 +48,7 @@ export default function App() {
     setSelectedDate,
     syncStatus,
     syncError,
+    lastSyncedAt,
     localMigrationData,
     dismissLocalMigration,
     importLocalMigration,
@@ -296,6 +297,19 @@ export default function App() {
     showUndoToast(`Deleted ${deletedEntry.workoutName}`, () => restoreWorkoutEntry(deletedEntry));
   }
 
+  const formattedLastSyncedAt = useMemo(() => {
+    if (!lastSyncedAt) {
+      return null;
+    }
+
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(lastSyncedAt);
+  }, [lastSyncedAt]);
+
   return (
     <div className="app-shell theme-shell" data-accent={state.settings.accentColor}>
       <header className="topbar">
@@ -389,6 +403,9 @@ export default function App() {
                   </span>
                 </div>
                 {syncError ? <p className="muted">{syncError}</p> : null}
+                {formattedLastSyncedAt ? (
+                  <p className="muted">Last synced {formattedLastSyncedAt}</p>
+                ) : null}
               </section>
             ) : null}
           </div>

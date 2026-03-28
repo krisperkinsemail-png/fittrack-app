@@ -228,9 +228,19 @@ export function useFitTrackStore() {
   const [isHydrated, setIsHydrated] = useReducer(() => true, false);
   const [syncStatus, setSyncStatus] = useState(hasSupabaseConfig ? "loading" : "local");
   const [syncError, setSyncError] = useState("");
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const [localMigrationData, setLocalMigrationData] = useState(null);
   const lastCloudRefreshAtRef = useRef(0);
   const lastKnownTodayRef = useRef(getToday());
+
+  function handleSyncSuccess() {
+    setSyncStatus(hasSupabaseConfig ? "synced" : "local");
+    setSyncError("");
+
+    if (hasSupabaseConfig) {
+      setLastSyncedAt(Date.now());
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -254,8 +264,7 @@ export function useFitTrackStore() {
         ) {
           setLocalMigrationData(localSnapshot);
         }
-        setSyncStatus(hasSupabaseConfig ? "synced" : "local");
-        setSyncError("");
+        handleSyncSuccess();
         lastCloudRefreshAtRef.current = Date.now();
         setIsHydrated();
       } catch (error) {
@@ -293,8 +302,7 @@ export function useFitTrackStore() {
       try {
         const payload = await appStorage.load();
         dispatch({ type: "hydrate", payload });
-        setSyncStatus("synced");
-        setSyncError("");
+        handleSyncSuccess();
         lastCloudRefreshAtRef.current = Date.now();
       } catch (error) {
         console.error("Failed to refresh FitTrack cloud state.", error);
@@ -368,8 +376,7 @@ export function useFitTrackStore() {
     appStorage
       .save(state)
       .then(() => {
-        setSyncStatus(hasSupabaseConfig ? "synced" : "local");
-        setSyncError("");
+        handleSyncSuccess();
       })
       .catch((error) => {
         console.error("Failed to persist FitTrack state.", error);
@@ -382,6 +389,7 @@ export function useFitTrackStore() {
     state,
     syncStatus,
     syncError,
+    lastSyncedAt,
     localMigrationData,
     dismissLocalMigration: () => setLocalMigrationData(null),
     importLocalMigration: () => {
@@ -399,8 +407,7 @@ export function useFitTrackStore() {
         appStorage
           .syncFoodEntries(nextEntries)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -419,8 +426,7 @@ export function useFitTrackStore() {
         appStorage
           .syncFoodEntries(nextEntries)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -439,8 +445,7 @@ export function useFitTrackStore() {
           appStorage
             .syncFoodEntries(nextEntries)
             .then(() => {
-              setSyncStatus("synced");
-              setSyncError("");
+              handleSyncSuccess();
             })
             .catch((error) => {
               setSyncStatus("error");
@@ -456,8 +461,7 @@ export function useFitTrackStore() {
         appStorage
           .syncFoodEntries(nextEntries)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -475,8 +479,7 @@ export function useFitTrackStore() {
         appStorage
           .syncFoodEntries(nextEntries)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -502,8 +505,7 @@ export function useFitTrackStore() {
         appStorage
           .syncMealTemplates(nextMeals)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -519,8 +521,7 @@ export function useFitTrackStore() {
         appStorage
           .syncMealTemplates(nextMeals)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -549,8 +550,7 @@ export function useFitTrackStore() {
         appStorage
           .syncCustomWorkoutSystems(nextSystems)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -566,8 +566,7 @@ export function useFitTrackStore() {
         appStorage
           .syncCustomWorkoutSystems(nextSystems)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -588,8 +587,7 @@ export function useFitTrackStore() {
         appStorage
           .syncWeightEntries(nextWeights)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -605,8 +603,7 @@ export function useFitTrackStore() {
         appStorage
           .syncWeightEntries(nextWeights)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -625,8 +622,7 @@ export function useFitTrackStore() {
         appStorage
           .syncWeightEntries(nextWeights)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -642,8 +638,7 @@ export function useFitTrackStore() {
         appStorage
           .syncWorkoutEntries(nextEntries)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -659,8 +654,7 @@ export function useFitTrackStore() {
         appStorage
           .syncWorkoutEntries(nextEntries)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -678,8 +672,7 @@ export function useFitTrackStore() {
         appStorage
           .syncWorkoutEntries(nextEntries)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
@@ -695,8 +688,7 @@ export function useFitTrackStore() {
         appStorage
           .syncSettings(nextSettings)
           .then(() => {
-            setSyncStatus("synced");
-            setSyncError("");
+            handleSyncSuccess();
           })
           .catch((error) => {
             setSyncStatus("error");
