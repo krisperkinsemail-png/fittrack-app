@@ -12,6 +12,7 @@ import {
   addDays,
   formatLongDate,
   getLatestWeightEntry,
+  getToday,
   isSameDate,
   sortByDateDescending,
 } from "./lib/date";
@@ -180,7 +181,7 @@ export default function App() {
         formattedDate={formatLongDate(state.selectedDate)}
         onPrevious={() => setSelectedDate(addDays(state.selectedDate, -1))}
         onNext={() => setSelectedDate(addDays(state.selectedDate, 1))}
-        onToday={() => setSelectedDate(new Date().toISOString().slice(0, 10))}
+        onToday={() => setSelectedDate(getToday())}
       />
 
       {localMigrationData ? (

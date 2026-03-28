@@ -7,14 +7,21 @@ import { hasMeaningfulLocalData, localStorageAdapter } from "../lib/storage.loca
 const SELECTED_DATE_KEY = "fittrack.selected-date.v1";
 
 function getInitialSelectedDate() {
+  const today = getToday();
+
   if (typeof window === "undefined") {
-    return getToday();
+    return today;
   }
 
   try {
-    return window.localStorage.getItem(SELECTED_DATE_KEY) || getToday();
+    const savedDate = window.localStorage.getItem(SELECTED_DATE_KEY);
+    if (!savedDate || savedDate < today) {
+      return today;
+    }
+
+    return savedDate;
   } catch {
-    return getToday();
+    return today;
   }
 }
 
@@ -242,6 +249,13 @@ export function useFitTrackStore() {
   const lastCloudRefreshAtRef = useRef(0);
 
   useEffect(() => {
+    const today = getToday();
+    if (state.selectedDate < today) {
+      dispatch({ type: "setSelectedDate", payload: today });
+    }
+  }, [state.selectedDate]);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function hydrateStore() {
@@ -315,11 +329,19 @@ export function useFitTrackStore() {
     }
 
     function handleFocus() {
+      const today = getToday();
+      if (state.selectedDate < today) {
+        dispatch({ type: "setSelectedDate", payload: today });
+      }
       refreshFromCloud();
     }
 
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {
+        const today = getToday();
+        if (state.selectedDate < today) {
+          dispatch({ type: "setSelectedDate", payload: today });
+        }
         refreshFromCloud();
       }
     }
@@ -331,7 +353,27 @@ export function useFitTrackStore() {
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isHydrated]);
+  }, [isHydrated, state.selectedDate]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const scheduledDay = getToday();
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 0, 0);
+    const timeoutId = window.setTimeout(() => {
+      if (state.selectedDate === scheduledDay) {
+        dispatch({ type: "setSelectedDate", payload: getToday() });
+      }
+    }, nextMidnight.getTime() - now.getTime() + 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [state.selectedDate]);
 
   useEffect(() => {
     try {
