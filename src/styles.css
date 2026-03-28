@@ -385,6 +385,10 @@ button {
   margin-bottom: 10px;
 }
 
+.dashboard-summary-grid {
+  margin-top: 18px;
+}
+
 .workout-picker-header + .summary-grid,
 .workout-system-grid + .summary-grid {
   margin-top: 10px;

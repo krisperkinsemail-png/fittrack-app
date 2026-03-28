@@ -53,6 +53,14 @@ export function DashboardSection({
       helper: `${formatMetricValue(dailyTotals.fat)}g / ${formatMetricValue(settings.fatTarget)}g`,
     },
   ];
+  const targetsHitCount = progressItems.filter((item) => {
+    if (item.target <= 0) {
+      return false;
+    }
+
+    const tolerance = item.label === "Calories" ? 0.1 : 0.15;
+    return Math.abs(item.current - item.target) / item.target <= tolerance;
+  }).length;
 
   return (
     <div className="section-stack">
@@ -87,11 +95,15 @@ export function DashboardSection({
           })}
         </div>
 
-        <div className="summary-grid">
+        <div className="summary-grid dashboard-summary-grid">
           <div className="summary-panel">
-            <span>Compliance score</span>
-            <strong>{complianceSummary.score}%</strong>
-            <p className="muted">{complianceSummary.label}</p>
+            <span>Targets Hit</span>
+            <strong>{targetsHitCount}/4</strong>
+            <p className="muted">
+              {targetsHitCount === 4
+                ? "All daily targets are within range."
+                : `${4 - targetsHitCount} target${4 - targetsHitCount === 1 ? "" : "s"} still outside range.`}
+            </p>
           </div>
         </div>
       </section>
