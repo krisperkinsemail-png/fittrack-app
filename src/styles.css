@@ -511,6 +511,11 @@ button {
   gap: 0;
 }
 
+.food-log-search__fields {
+  display: grid;
+  gap: 8px;
+}
+
 .food-log-search__dropdown {
   position: absolute;
   top: calc(100% + 6px);
@@ -889,6 +894,10 @@ button:focus {
 
   .food-log-search {
     justify-self: end;
+  }
+
+  .food-log-search__fields {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   }
 
   .landing-feature-grid,

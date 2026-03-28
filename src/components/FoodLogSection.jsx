@@ -125,6 +125,26 @@ function getItemSearchMeta(item, term) {
   return getSearchMeta(term, [item.name, item.brand, item.servingSize, item.description]);
 }
 
+function getQuickSearchMeta(item, foodTerm, restaurantTerm) {
+  const foodMeta = foodTerm
+    ? getSearchMeta(foodTerm, [item.name, item.servingSize, item.description])
+    : { tier: 3, score: 1 };
+  const brandMeta = restaurantTerm
+    ? getSearchMeta(restaurantTerm, [item.brand || ""])
+    : { tier: 3, score: 1 };
+
+  if (foodMeta.tier === 0 || brandMeta.tier === 0) {
+    return { tier: 0, score: 0, foodMeta, brandMeta };
+  }
+
+  return {
+    tier: Math.min(foodMeta.tier, brandMeta.tier),
+    score: foodMeta.score * 0.75 + brandMeta.score * 0.25,
+    foodMeta,
+    brandMeta,
+  };
+}
+
 export function FoodLogSection({
   selectedDate,
   entries,
@@ -142,6 +162,7 @@ export function FoodLogSection({
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [search, setSearch] = useState("");
   const [quickSearch, setQuickSearch] = useState("");
+  const [quickRestaurantSearch, setQuickRestaurantSearch] = useState("");
   const [quickSearchResults, setQuickSearchResults] = useState([]);
   const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
@@ -152,6 +173,7 @@ export function FoodLogSection({
   const [restaurantError, setRestaurantError] = useState("");
   const deferredSearch = useDeferredValue(search);
   const deferredQuickSearch = useDeferredValue(quickSearch);
+  const deferredQuickRestaurantSearch = useDeferredValue(quickRestaurantSearch);
   const quickSearchRef = useRef(null);
 
   const totalCalories = useMemo(
@@ -242,9 +264,12 @@ export function FoodLogSection({
 
   useEffect(() => {
     const trimmedSearch = deferredQuickSearch.trim();
-    if (!isQuickSearchOpen || trimmedSearch.length < 2) {
+    const trimmedRestaurantSearch = deferredQuickRestaurantSearch.trim();
+    const hasEnoughInput = trimmedSearch.length >= 2 || trimmedRestaurantSearch.length >= 2;
+
+    if (!isQuickSearchOpen || !hasEnoughInput) {
       setQuickSearchResults([]);
-      if (trimmedSearch.length < 2) {
+      if (!hasEnoughInput) {
         setQuickSearchStatus("idle");
       }
       return;
@@ -253,8 +278,13 @@ export function FoodLogSection({
     let isMounted = true;
 
     const localMatches = quickPickLibrary
-      .map((item) => ({ item, meta: getItemSearchMeta(item, trimmedSearch) }))
-      .filter(({ meta }) => meta.tier >= 2)
+      .map((item) => ({ item, meta: getQuickSearchMeta(item, trimmedSearch, trimmedRestaurantSearch) }))
+      .filter(({ meta, item }) => {
+        if (trimmedRestaurantSearch && !item.brand) {
+          return false;
+        }
+        return meta.tier >= 2;
+      })
       .sort((left, right) => {
         if (right.meta.tier !== left.meta.tier) {
           return right.meta.tier - left.meta.tier;
@@ -273,7 +303,7 @@ export function FoodLogSection({
     setQuickSearchStatus(localMatches.length ? "ready" : "loading");
 
     const timeoutId = window.setTimeout(() => {
-      searchRestaurantLibrary(trimmedSearch)
+      searchRestaurantLibrary(trimmedSearch || trimmedRestaurantSearch)
         .then((restaurantMatches) => {
           if (!isMounted) {
             return;
@@ -282,7 +312,7 @@ export function FoodLogSection({
           const seen = new Set(localMatches.map((item) => item.id));
           const mergedResults = [...localMatches];
           const strictRestaurantMatches = restaurantMatches.filter(
-            (item) => getItemSearchMeta(item, trimmedSearch).tier >= 2
+            (item) => getQuickSearchMeta(item, trimmedSearch, trimmedRestaurantSearch).tier >= 2
           );
 
           const sourceResults = localMatches.length ? strictRestaurantMatches : restaurantMatches;
@@ -298,8 +328,8 @@ export function FoodLogSection({
           }
 
           mergedResults.sort((left, right) => {
-            const leftMeta = getItemSearchMeta(left, trimmedSearch);
-            const rightMeta = getItemSearchMeta(right, trimmedSearch);
+            const leftMeta = getQuickSearchMeta(left, trimmedSearch, trimmedRestaurantSearch);
+            const rightMeta = getQuickSearchMeta(right, trimmedSearch, trimmedRestaurantSearch);
 
             if (rightMeta.tier !== leftMeta.tier) {
               return rightMeta.tier - leftMeta.tier;
@@ -329,7 +359,7 @@ export function FoodLogSection({
       isMounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [deferredQuickSearch, isQuickSearchOpen, quickPickLibrary]);
+  }, [deferredQuickRestaurantSearch, deferredQuickSearch, isQuickSearchOpen, quickPickLibrary]);
 
   const filteredLibrary = useMemo(() => {
     if (categoryFilter === "restaurant") {
@@ -376,6 +406,7 @@ export function FoodLogSection({
     setUsageCounts(recordFoodLibraryUsage(item.id));
     setSelectedPreset(scalablePreset);
     setQuickSearch(item.name);
+    setQuickRestaurantSearch(item.brand || "");
     setQuickSearchResults([]);
     setQuickSearchStatus("idle");
     setIsQuickSearchOpen(false);
@@ -542,19 +573,34 @@ export function FoodLogSection({
           </div>
           <div className="food-log-search" ref={quickSearchRef}>
             <p className="muted">Selected day: {selectedDate}</p>
-            <label className="food-log-search__label">
-              <span className="sr-only">Search foods</span>
-              <input
-                value={quickSearch}
-                onChange={(event) => {
-                  setQuickSearch(event.target.value);
-                  setIsQuickSearchOpen(true);
-                }}
-                onFocus={() => setIsQuickSearchOpen(true)}
-                placeholder="Search foods or restaurants..."
-              />
-            </label>
-            {isQuickSearchOpen && quickSearch.trim().length >= 2 ? (
+            <div className="food-log-search__fields">
+              <label className="food-log-search__label">
+                <span className="sr-only">Search foods</span>
+                <input
+                  value={quickSearch}
+                  onChange={(event) => {
+                    setQuickSearch(event.target.value);
+                    setIsQuickSearchOpen(true);
+                  }}
+                  onFocus={() => setIsQuickSearchOpen(true)}
+                  placeholder="Food"
+                />
+              </label>
+              <label className="food-log-search__label">
+                <span className="sr-only">Search restaurant</span>
+                <input
+                  value={quickRestaurantSearch}
+                  onChange={(event) => {
+                    setQuickRestaurantSearch(event.target.value);
+                    setIsQuickSearchOpen(true);
+                  }}
+                  onFocus={() => setIsQuickSearchOpen(true)}
+                  placeholder="Restaurant"
+                />
+              </label>
+            </div>
+            {isQuickSearchOpen &&
+            (quickSearch.trim().length >= 2 || quickRestaurantSearch.trim().length >= 2) ? (
               <div className="food-log-search__dropdown">
                 {quickSearchResults.length ? (
                   <div className="food-log-search__results">
