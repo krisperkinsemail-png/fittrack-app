@@ -50,6 +50,37 @@ function similarityScore(left, right) {
   return 1 - levenshteinDistance(left, right) / longest;
 }
 
+export function getSearchMeta(query, values, threshold = 0.72) {
+  const normalizedQuery = normalizeSearchValue(query);
+  if (!normalizedQuery) {
+    return { tier: 3, score: 1 };
+  }
+
+  let tier = 0;
+  let score = 0;
+
+  for (const rawValue of values.filter(Boolean)) {
+    const normalizedValue = normalizeSearchValue(rawValue);
+    if (!normalizedValue) {
+      continue;
+    }
+
+    const tokens = tokenize(normalizedValue);
+    if (tokens.some((token) => token.startsWith(normalizedQuery))) {
+      tier = Math.max(tier, 3);
+    } else if (normalizedValue.includes(normalizedQuery)) {
+      tier = Math.max(tier, 2);
+    }
+  }
+
+  score = computeSearchScore(query, values);
+  if (tier === 0 && score >= threshold) {
+    tier = 1;
+  }
+
+  return { tier, score };
+}
+
 export function computeSearchScore(query, values) {
   const normalizedQuery = normalizeSearchValue(query);
   if (!normalizedQuery) {

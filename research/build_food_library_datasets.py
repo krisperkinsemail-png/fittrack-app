@@ -56,6 +56,14 @@ OUTPUT_FIELDS = [
 ]
 
 
+EXCLUDED_RESTAURANT_CATEGORY_TERMS = {
+    "beverages",
+    "beverage",
+    "drinks",
+    "drink",
+}
+
+
 def col_to_index(cell_ref: str) -> int:
     letters = "".join(ch for ch in cell_ref if ch.isalpha())
     value = 0
@@ -118,6 +126,11 @@ def parse_number(value: str) -> str:
     if not text:
         return ""
     return text
+
+
+def should_exclude_restaurant_row(row: Dict[str, str]) -> bool:
+    category = clean_text(row.get("category", "")).lower()
+    return category in EXCLUDED_RESTAURANT_CATEGORY_TERMS
 
 
 def load_annual_rows(path: Path) -> List[Dict[str, str]]:
@@ -256,6 +269,7 @@ def build_summary(
     memphis_rows: List[Dict[str, str]],
     merged_rows: List[Dict[str, str]],
     overrides_applied: int,
+    excluded_rows: int,
 ) -> str:
     annual_brands = len({row["brand"] for row in annual_rows if row["brand"]})
     merged_brands = len({row["brand"] for row in merged_rows if row["brand"]})
@@ -274,11 +288,13 @@ def build_summary(
             f"- Annual unique brands: `{annual_brands}`",
             f"- Merged unique brands: `{merged_brands}`",
             f"- Manual overrides applied over annual rows: `{overrides_applied}`",
+            f"- Excluded beverage rows: `{excluded_rows}`",
             "",
             "Merge rule:",
             "- Start from the annual 2022 baseline dataset.",
             "- Replace rows when the Memphis manual dataset has the same normalized `brand + item_name` key.",
             "- Append Memphis rows that do not exist in the annual dataset.",
+            "- Exclude restaurant beverage-category rows so overlapping soft drinks do not appear in search.",
             "",
             "Caveat:",
             "- The annual workbook is still older source data. Manual official-source rows are treated as higher-trust overrides where available.",
@@ -324,6 +340,9 @@ def main() -> None:
         if key not in annual_override_keys:
             merged_rows.append(row)
 
+    excluded_rows = sum(1 for row in merged_rows if should_exclude_restaurant_row(row))
+    merged_rows = [row for row in merged_rows if not should_exclude_restaurant_row(row)]
+
     merged_rows = sorted(
         merged_rows,
         key=lambda row: (
@@ -337,7 +356,7 @@ def main() -> None:
     RESTAURANT_JSON_OUTPUT.write_text(json.dumps(restaurant_json, separators=(",", ":")), encoding="utf-8")
 
     SUMMARY_OUTPUT.write_text(
-        build_summary(annual_rows, memphis_rows, merged_rows, overrides_applied),
+        build_summary(annual_rows, memphis_rows, merged_rows, overrides_applied, excluded_rows),
         encoding="utf-8",
     )
 
@@ -345,6 +364,7 @@ def main() -> None:
     print(f"memphis_rows={len(memphis_rows)}")
     print(f"merged_rows={merged_count}")
     print(f"overrides_applied={overrides_applied}")
+    print(f"excluded_rows={excluded_rows}")
     print(f"annual_output={ANNUAL_OUTPUT}")
     print(f"merged_output={MERGED_OUTPUT}")
     print(f"summary_output={SUMMARY_OUTPUT}")

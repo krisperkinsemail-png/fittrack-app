@@ -2,7 +2,7 @@ import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState
 import { FOOD_LIBRARY } from "../lib/foodLibrary";
 import { loadFoodLibraryUsage, recordFoodLibraryUsage } from "../lib/libraryUsage";
 import { searchRestaurantLibrary } from "../lib/restaurantLibrary";
-import { computeSearchScore, isFuzzyMatch } from "../lib/search";
+import { computeSearchScore, getSearchMeta, isFuzzyMatch } from "../lib/search";
 
 const EMPTY_FORM = {
   foodName: "",
@@ -117,6 +117,10 @@ function inferSavedTemplateType(item) {
 
 function matchesSearch(item, term) {
   return isFuzzyMatch(term, [item.name, item.brand, item.servingSize, item.description]);
+}
+
+function getItemSearchMeta(item, term) {
+  return getSearchMeta(term, [item.name, item.brand, item.servingSize, item.description]);
 }
 
 export function FoodLogSection({
@@ -247,27 +251,20 @@ export function FoodLogSection({
     let isMounted = true;
 
     const localMatches = quickPickLibrary
-      .filter((item) => matchesSearch(item, trimmedSearch))
+      .map((item) => ({ item, meta: getItemSearchMeta(item, trimmedSearch) }))
+      .filter(({ meta }) => meta.tier >= 2 || (meta.tier === 1 && meta.score >= 0.84))
       .sort((left, right) => {
-        const rightScore = computeSearchScore(trimmedSearch, [
-          right.name,
-          right.brand,
-          right.servingSize,
-          right.description,
-        ]);
-        const leftScore = computeSearchScore(trimmedSearch, [
-          left.name,
-          left.brand,
-          left.servingSize,
-          left.description,
-        ]);
-
-        if (rightScore !== leftScore) {
-          return rightScore - leftScore;
+        if (right.meta.tier !== left.meta.tier) {
+          return right.meta.tier - left.meta.tier;
         }
 
-        return left.name.localeCompare(right.name);
+        if (right.meta.score !== left.meta.score) {
+          return right.meta.score - left.meta.score;
+        }
+
+        return left.item.name.localeCompare(right.item.name);
       })
+      .map(({ item }) => item)
       .slice(0, 6);
 
     setQuickSearchResults(localMatches);
@@ -292,6 +289,21 @@ export function FoodLogSection({
               break;
             }
           }
+
+          mergedResults.sort((left, right) => {
+            const leftMeta = getItemSearchMeta(left, trimmedSearch);
+            const rightMeta = getItemSearchMeta(right, trimmedSearch);
+
+            if (rightMeta.tier !== leftMeta.tier) {
+              return rightMeta.tier - leftMeta.tier;
+            }
+
+            if (rightMeta.score !== leftMeta.score) {
+              return rightMeta.score - leftMeta.score;
+            }
+
+            return left.name.localeCompare(right.name);
+          });
 
           startTransition(() => {
             setQuickSearchResults(mergedResults);
@@ -318,39 +330,32 @@ export function FoodLogSection({
     }
 
     return quickPickLibrary
-      .filter((item) => {
+      .map((item) => ({ item, meta: getItemSearchMeta(item, search) }))
+      .filter(({ item, meta }) => {
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
-        return matchesCategory && matchesSearch(item, search);
+        return matchesCategory && meta.tier > 0;
       })
       .sort((left, right) => {
-        const rightScore = computeSearchScore(search, [
-          right.name,
-          right.brand,
-          right.servingSize,
-          right.description,
-        ]);
-        const leftScore = computeSearchScore(search, [
-          left.name,
-          left.brand,
-          left.servingSize,
-          left.description,
-        ]);
+        if (search && right.meta.tier !== left.meta.tier) {
+          return right.meta.tier - left.meta.tier;
+        }
 
-        if (search && rightScore !== leftScore) {
-          return rightScore - leftScore;
+        if (search && right.meta.score !== left.meta.score) {
+          return right.meta.score - left.meta.score;
         }
 
         if (categoryFilter === "all") {
-          const rightUsage = usageCounts[right.id] || 0;
-          const leftUsage = usageCounts[left.id] || 0;
+          const rightUsage = usageCounts[right.item.id] || 0;
+          const leftUsage = usageCounts[left.item.id] || 0;
 
           if (rightUsage !== leftUsage) {
             return rightUsage - leftUsage;
           }
         }
 
-        return left.name.localeCompare(right.name);
-      });
+        return left.item.name.localeCompare(right.item.name);
+      })
+      .map(({ item }) => item);
   }, [categoryFilter, quickPickLibrary, restaurantLibrary, search, usageCounts]);
 
   function resetForm() {

@@ -1,9 +1,9 @@
-import { hasSupabaseConfig, supabase } from "./supabase";
-import { computeSearchScore, isFuzzyMatch, normalizeSearchQuery } from "./search";
+import { getSearchMeta, isFuzzyMatch, normalizeSearchQuery } from "./search";
 
 let fallbackLibraryPromise = null;
 const queryCache = new Map();
 const MAX_CACHE_ENTRIES = 60;
+const EXCLUDED_RESTAURANT_CATEGORIES = new Set(["beverages", "beverage", "drinks", "drink"]);
 
 function getCachedQuery(query) {
   if (!queryCache.has(query)) {
@@ -48,6 +48,11 @@ function mapRestaurantRow(row) {
     sourceType: row.source_type || "",
     sourceDate: row.source_date || "",
   };
+}
+
+function shouldExcludeRestaurantRow(row) {
+  const category = String(row.category || "").trim().toLowerCase();
+  return EXCLUDED_RESTAURANT_CATEGORIES.has(category);
 }
 
 function dedupeRestaurantRows(rows) {
@@ -124,7 +129,7 @@ export async function searchRestaurantLibrary(query) {
       .limit(40);
 
     if (!fastResult.error && fastResult.data?.length >= 12) {
-      const mapped = fastResult.data.map(mapRestaurantRow);
+      const mapped = fastResult.data.filter((row) => !shouldExcludeRestaurantRow(row)).map(mapRestaurantRow);
       setCachedQuery(normalized, mapped);
       return mapped;
     }
@@ -138,13 +143,15 @@ export async function searchRestaurantLibrary(query) {
       const merged = dedupeRestaurantRows([
         ...(fastResult.error || !fastResult.data ? [] : fastResult.data),
         ...fuzzyResult.data,
-      ]).map(mapRestaurantRow);
+      ])
+        .filter((row) => !shouldExcludeRestaurantRow(row))
+        .map(mapRestaurantRow);
       setCachedQuery(normalized, merged);
       return merged;
     }
 
     if (!fastResult.error && fastResult.data) {
-      const mapped = fastResult.data.map(mapRestaurantRow);
+      const mapped = fastResult.data.filter((row) => !shouldExcludeRestaurantRow(row)).map(mapRestaurantRow);
       setCachedQuery(normalized, mapped);
       return mapped;
     }
@@ -152,26 +159,20 @@ export async function searchRestaurantLibrary(query) {
 
   const library = await loadFallbackLibrary();
   const results = library
-    .filter((item) => matchesSearch(item, trimmed))
+    .filter((item) => !shouldExcludeRestaurantRow(item))
+    .map((item) => ({ item, meta: getSearchMeta(trimmed, [item.name, item.brand, item.description, item.servingSize]) }))
+    .filter(({ meta }) => meta.tier > 0)
     .sort((left, right) => {
-      const rightScore = computeSearchScore(trimmed, [
-        right.name,
-        right.brand,
-        right.description,
-        right.servingSize,
-      ]);
-      const leftScore = computeSearchScore(trimmed, [
-        left.name,
-        left.brand,
-        left.description,
-        left.servingSize,
-      ]);
-      if (rightScore !== leftScore) {
-        return rightScore - leftScore;
+      if (right.meta.tier !== left.meta.tier) {
+        return right.meta.tier - left.meta.tier;
       }
-      const brandSort = left.brand.localeCompare(right.brand);
-      return brandSort || left.name.localeCompare(right.name);
+      if (right.meta.score !== left.meta.score) {
+        return right.meta.score - left.meta.score;
+      }
+      const brandSort = left.item.brand.localeCompare(right.item.brand);
+      return brandSort || left.item.name.localeCompare(right.item.name);
     })
+    .map(({ item }) => item)
     .slice(0, 80);
   setCachedQuery(normalized, results);
   return results;
