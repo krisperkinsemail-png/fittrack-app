@@ -266,19 +266,21 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
         <div className="summary-grid">
           <div className="summary-panel">
             <span>Email</span>
-            <strong>{session?.user?.email || "--"}</strong>
+            <p className="account-email">{session?.user?.email || "--"}</p>
           </div>
           <div className="summary-panel">
             <span>Sync status</span>
-            <strong>{syncStatus}</strong>
+            <strong>{syncStatus ? `${syncStatus.charAt(0).toUpperCase()}${syncStatus.slice(1)}` : "--"}</strong>
             {syncError ? <p className="muted">{syncError}</p> : null}
           </div>
         </div>
 
         {session ? (
-          <button type="button" className="secondary-button" onClick={signOut}>
-            Sign out
-          </button>
+          <div className="account-actions">
+            <button type="button" className="secondary-button" onClick={signOut}>
+              Sign Out
+            </button>
+          </div>
         ) : null}
       </section>
     </div>
