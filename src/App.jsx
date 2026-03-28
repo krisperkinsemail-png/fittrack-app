@@ -169,10 +169,7 @@ export default function App() {
                 ? "secondary-button home-button is-selected-accent"
                 : "secondary-button home-button"
             }
-            onClick={() => {
-              setActiveTab("dashboard");
-              setSelectedDate(getToday());
-            }}
+            onClick={() => setActiveTab("dashboard")}
           >
             Today's Snapshot
           </button>
