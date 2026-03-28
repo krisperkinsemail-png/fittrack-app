@@ -1,11 +1,18 @@
 import { WeightTrendChart } from "./WeightTrendChart";
 
+function formatMetricValue(value) {
+  const rounded = Math.round(Number(value || 0) * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
 function formatRemaining(value, unit) {
+  const formattedValue = formatMetricValue(Math.abs(value));
+
   if (value >= 0) {
-    return `${value} ${unit} left`;
+    return `${formattedValue} ${unit} left`;
   }
 
-  return `${Math.abs(value)} ${unit} over`;
+  return `${formattedValue} ${unit} over`;
 }
 
 export function DashboardSection({
@@ -25,25 +32,25 @@ export function DashboardSection({
       label: "Calories",
       current: dailyTotals.calories,
       target: settings.calorieTarget,
-      helper: `${dailyTotals.calories} / ${settings.calorieTarget}`,
+      helper: `${formatMetricValue(dailyTotals.calories)} / ${formatMetricValue(settings.calorieTarget)}`,
     },
     {
       label: "Protein",
       current: dailyTotals.protein,
       target: settings.proteinTarget,
-      helper: `${dailyTotals.protein}g / ${settings.proteinTarget}g`,
+      helper: `${formatMetricValue(dailyTotals.protein)}g / ${formatMetricValue(settings.proteinTarget)}g`,
     },
     {
       label: "Carbs",
       current: dailyTotals.carbs,
       target: settings.carbsTarget,
-      helper: `${dailyTotals.carbs}g / ${settings.carbsTarget}g`,
+      helper: `${formatMetricValue(dailyTotals.carbs)}g / ${formatMetricValue(settings.carbsTarget)}g`,
     },
     {
       label: "Fat",
       current: dailyTotals.fat,
       target: settings.fatTarget,
-      helper: `${dailyTotals.fat}g / ${settings.fatTarget}g`,
+      helper: `${formatMetricValue(dailyTotals.fat)}g / ${formatMetricValue(settings.fatTarget)}g`,
     },
   ];
 
