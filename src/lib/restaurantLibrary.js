@@ -1,4 +1,6 @@
 import { getSearchMeta, isFuzzyMatch, normalizeSearchQuery } from "./search";
+import { hasSupabaseConfig } from "./supabase";
+import { supabase } from "./supabase";
 
 let fallbackLibraryPromise = null;
 const queryCache = new Map();
