@@ -1031,6 +1031,38 @@ button {
   padding: 16px;
 }
 
+.food-library-card--toggle {
+  display: grid;
+  gap: 14px;
+}
+
+.form-grid + .food-library-card--toggle {
+  margin-top: 12px;
+}
+
+.food-library-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.food-library-toggle h3,
+.food-library-toggle p {
+  margin: 0;
+}
+
+.food-library-toggle__chevron {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #f8fafc;
+}
+
 .timer-panel .button-row + .button-row {
   margin-top: 10px;
 }

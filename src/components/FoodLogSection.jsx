@@ -227,6 +227,7 @@ export function FoodLogSection({
   const [quickSearchResults, setQuickSearchResults] = useState([]);
   const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
+  const [isQuickPicksOpen, setIsQuickPicksOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
   const [restaurantLibrary, setRestaurantLibrary] = useState([]);
@@ -475,6 +476,10 @@ export function FoodLogSection({
       })
       .map(({ item }) => item);
   }, [categoryFilter, quickPickLibrary, restaurantLibrary, search, usageCounts]);
+
+  const shouldShowQuickPicksCard =
+    categoryFilter !== "restaurant" && search.trim().length === 0;
+  const quickPickPreview = useMemo(() => filteredLibrary.slice(0, 8), [filteredLibrary]);
 
   function resetForm() {
     setForm(EMPTY_FORM);
@@ -1189,47 +1194,114 @@ export function FoodLogSection({
           </div>
         ) : null}
 
-        <div className="food-library-grid">
-          {filteredLibrary.map((item) => (
-            <article className="food-library-card" key={item.id}>
-              <div className="log-card__top">
-                <div>
-                  <h3>{item.name}</h3>
-                  <p className="muted">
-                    {item.brand ? `${item.brand} • ` : ""}
-                    {item.servingSize}
-                    {item.category ? ` • ${item.category}` : ""}
-                  </p>
-                </div>
-                <strong>{item.calories} cal</strong>
+        {shouldShowQuickPicksCard ? (
+          <article className="food-library-card food-library-card--toggle">
+            <button
+              type="button"
+              className="food-library-toggle"
+              onClick={() => setIsQuickPicksOpen((current) => !current)}
+              aria-expanded={isQuickPicksOpen}
+            >
+              <div>
+                <h3>Quick Picks</h3>
+                <p className="muted">Most recent and most picked foods</p>
               </div>
-              <p className="muted">
-                P {item.protein}g • C {item.carbs}g • F {item.fat}g
-              </p>
-              <div className="button-row">
-                <button type="button" className="secondary-button" onClick={() => loadPreset(item)}>
-                  Use preset
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => quickAddItem(item)}
-                >
-                  Quick add
-                </button>
-                {item.itemType === "meal" || item.itemType === "saved-food" ? (
+              <span className="food-library-toggle__chevron">
+                {isQuickPicksOpen ? "−" : "+"}
+              </span>
+            </button>
+
+            {isQuickPicksOpen ? (
+              <div className="food-library-grid">
+                {quickPickPreview.map((item) => (
+                  <article className="food-library-card" key={item.id}>
+                    <div className="log-card__top">
+                      <div>
+                        <h3>{item.name}</h3>
+                        <p className="muted">
+                          {item.brand ? `${item.brand} • ` : ""}
+                          {item.servingSize}
+                          {item.category ? ` • ${item.category}` : ""}
+                        </p>
+                      </div>
+                      <strong>{item.calories} cal</strong>
+                    </div>
+                    <p className="muted">
+                      P {item.protein}g • C {item.carbs}g • F {item.fat}g
+                    </p>
+                    <div className="button-row">
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => loadPreset(item)}
+                      >
+                        Use preset
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => quickAddItem(item)}
+                      >
+                        Quick add
+                      </button>
+                      {item.itemType === "meal" || item.itemType === "saved-food" ? (
+                        <button
+                          type="button"
+                          className="secondary-button danger-button"
+                          onClick={() => onDeleteMeal(item.id)}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+          </article>
+        ) : (
+          <div className="food-library-grid">
+            {filteredLibrary.map((item) => (
+              <article className="food-library-card" key={item.id}>
+                <div className="log-card__top">
+                  <div>
+                    <h3>{item.name}</h3>
+                    <p className="muted">
+                      {item.brand ? `${item.brand} • ` : ""}
+                      {item.servingSize}
+                      {item.category ? ` • ${item.category}` : ""}
+                    </p>
+                  </div>
+                  <strong>{item.calories} cal</strong>
+                </div>
+                <p className="muted">
+                  P {item.protein}g • C {item.carbs}g • F {item.fat}g
+                </p>
+                <div className="button-row">
+                  <button type="button" className="secondary-button" onClick={() => loadPreset(item)}>
+                    Use preset
+                  </button>
                   <button
                     type="button"
-                    className="secondary-button danger-button"
-                    onClick={() => onDeleteMeal(item.id)}
+                    className="secondary-button"
+                    onClick={() => quickAddItem(item)}
                   >
-                    Delete
+                    Quick add
                   </button>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
+                  {item.itemType === "meal" || item.itemType === "saved-food" ? (
+                    <button
+                      type="button"
+                      className="secondary-button danger-button"
+                      onClick={() => onDeleteMeal(item.id)}
+                    >
+                      Delete
+                    </button>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
 
         {!filteredLibrary.length &&
         categoryFilter !== "restaurant" &&
