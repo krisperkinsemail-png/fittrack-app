@@ -169,17 +169,15 @@ export function WeightSection({
           entries.length ? (
             <div className="weight-history-content list-stack">
               {entries.map((entry) => (
-                <article className="log-card" key={entry.id}>
-                  <div className="log-card__top">
-                    <div className="weight-history-header">
-                      <h3>{formatLongDate(entry.date)}</h3>
-                      {entry.notes ? <p className="muted weight-history-note">{entry.notes}</p> : null}
-                    </div>
+                <article className="weight-history-item" key={entry.id}>
+                  <div className="weight-history-item__top">
+                    <h3>{formatLongDate(entry.date)}</h3>
+                    <strong className="weight-history-value">
+                      {entry.weight} {settings.weightUnit}
+                    </strong>
                   </div>
-                  <strong className="weight-history-value">
-                    {entry.weight} {settings.weightUnit}
-                  </strong>
-                  <div className="button-row">
+                  {entry.notes ? <p className="muted weight-history-note">{entry.notes}</p> : null}
+                  <div className="button-row weight-history-actions">
                     <button
                       type="button"
                       className="secondary-button danger-button"

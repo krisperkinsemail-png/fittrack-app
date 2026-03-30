@@ -445,7 +445,7 @@ export default function App() {
           <WeightSection
             selectedDate={state.selectedDate}
             currentEntry={selectedWeightEntry}
-            entries={weightEntriesDescending.slice(0, 10)}
+            entries={weightEntriesDescending}
             settings={state.settings}
             weightTrendSummary={weightTrendSummary}
             weightGoalProgress={weightGoalProgress}

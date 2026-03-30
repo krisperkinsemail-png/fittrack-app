@@ -1410,15 +1410,46 @@ button {
   width: 100%;
 }
 
+.weight-history-item {
+  border-radius: var(--radius-lg);
+  background: var(--surface-strong);
+  border: 1px solid rgba(96, 114, 139, 0.22);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.weight-history-item__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weight-history-item__top h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 .weight-history-value {
   display: block;
-  text-align: center;
-  font-size: 1.5rem;
+  text-align: right;
+  font-size: 1.05rem;
   line-height: 1;
 }
 
 .weight-history-note {
-  text-align: right;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.weight-history-actions {
+  justify-content: flex-end;
+}
+
+.weight-history-actions .secondary-button {
+  min-height: 40px;
+  padding: 8px 12px;
 }
 
 .chart-card {
