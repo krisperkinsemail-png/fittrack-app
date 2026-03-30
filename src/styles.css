@@ -61,6 +61,10 @@ select {
   font: inherit;
 }
 
+textarea {
+  font: inherit;
+}
+
 button,
 input,
 select,
@@ -766,6 +770,18 @@ button {
   display: flex;
   justify-content: center;
   margin-top: 14px;
+}
+
+.feedback-modal {
+  width: min(100%, 640px);
+}
+
+.feedback-context {
+  gap: 8px;
+}
+
+.feedback-context p {
+  margin: 0;
 }
 
 .stat-card--warning strong {
@@ -1554,6 +1570,16 @@ select {
   background: rgba(11, 17, 28, 0.96);
   color: var(--text);
   padding: 12px 14px;
+}
+
+textarea {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(96, 114, 139, 0.34);
+  background: rgba(11, 17, 28, 0.96);
+  color: var(--text);
+  padding: 12px 14px;
+  resize: vertical;
 }
 
 input::placeholder,

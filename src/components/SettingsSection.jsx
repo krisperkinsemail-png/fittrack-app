@@ -14,13 +14,30 @@ function parseOptionalNumber(value) {
   return Number.isFinite(numericValue) ? numericValue : "";
 }
 
-export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
+export function SettingsSection({
+  settings,
+  onSave,
+  syncStatus,
+  syncError,
+  activeTab,
+  selectedDate,
+}) {
   const [form, setForm] = useState(settings);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState("bug");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackContact, setFeedbackContact] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState("idle");
+  const [feedbackError, setFeedbackError] = useState("");
   const { session, signOut, hasCloud } = useAuth();
 
   useEffect(() => {
     setForm(settings);
   }, [settings]);
+
+  useEffect(() => {
+    setFeedbackContact(session?.user?.email || "");
+  }, [session?.user?.email]);
 
   const macroPercents = useMemo(() => {
     const proteinPercent = Math.max(0, Math.min(80, Number(form.proteinPercent) || 0));
@@ -81,6 +98,49 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
           };
 
     onSave(nextSettings);
+  }
+
+  async function handleFeedbackSubmit(event) {
+    event.preventDefault();
+
+    if (!feedbackMessage.trim()) {
+      setFeedbackError("Please enter a message.");
+      return;
+    }
+
+    setFeedbackStatus("submitting");
+    setFeedbackError("");
+
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: feedbackType,
+          message: feedbackMessage.trim(),
+          contactEmail: feedbackContact.trim(),
+          userEmail: session?.user?.email || "",
+          activeTab,
+          selectedDate,
+          pageUrl: typeof window !== "undefined" ? window.location.href : "",
+          userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || "Failed to send feedback.");
+      }
+
+      setFeedbackStatus("success");
+      setFeedbackMessage("");
+      setFeedbackType("bug");
+    } catch (error) {
+      setFeedbackStatus("error");
+      setFeedbackError(error.message || "Failed to send feedback.");
+    }
   }
 
   return (
@@ -297,6 +357,126 @@ export function SettingsSection({ settings, onSave, syncStatus, syncError }) {
           </div>
         ) : null}
       </section>
+
+      <section className="card">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Support</p>
+            <h2>Feedback / Report Issue</h2>
+          </div>
+          <p className="muted">Send feedback or bug reports directly from the app.</p>
+        </div>
+
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() => {
+            setIsFeedbackOpen(true);
+            setFeedbackError("");
+            if (feedbackStatus === "success") {
+              setFeedbackStatus("idle");
+            }
+          }}
+        >
+          Open feedback form
+        </button>
+      </section>
+
+      {isFeedbackOpen ? (
+        <div className="insights-modal-backdrop" role="presentation">
+          <section className="insights-modal feedback-modal" role="dialog" aria-modal="true">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Support</p>
+                <h2>Send feedback</h2>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setIsFeedbackOpen(false);
+                  setFeedbackError("");
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="muted">
+              Include what happened, what you expected, and any steps that help reproduce it.
+            </p>
+
+            <form className="form-grid" onSubmit={handleFeedbackSubmit}>
+              <label>
+                Type
+                <select
+                  value={feedbackType}
+                  onChange={(event) => setFeedbackType(event.target.value)}
+                >
+                  <option value="bug">Bug</option>
+                  <option value="feedback">General feedback</option>
+                  <option value="feature">Feature request</option>
+                </select>
+              </label>
+
+              <label>
+                Contact email
+                <input
+                  type="email"
+                  value={feedbackContact}
+                  onChange={(event) => setFeedbackContact(event.target.value)}
+                  placeholder="you@example.com"
+                />
+              </label>
+
+              <label>
+                Message
+                <textarea
+                  value={feedbackMessage}
+                  onChange={(event) => setFeedbackMessage(event.target.value)}
+                  placeholder="Tell us what happened..."
+                  rows="6"
+                  required
+                />
+              </label>
+
+              <div className="summary-panel feedback-context">
+                <span>Context included</span>
+                <p className="muted">Signed-in email: {session?.user?.email || "--"}</p>
+                <p className="muted">Tab: {activeTab}</p>
+                <p className="muted">Selected date: {selectedDate}</p>
+              </div>
+
+              {feedbackError ? <p className="muted">{feedbackError}</p> : null}
+              {feedbackStatus === "success" ? (
+                <p className="muted">Feedback sent successfully.</p>
+              ) : null}
+
+              <div className="button-row">
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={feedbackStatus === "submitting"}
+                >
+                  {feedbackStatus === "submitting" ? "Sending..." : "Send feedback"}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => {
+                    setFeedbackMessage("");
+                    setFeedbackType("bug");
+                    setFeedbackError("");
+                    setFeedbackStatus("idle");
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

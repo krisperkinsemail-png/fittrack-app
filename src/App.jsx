@@ -474,6 +474,8 @@ export default function App() {
             onSave={updateSettings}
             syncStatus={syncStatus}
             syncError={syncError}
+            activeTab={activeTab}
+            selectedDate={state.selectedDate}
           />
         </section>
       </main>
