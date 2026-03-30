@@ -1153,6 +1153,52 @@ button {
   margin-top: 10px;
 }
 
+.workout-timer-launcher {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+}
+
+.workout-timer-launcher strong {
+  display: block;
+}
+
+.workout-timer-launcher__meta {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.workout-timer-float {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100vw - 24px), 560px);
+  z-index: 30;
+  pointer-events: none;
+}
+
+.workout-timer-float__panel {
+  pointer-events: auto;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+}
+
+.workout-timer-float__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.workout-timer-float__header .eyebrow {
+  margin-bottom: 8px;
+}
+
 .custom-exercise-save-toggle {
   display: flex;
   align-items: center;

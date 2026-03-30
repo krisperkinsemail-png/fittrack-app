@@ -107,6 +107,7 @@ export function WorkoutSection({
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [isProgramPickerOpen, setIsProgramPickerOpen] = useState(false);
   const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
+  const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
   const [customExerciseBank, setCustomExerciseBank] = useState(() => loadCustomExerciseBank());
   const [savedWorkoutDraft, setSavedWorkoutDraft] = useState(null);
@@ -770,54 +771,86 @@ export function WorkoutSection({
         <div className="section-heading">
           <div>
             <p className="eyebrow">Rest timer</p>
-            <h2>Keep the pace tight between sets</h2>
+            <h2>Open a floating timer while you log</h2>
           </div>
-          <p className="muted">Pick a preset, then start or reset the countdown.</p>
+          <p className="muted">Open it once, then scroll the workout with the timer pinned at the top.</p>
         </div>
 
-        <div className="timer-panel">
-          <strong className="timer-readout">{formatTimer(timeLeft)}</strong>
-          <div className="button-row">
-            {REST_PRESETS.map((preset) => (
+        <button
+          type="button"
+          className="summary-panel workout-timer-launcher"
+          onClick={() => setIsTimerOpen(true)}
+        >
+          <div>
+            <span>Current timer</span>
+            <strong>{formatTimer(timeLeft)}</strong>
+            <p className="muted">Preset: {restDuration / 60}m</p>
+          </div>
+          <div className="workout-timer-launcher__meta">
+            <span>{isTimerRunning ? "Running" : "Ready"}</span>
+            <strong>Open timer</strong>
+          </div>
+        </button>
+      </section>
+
+      {isTimerOpen ? (
+        <div className="workout-timer-float" role="dialog" aria-label="Rest timer">
+          <div className="timer-panel workout-timer-float__panel">
+            <div className="workout-timer-float__header">
+              <div>
+                <p className="eyebrow">Rest timer</p>
+                <strong className="timer-readout">{formatTimer(timeLeft)}</strong>
+              </div>
               <button
-                key={preset}
                 type="button"
-                className={
-                  preset === restDuration
-                    ? "secondary-button is-selected-accent"
-                    : "secondary-button"
-                }
+                className="secondary-button"
+                onClick={() => setIsTimerOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="button-row">
+              {REST_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  className={
+                    preset === restDuration
+                      ? "secondary-button is-selected-accent"
+                      : "secondary-button"
+                  }
+                  onClick={() => {
+                    setRestDuration(preset);
+                    setTimeLeft(preset);
+                    setIsTimerRunning(false);
+                  }}
+                >
+                  {preset / 60}m
+                </button>
+              ))}
+            </div>
+            <div className="button-row">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => setIsTimerRunning((current) => !current)}
+              >
+                {isTimerRunning ? "Pause" : "Start"}
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
                 onClick={() => {
-                  setRestDuration(preset);
-                  setTimeLeft(preset);
+                  setTimeLeft(restDuration);
                   setIsTimerRunning(false);
                 }}
               >
-                {preset / 60}m
+                Reset
               </button>
-            ))}
-          </div>
-          <div className="button-row">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => setIsTimerRunning((current) => !current)}
-            >
-              {isTimerRunning ? "Pause" : "Start"}
-            </button>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => {
-                setTimeLeft(restDuration);
-                setIsTimerRunning(false);
-              }}
-            >
-              Reset
-            </button>
+            </div>
           </div>
         </div>
-      </section>
+      ) : null}
 
       <section className="card">
         <div className="section-heading">
