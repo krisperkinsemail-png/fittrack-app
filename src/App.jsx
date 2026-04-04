@@ -350,7 +350,7 @@ export default function App() {
             </button>
           </div>
         </div>
-        <p className="topbar-copy">Let&apos;s build the version of you that your future self is proud of.</p>
+        <p className="topbar-copy">Let&apos;s get started!</p>
         <div className="accent-switcher" aria-label="Accent color">
           <button
             type="button"
