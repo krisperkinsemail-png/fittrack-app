@@ -1003,6 +1003,7 @@ export function WorkoutSection({
                       : "secondary-button"
                   }
                   onClick={() => {
+                    ensureAudioContext(audioContextRef);
                     setRestDuration(preset);
                     setTimeLeft(preset);
                     setIsTimerRunning(false);
@@ -1016,7 +1017,10 @@ export function WorkoutSection({
               <button
                 type="button"
                 className="primary-button"
-                onClick={() => setIsTimerRunning((current) => !current)}
+                onClick={() => {
+                  ensureAudioContext(audioContextRef);
+                  setIsTimerRunning((current) => !current);
+                }}
               >
                 {isTimerRunning ? "Pause" : "Start"}
               </button>
@@ -1024,6 +1028,7 @@ export function WorkoutSection({
                 type="button"
                 className="secondary-button"
                 onClick={() => {
+                  ensureAudioContext(audioContextRef);
                   setTimeLeft(restDuration);
                   setIsTimerRunning(false);
                 }}
@@ -2204,27 +2209,22 @@ export function WorkoutSection({
   );
 }
 
-function playTimerAlarm(audioContextRef) {
-  if (typeof window === "undefined") {
-    return;
-  }
+function ensureAudioContext(audioContextRef) {
+  if (typeof window === "undefined") return;
 
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) {
-    return;
-  }
+  if (!AudioContextClass) return;
 
   if (!audioContextRef.current) {
     audioContextRef.current = new AudioContextClass();
   }
 
-  const context = audioContextRef.current;
-  if (context.state === "suspended") {
-    context.resume().catch(() => {
-      // Ignore autoplay-policy failures.
-    });
+  if (audioContextRef.current.state === "suspended") {
+    audioContextRef.current.resume().catch(() => {});
   }
+}
 
+function scheduleBeeps(context) {
   const startAt = context.currentTime;
   [0, 0.22, 0.44].forEach((offset, index) => {
     const oscillator = context.createOscillator();
@@ -2241,6 +2241,17 @@ function playTimerAlarm(audioContextRef) {
     oscillator.start(startAt + offset);
     oscillator.stop(startAt + offset + 0.18);
   });
+}
+
+function playTimerAlarm(audioContextRef) {
+  const context = audioContextRef.current;
+  if (!context) return;
+
+  if (context.state === "suspended") {
+    context.resume().then(() => scheduleBeeps(context)).catch(() => {});
+  } else {
+    scheduleBeeps(context);
+  }
 }
 
 function loadCustomExerciseBank() {
