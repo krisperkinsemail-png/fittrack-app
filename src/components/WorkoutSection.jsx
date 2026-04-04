@@ -115,6 +115,7 @@ export function WorkoutSection({
   const [removedExerciseUndo, setRemovedExerciseUndo] = useState(null);
   const [openExerciseId, setOpenExerciseId] = useState(null);
   const exerciseCardRefs = useRef({});
+  const timerFloatRef = useRef(null);
   const [openHistoryEntryId, setOpenHistoryEntryId] = useState(null);
   const [customExerciseForm, setCustomExerciseForm] = useState({
     name: "",
@@ -247,7 +248,15 @@ export function WorkoutSection({
 
     const frameId = requestAnimationFrame(() => {
       const el = exerciseCardRefs.current[openExerciseId];
-      if (el) {
+      if (!el) return;
+
+      const timerEl = timerFloatRef.current;
+      if (timerEl) {
+        // Timer is pinned at the top — scroll the card top to sit just below it
+        const timerBottom = timerEl.getBoundingClientRect().bottom;
+        const cardTop = el.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: cardTop - timerBottom - 12, behavior: "smooth" });
+      } else {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
@@ -967,7 +976,7 @@ export function WorkoutSection({
       </section>
 
       {isTimerOpen ? (
-        <div className="workout-timer-float" role="dialog" aria-label="Rest timer">
+        <div className="workout-timer-float" role="dialog" aria-label="Rest timer" ref={timerFloatRef}>
           <div className="timer-panel workout-timer-float__panel">
             <div className="workout-timer-float__header">
               <div>
