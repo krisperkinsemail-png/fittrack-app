@@ -685,6 +685,11 @@ button {
   margin-top: 10px;
 }
 
+.list-stack + .section-heading,
+.empty-panel + .section-heading {
+  margin-top: 24px;
+}
+
 .stat-card,
 .summary-panel,
 .log-card,
