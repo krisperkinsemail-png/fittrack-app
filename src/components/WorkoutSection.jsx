@@ -1347,18 +1347,6 @@ export function WorkoutSection({
                   </button>
                   {isOpen && (
                     <>
-                      <div className="exercise-history-list">
-                        {entry.exercises.map((exercise) => (
-                          <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
-                            <span>{exercise.name}</span>
-                            <span>
-                              {exercise.sets
-                                .map((set) => `${set.reps} × ${set.weight}`)
-                                .join(" • ")}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
                       {editingDateEntryId === entry.id ? (
                         <div className="log-card__date-editor">
                           <label className="log-card__date-label">
@@ -1415,6 +1403,18 @@ export function WorkoutSection({
                           </button>
                         </div>
                       )}
+                      <div className="exercise-history-list">
+                        {entry.exercises.map((exercise) => (
+                          <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
+                            <span>{exercise.name}</span>
+                            <span>
+                              {exercise.sets
+                                .map((set) => `${set.reps} × ${set.weight}`)
+                                .join(" • ")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </>
                   )}
                 </article>
@@ -1468,18 +1468,6 @@ export function WorkoutSection({
                     </button>
                     {isOpen && (
                       <>
-                        <div className="exercise-history-list">
-                          {entry.exercises.map((exercise) => (
-                            <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
-                              <span>{exercise.name}</span>
-                              <span>
-                                {exercise.sets
-                                  .map((set) => `${set.reps} × ${set.weight}`)
-                                  .join(" • ")}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
                         {editingDateEntryId === entry.id ? (
                           <div className="log-card__date-editor">
                             <label className="log-card__date-label">
@@ -1516,7 +1504,7 @@ export function WorkoutSection({
                             </div>
                           </div>
                         ) : (
-                          <div className="button-row log-card__actions">
+                          <div className="button-row">
                             <button
                               type="button"
                               className="secondary-button"
@@ -1536,6 +1524,18 @@ export function WorkoutSection({
                             </button>
                           </div>
                         )}
+                        <div className="exercise-history-list">
+                          {entry.exercises.map((exercise) => (
+                            <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
+                              <span>{exercise.name}</span>
+                              <span>
+                                {exercise.sets
+                                  .map((set) => `${set.reps} × ${set.weight}`)
+                                  .join(" • ")}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </>
                     )}
                   </article>
