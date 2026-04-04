@@ -59,6 +59,7 @@ button,
 input,
 select {
   font: inherit;
+  color: inherit;
 }
 
 textarea {
@@ -185,7 +186,7 @@ button {
   gap: 22px;
   padding: 24px;
   background:
-    radial-gradient(circle at top center, rgba(78, 114, 255, 0.18), transparent 32%),
+    radial-gradient(circle at top center, color-mix(in srgb, var(--accent) 18%, transparent), transparent 32%),
     radial-gradient(circle at 78% 18%, rgba(187, 87, 255, 0.18), transparent 22%),
     linear-gradient(180deg, rgba(10, 14, 24, 0.98), rgba(8, 11, 20, 0.98));
 }
@@ -208,7 +209,7 @@ button {
   width: 220px;
   height: 220px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(77, 183, 255, 0.14), transparent 72%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 14%, transparent), transparent 72%);
   pointer-events: none;
 }
 
@@ -229,7 +230,7 @@ button {
   inset: 8% 14% 10%;
   border-radius: 40px;
   background:
-    radial-gradient(circle at 50% 30%, rgba(92, 132, 255, 0.22), transparent 34%),
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 34%),
     radial-gradient(circle at 62% 44%, rgba(208, 102, 255, 0.18), transparent 30%);
   filter: blur(24px);
   pointer-events: none;
@@ -256,7 +257,7 @@ button {
 }
 
 .landing-actions .secondary-button {
-  border: 1px solid rgba(102, 126, 255, 0.28);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
     rgba(10, 16, 28, 0.88);
@@ -264,7 +265,7 @@ button {
 }
 
 .landing-top-actions .secondary-button {
-  border: 1px solid rgba(102, 126, 255, 0.28);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
     rgba(10, 16, 28, 0.88);
@@ -285,7 +286,7 @@ button {
   min-height: 38px;
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(99, 121, 255, 0.36);
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent),
     rgba(11, 18, 31, 0.84);
@@ -323,7 +324,7 @@ button {
   min-height: 0;
   padding: 12px;
   background:
-    radial-gradient(circle at center, rgba(84, 115, 255, 0.14), transparent 35%),
+    radial-gradient(circle at center, color-mix(in srgb, var(--accent) 14%, transparent), transparent 35%),
     linear-gradient(180deg, rgba(12, 18, 30, 0.96), rgba(8, 12, 21, 0.98));
 }
 
@@ -338,7 +339,7 @@ button {
   -webkit-mask-image: radial-gradient(ellipse 92% 92% at 50% 48%, #000 72%, transparent 100%);
   mask-image: radial-gradient(ellipse 92% 92% at 50% 48%, #000 72%, transparent 100%);
   filter:
-    drop-shadow(0 0 20px rgba(70, 128, 255, 0.18))
+    drop-shadow(0 0 20px color-mix(in srgb, var(--accent) 18%, transparent))
     drop-shadow(0 0 30px rgba(196, 96, 255, 0.14));
 }
 
@@ -356,7 +357,7 @@ button {
 .landing-neon-card {
   padding: 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 126, 255, 0.24);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
     rgba(11, 17, 30, 0.92);
@@ -390,13 +391,13 @@ button {
   width: 120px;
   height: 120px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(113, 86, 255, 0.18), transparent 72%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 72%);
   pointer-events: none;
 }
 
 .landing-section--accent {
   background:
-    radial-gradient(circle at top left, rgba(88, 120, 255, 0.12), transparent 28%),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 12%, transparent), transparent 28%),
     linear-gradient(180deg, rgba(10, 15, 27, 0.94), rgba(10, 14, 22, 0.94));
 }
 
@@ -407,7 +408,7 @@ button {
 }
 
 .landing-feature-panel {
-  border: 1px solid rgba(91, 126, 255, 0.26);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
     rgba(13, 19, 31, 0.94);
@@ -514,7 +515,7 @@ button {
 .sync-pill {
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(59, 130, 246, 0.16);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--text);
   font-size: 0.8rem;
   font-weight: 700;
@@ -1113,6 +1114,14 @@ button {
   margin-top: 14px;
 }
 
+.food-history-content .log-card__top {
+  padding: 16px 16px 0;
+}
+
+.food-history-content .log-card > p {
+  padding: 6px 16px 0;
+}
+
 .weight-history-toggle {
   width: 100%;
   display: grid;
@@ -1238,8 +1247,13 @@ button {
   padding: 0;
 }
 
-.card .button-row + .list-stack {
-  margin-top: 10px;
+.card .button-row + .list-stack,
+.card .summary-panel + .list-stack {
+  margin-top: 20px;
+}
+
+.card .summary-panel + .button-row {
+  margin-top: 16px;
 }
 
 .list-stack + .button-row {
@@ -1469,7 +1483,7 @@ button {
 .log-card .exercise-history-list,
 .log-card .button-row,
 .log-card__date-editor {
-  padding: 0 16px 16px;
+  padding: 16px 16px 16px;
 }
 
 .log-card__date-label {
