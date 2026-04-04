@@ -687,7 +687,7 @@ button {
 
 .list-stack + .section-heading,
 .empty-panel + .section-heading {
-  margin-top: 24px;
+  margin-top: 40px;
 }
 
 .stat-card,
