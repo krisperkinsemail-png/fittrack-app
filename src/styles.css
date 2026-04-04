@@ -1115,7 +1115,7 @@ button {
 }
 
 .food-log-entry-body {
-  padding: 16px 16px 8px;
+  padding: 16px 16px 10px;
   display: grid;
   gap: 6px;
 }
