@@ -776,14 +776,6 @@ button {
   width: min(100%, 640px);
 }
 
-.feedback-context {
-  gap: 8px;
-}
-
-.feedback-context p {
-  margin: 0;
-}
-
 .stat-card--warning strong {
   color: var(--warning);
 }
@@ -1629,6 +1621,11 @@ button:focus {
   color: var(--danger);
 }
 
+.required-indicator {
+  color: #ff6b6b;
+  font-weight: 700;
+}
+
 .accent-switcher {
   display: flex;
   gap: 10px;
@@ -1640,6 +1637,26 @@ button:focus {
   min-height: 40px;
   padding: 8px 14px;
   font-size: 0.88rem;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+}
+
+.topbar-icon-button {
+  min-height: 40px;
+  min-width: 40px;
+  width: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .accent-switcher .home-button {
@@ -1787,5 +1804,274 @@ button:focus {
 
   .dashboard-fold-content.is-open {
     display: grid;
+  }
+}
+
+/* ---- Custom Workout Builder ---- */
+
+.builder-modal {
+  max-width: 600px;
+}
+
+.builder-steps {
+  display: flex;
+  align-items: center;
+}
+
+.builder-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.builder-step:last-child {
+  flex: none;
+}
+
+.builder-step__line {
+  flex: 1;
+  height: 2px;
+  background: rgba(96, 114, 139, 0.28);
+  border-radius: 2px;
+  margin-right: 8px;
+  min-width: 14px;
+  transition: background 300ms ease;
+}
+
+.builder-step--active .builder-step__line,
+.builder-step--done .builder-step__line {
+  background: var(--accent);
+}
+
+.builder-step__circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--surface-strong);
+  border: 2px solid rgba(96, 114, 139, 0.28);
+  color: var(--muted);
+  flex-shrink: 0;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.builder-step--active .builder-step__circle {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.builder-step--done .builder-step__circle {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-strong));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.builder-step__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 180ms ease;
+}
+
+.builder-step--active .builder-step__label,
+.builder-step--done .builder-step__label {
+  color: var(--text);
+}
+
+.builder-exercise-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.builder-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.builder-chip-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.builder-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 114, 139, 0.28);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.builder-chip:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-strong));
+}
+
+.builder-chip--selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-strong));
+}
+
+.builder-exercise-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+  border: 1px solid rgba(96, 114, 139, 0.22);
+}
+
+.builder-exercise-name {
+  min-width: 0;
+}
+
+.builder-reps-input {
+  width: 68px;
+}
+
+.builder-sets-stepper {
+  display: flex;
+  align-items: center;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(96, 114, 139, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+
+.builder-sets-stepper button {
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms;
+  padding: 0;
+  line-height: 1;
+}
+
+.builder-sets-stepper button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.builder-sets-stepper span {
+  min-width: 22px;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.builder-remove-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(180, 35, 24, 0.14);
+  color: var(--danger);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.builder-remove-btn:hover {
+  background: rgba(180, 35, 24, 0.28);
+}
+
+.builder-remove-placeholder {
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.builder-review-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+  border: 1px solid rgba(96, 114, 139, 0.22);
+}
+
+.builder-review-row__info {
+  min-width: 0;
+}
+
+.builder-review-row__info strong {
+  display: block;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.builder-review-row__target {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-text);
+  flex-shrink: 0;
+}
+
+.workout-chip.builder-create-chip {
+  border: 1px dashed color-mix(in srgb, var(--accent) 52%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-strong));
+}
+
+.workout-chip.builder-create-chip:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-strong));
+}
+
+.workout-chip.builder-create-chip strong {
+  color: var(--accent);
+}
+
+@media (max-width: 599px) {
+  .builder-exercise-row {
+    grid-template-columns: 22px 1fr auto auto auto;
+    gap: 6px;
+    padding: 9px 10px;
+  }
+
+  .builder-reps-input {
+    width: 52px;
+  }
+
+  .builder-step__label {
+    display: none;
   }
 }

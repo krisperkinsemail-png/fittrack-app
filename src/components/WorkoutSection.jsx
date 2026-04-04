@@ -120,6 +120,12 @@ export function WorkoutSection({
     setCount: "3",
     saveToBank: false,
   });
+  const [isCustomBuilderOpen, setIsCustomBuilderOpen] = useState(false);
+  const [builderStep, setBuilderStep] = useState(1);
+  const [builderForm, setBuilderForm] = useState(null);
+  const builderExerciseRefs = useRef({});
+  const [builderFocusId, setBuilderFocusId] = useState(null);
+  const [builderFocusedExId, setBuilderFocusedExId] = useState(null);
   const audioContextRef = useRef(null);
   const previousTimeLeftRef = useRef(timeLeft);
 
@@ -219,6 +225,18 @@ export function WorkoutSection({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!builderFocusId) {
+      return undefined;
+    }
+
+    const ref = builderExerciseRefs.current[builderFocusId];
+    if (ref) {
+      ref.focus();
+      setBuilderFocusId(null);
+    }
+  }, [builderFocusId]);
 
   const isDraftDirty = useMemo(
     () => hasDraftChanges(draftExercises, selectedWorkout),
@@ -721,6 +739,125 @@ export function WorkoutSection({
         };
       })
     );
+  }
+
+  // --- Custom Workout Builder ---
+
+  function makeBuilderExercise() {
+    return { id: crypto.randomUUID(), name: "", sets: 3, reps: "10-12" };
+  }
+
+  function openCustomBuilder() {
+    const firstSystem = customSystems[0];
+    setBuilderForm({
+      systemName: firstSystem?.name || "My Workouts",
+      workoutName: "",
+      exercises: [makeBuilderExercise()],
+    });
+    setBuilderStep(1);
+    setBuilderFocusId(null);
+    setBuilderFocusedExId(null);
+    setIsCustomBuilderOpen(true);
+  }
+
+  function handleBuilderNext() {
+    if (builderStep === 1 && builderForm.workoutName.trim()) {
+      setBuilderStep(2);
+    } else if (builderStep === 2 && builderForm.exercises.some((e) => e.name.trim())) {
+      setBuilderStep(3);
+    }
+  }
+
+  function addBuilderExercise() {
+    const newEx = makeBuilderExercise();
+    setBuilderForm((current) => ({
+      ...current,
+      exercises: [...current.exercises, newEx],
+    }));
+    setBuilderFocusId(newEx.id);
+  }
+
+  function updateBuilderExercise(id, field, value) {
+    setBuilderForm((current) => ({
+      ...current,
+      exercises: current.exercises.map((ex) =>
+        ex.id === id ? { ...ex, [field]: value } : ex
+      ),
+    }));
+  }
+
+  function removeBuilderExercise(id) {
+    setBuilderForm((current) => ({
+      ...current,
+      exercises: current.exercises.filter((ex) => ex.id !== id),
+    }));
+    if (builderFocusedExId === id) {
+      setBuilderFocusedExId(null);
+    }
+  }
+
+  function moveBuilderExercise(id, direction) {
+    setBuilderForm((current) => {
+      const idx = current.exercises.findIndex((ex) => ex.id === id);
+      if (idx === -1) return current;
+      const nextIdx = direction === "up" ? idx - 1 : idx + 1;
+      return { ...current, exercises: moveItem(current.exercises, idx, nextIdx) };
+    });
+  }
+
+  function applyBuilderRepChip(sets, reps) {
+    setBuilderForm((current) => ({
+      ...current,
+      exercises: current.exercises.map((ex) =>
+        builderFocusedExId ? (ex.id === builderFocusedExId ? { ...ex, sets, reps } : ex) : { ...ex, sets, reps }
+      ),
+    }));
+  }
+
+  function handleBuilderSave() {
+    if (!builderForm) return;
+    const validExercises = builderForm.exercises.filter((e) => e.name.trim());
+    if (!builderForm.workoutName.trim() || !validExercises.length) return;
+
+    const systemName = builderForm.systemName.trim() || "My Workouts";
+    const workoutName = builderForm.workoutName.trim();
+    const newWorkoutId = crypto.randomUUID();
+
+    const newWorkout = {
+      id: newWorkoutId,
+      name: workoutName,
+      summary: validExercises
+        .slice(0, 3)
+        .map((e) => e.name.trim())
+        .join(", "),
+      exercises: validExercises.map((e) => ({
+        name: e.name.trim(),
+        target: `${e.sets} × ${e.reps || "open"}`,
+        defaultSets: e.sets,
+        notes: "",
+      })),
+    };
+
+    const existingSystem = customSystems.find(
+      (s) => s.name.toLowerCase() === systemName.toLowerCase()
+    );
+    const systemId = existingSystem?.id || crypto.randomUUID();
+    const existingWorkouts = existingSystem?.workouts || [];
+
+    onSaveSystem({
+      id: systemId,
+      name: systemName,
+      description: "Custom workout system",
+      isCustom: true,
+      workouts: [newWorkout, ...existingWorkouts],
+    });
+
+    // Navigate directly to the new workout (new workout is first, so the
+    // selectedProgramId effect will set selectedWorkoutId to newWorkoutId)
+    setSelectedProgramId(systemId);
+    setSelectedPhaseId(null);
+    setIsProgramPickerOpen(false);
+    setIsCustomBuilderOpen(false);
   }
 
   return (
@@ -1397,6 +1534,14 @@ export function WorkoutSection({
                   <span>{program.description || "Workout program"}</span>
                 </button>
               ))}
+              <button
+                type="button"
+                className="workout-chip builder-create-chip"
+                onClick={openCustomBuilder}
+              >
+                <strong>+ Build Custom Workout</strong>
+                <span>Design your own exercises, sets &amp; reps</span>
+              </button>
             </div>
 
             {selectedProgram.phases?.length ? (
@@ -1629,6 +1774,312 @@ export function WorkoutSection({
                 <p>No saved custom exercises yet.</p>
               </div>
             )}
+          </section>
+        </div>
+      ) : null}
+
+      {isCustomBuilderOpen && builderForm ? (
+        <div
+          className="insights-modal-backdrop"
+          role="presentation"
+          onClick={() => setIsCustomBuilderOpen(false)}
+        >
+          <section
+            className="insights-modal builder-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="builder-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Custom Workout</p>
+                <h2 id="builder-modal-title">
+                  {builderStep === 1
+                    ? "Name your workout"
+                    : builderStep === 2
+                    ? "Add exercises"
+                    : "Review & save"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setIsCustomBuilderOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="builder-steps">
+              {["Name", "Exercises", "Review"].map((label, i) => {
+                const stepNum = i + 1;
+                const isActive = stepNum === builderStep;
+                const isDone = stepNum < builderStep;
+                return (
+                  <div
+                    key={label}
+                    className={[
+                      "builder-step",
+                      isActive ? "builder-step--active" : "",
+                      isDone ? "builder-step--done" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    {i > 0 && <div className="builder-step__line" />}
+                    <div className="builder-step__circle">{isDone ? "✓" : stepNum}</div>
+                    <span className="builder-step__label">{label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {builderStep === 1 ? (
+              <div className="form-grid">
+                <label>
+                  Workout name
+                  <input
+                    autoFocus
+                    value={builderForm.workoutName}
+                    onChange={(e) =>
+                      setBuilderForm((f) => ({ ...f, workoutName: e.target.value }))
+                    }
+                    placeholder="Push Day, Upper A, Leg Day…"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleBuilderNext();
+                    }}
+                  />
+                </label>
+                <label>
+                  Program group
+                  <input
+                    value={builderForm.systemName}
+                    onChange={(e) =>
+                      setBuilderForm((f) => ({ ...f, systemName: e.target.value }))
+                    }
+                    placeholder="My Workouts"
+                  />
+                </label>
+                {customSystems.length > 0 ? (
+                  <div>
+                    <p className="muted" style={{ margin: "0 0 8px" }}>
+                      Or add to an existing group:
+                    </p>
+                    <div className="builder-chip-group">
+                      {customSystems.map((sys) => (
+                        <button
+                          key={sys.id}
+                          type="button"
+                          className={[
+                            "builder-chip",
+                            builderForm.systemName.toLowerCase() === sys.name.toLowerCase()
+                              ? "builder-chip--selected"
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          onClick={() =>
+                            setBuilderForm((f) => ({ ...f, systemName: sys.name }))
+                          }
+                        >
+                          {sys.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleBuilderNext}
+                    disabled={!builderForm.workoutName.trim()}
+                  >
+                    Next: Add exercises
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {builderStep === 2 ? (
+              <>
+                <div className="builder-exercise-meta">
+                  <span className="eyebrow">
+                    {builderForm.exercises.filter((e) => e.name.trim()).length} exercise
+                    {builderForm.exercises.filter((e) => e.name.trim()).length !== 1 ? "s" : ""}
+                    {" added"}
+                  </span>
+                </div>
+
+                <div className="builder-chip-group">
+                  <span className="builder-chip-label">Set all:</span>
+                  {[
+                    { label: "5×5", sets: 5, reps: "5" },
+                    { label: "4×6", sets: 4, reps: "6" },
+                    { label: "3×8", sets: 3, reps: "8" },
+                    { label: "3×10", sets: 3, reps: "10-12" },
+                    { label: "3×12", sets: 3, reps: "12-15" },
+                    { label: "AMRAP", sets: 3, reps: "AMRAP" },
+                  ].map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      className="builder-chip"
+                      onClick={() => applyBuilderRepChip(chip.sets, chip.reps)}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="list-stack">
+                  {builderForm.exercises.map((ex, idx) => (
+                    <div className="builder-exercise-row" key={ex.id}>
+                      <span className="exercise-index">{idx + 1}</span>
+                      <input
+                        ref={(el) => {
+                          builderExerciseRefs.current[ex.id] = el;
+                        }}
+                        className="builder-exercise-name"
+                        value={ex.name}
+                        onChange={(e) => updateBuilderExercise(ex.id, "name", e.target.value)}
+                        onFocus={() => setBuilderFocusedExId(ex.id)}
+                        onBlur={() => setBuilderFocusedExId(null)}
+                        placeholder={`Exercise ${idx + 1}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            if (idx === builderForm.exercises.length - 1) {
+                              addBuilderExercise();
+                            } else {
+                              const nextEx = builderForm.exercises[idx + 1];
+                              builderExerciseRefs.current[nextEx.id]?.focus();
+                            }
+                          }
+                        }}
+                      />
+                      <div className="builder-sets-stepper">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateBuilderExercise(ex.id, "sets", Math.max(1, ex.sets - 1))
+                          }
+                          aria-label="Decrease sets"
+                        >
+                          −
+                        </button>
+                        <span>{ex.sets}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateBuilderExercise(ex.id, "sets", Math.min(10, ex.sets + 1))
+                          }
+                          aria-label="Increase sets"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <input
+                        className="builder-reps-input"
+                        value={ex.reps}
+                        onChange={(e) => updateBuilderExercise(ex.id, "reps", e.target.value)}
+                        onFocus={() => setBuilderFocusedExId(ex.id)}
+                        onBlur={() => setBuilderFocusedExId(null)}
+                        placeholder="Reps"
+                        aria-label={`Exercise ${idx + 1} reps`}
+                      />
+                      {builderForm.exercises.length > 1 ? (
+                        <button
+                          type="button"
+                          className="builder-remove-btn"
+                          onClick={() => removeBuilderExercise(ex.id)}
+                          aria-label={`Remove exercise ${idx + 1}`}
+                        >
+                          ×
+                        </button>
+                      ) : (
+                        <span className="builder-remove-placeholder" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={addBuilderExercise}
+                  >
+                    + Add exercise
+                  </button>
+                </div>
+
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleBuilderNext}
+                    disabled={!builderForm.exercises.some((e) => e.name.trim())}
+                  >
+                    Review workout
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setBuilderStep(1)}
+                  >
+                    Back
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {builderStep === 3 ? (
+              <>
+                <div className="summary-panel">
+                  <span>Workout</span>
+                  <strong>{builderForm.workoutName}</strong>
+                  <p className="muted">{builderForm.systemName}</p>
+                </div>
+
+                <div className="list-stack">
+                  {builderForm.exercises
+                    .filter((e) => e.name.trim())
+                    .map((ex, idx) => (
+                      <div className="builder-review-row" key={ex.id}>
+                        <span className="exercise-index">{idx + 1}</span>
+                        <div className="builder-review-row__info">
+                          <strong>{ex.name}</strong>
+                        </div>
+                        <span className="builder-review-row__target">
+                          {ex.sets} × {ex.reps || "open"}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+
+                <p className="muted">
+                  After saving, this workout appears in your program picker and is ready to log immediately.
+                </p>
+
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleBuilderSave}
+                  >
+                    Save workout
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setBuilderStep(2)}
+                  >
+                    Edit exercises
+                  </button>
+                </div>
+              </>
+            ) : null}
           </section>
         </div>
       ) : null}
