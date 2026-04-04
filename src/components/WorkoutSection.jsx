@@ -104,6 +104,7 @@ export function WorkoutSection({
   const [restDuration, setRestDuration] = useState(90);
   const [timeLeft, setTimeLeft] = useState(90);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [customTimerInput, setCustomTimerInput] = useState("");
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [isProgramPickerOpen, setIsProgramPickerOpen] = useState(false);
   const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
@@ -1012,6 +1013,46 @@ export function WorkoutSection({
                   {preset / 60}m
                 </button>
               ))}
+            </div>
+            <div className="timer-custom-row">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="timer-custom-input"
+                placeholder="Custom (sec)"
+                value={customTimerInput}
+                onChange={(e) => setCustomTimerInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const secs = parseInt(customTimerInput, 10);
+                    if (!isNaN(secs) && secs > 0) {
+                      ensureAudioContext(audioContextRef);
+                      setRestDuration(secs);
+                      setTimeLeft(secs);
+                      setIsTimerRunning(false);
+                      setCustomTimerInput("");
+                    }
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  const secs = parseInt(customTimerInput, 10);
+                  if (!isNaN(secs) && secs > 0) {
+                    ensureAudioContext(audioContextRef);
+                    setRestDuration(secs);
+                    setTimeLeft(secs);
+                    setIsTimerRunning(false);
+                    setCustomTimerInput("");
+                  }
+                }}
+                disabled={!customTimerInput.trim() || isNaN(parseInt(customTimerInput, 10)) || parseInt(customTimerInput, 10) <= 0}
+              >
+                Set
+              </button>
             </div>
             <div className="button-row">
               <button

@@ -1207,6 +1207,17 @@ button {
   margin-bottom: 8px;
 }
 
+.timer-custom-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.timer-custom-input {
+  flex: 1;
+  min-width: 0;
+}
+
 .custom-exercise-save-toggle {
   display: flex;
   align-items: center;
