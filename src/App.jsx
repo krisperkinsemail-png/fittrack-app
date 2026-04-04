@@ -42,6 +42,7 @@ export default function App() {
     addWorkoutEntry,
     deleteWorkoutEntry,
     restoreWorkoutEntry,
+    updateWorkoutEntry,
     saveCustomWorkoutSystem,
     deleteCustomWorkoutSystem,
     updateSettings,
@@ -483,7 +484,8 @@ export default function App() {
             customSystems={state.customWorkoutSystems}
             onAddEntry={addWorkoutEntry}
             onDeleteEntry={handleDeleteWorkoutEntry}
-            onUpdateEntry={restoreWorkoutEntry}
+            onUpdateEntry={updateWorkoutEntry}
+            onSetSelectedDate={setSelectedDate}
             onSaveSystem={saveCustomWorkoutSystem}
             onDeleteSystem={deleteCustomWorkoutSystem}
           />

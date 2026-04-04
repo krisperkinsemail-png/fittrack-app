@@ -689,6 +689,24 @@ export function useFitTrackStore() {
           });
       }
     },
+    updateWorkoutEntry: (entry) => {
+      const nextEntries = state.workoutEntries.map((item) =>
+        item.id === entry.id ? entry : item
+      );
+      dispatch({ type: "hydrate", payload: { workoutEntries: nextEntries } });
+      if (storageCapabilities.supportsGranularSync) {
+        setSyncStatus("saving");
+        appStorage
+          .syncWorkoutEntries(nextEntries)
+          .then(() => {
+            handleSyncSuccess();
+          })
+          .catch((error) => {
+            setSyncStatus("error");
+            setSyncError(error.message || "Failed to sync workout entries.");
+          });
+      }
+    },
     updateSettings: (settings) => {
       const nextSettings = { ...state.settings, ...settings };
       dispatch({ type: "hydrate", payload: { settings: nextSettings } });

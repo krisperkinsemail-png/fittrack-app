@@ -86,6 +86,7 @@ export function WorkoutSection({
   onAddEntry,
   onDeleteEntry,
   onUpdateEntry,
+  onSetSelectedDate,
   onSaveSystem,
   onDeleteSystem,
 }) {
@@ -1040,6 +1041,16 @@ export function WorkoutSection({
           </div>
         ) : null}
 
+        <div className="button-row">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setIsCustomExerciseModalOpen(true)}
+          >
+            Add custom exercise
+          </button>
+        </div>
+
         {savedWorkoutDraft && !isDraftActive ? (
           <div className="summary-panel">
             <span>Saved draft available</span>
@@ -1087,16 +1098,6 @@ export function WorkoutSection({
             </div>
           </div>
         ) : null}
-
-        <div className="button-row">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setIsCustomExerciseModalOpen(true)}
-          >
-            Add custom exercise
-          </button>
-        </div>
 
         <div className="list-stack">
           {draftExercises.map((exercise, exerciseIndex) => {
@@ -1364,6 +1365,7 @@ export function WorkoutSection({
                               disabled={!editingDateValue || editingDateValue === entry.date}
                               onClick={() => {
                                 onUpdateEntry({ ...entry, date: editingDateValue });
+                                onSetSelectedDate(editingDateValue);
                                 setEditingDateEntryId(null);
                                 setEditingDateValue("");
                               }}
@@ -1485,6 +1487,7 @@ export function WorkoutSection({
                                 disabled={!editingDateValue || editingDateValue === entry.date}
                                 onClick={() => {
                                   onUpdateEntry({ ...entry, date: editingDateValue });
+                                  onSetSelectedDate(editingDateValue);
                                   setEditingDateEntryId(null);
                                   setEditingDateValue("");
                                 }}
