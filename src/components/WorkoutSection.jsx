@@ -257,7 +257,8 @@ export function WorkoutSection({
         const cardTop = el.getBoundingClientRect().top + window.scrollY;
         window.scrollTo({ top: cardTop - timerBottom - 12, behavior: "smooth" });
       } else {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        const cardTop = el.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: cardTop - 80, behavior: "smooth" });
       }
     });
 
