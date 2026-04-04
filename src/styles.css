@@ -1211,6 +1211,7 @@ button {
   display: flex;
   gap: 8px;
   align-items: center;
+  margin: 4px 0;
 }
 
 .timer-custom-input {
