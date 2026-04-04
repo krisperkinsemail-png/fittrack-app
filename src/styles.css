@@ -1315,6 +1315,11 @@ button {
   min-width: 0;
 }
 
+.set-copy-down-btn:not(:disabled) {
+  color: var(--accent-text);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
 .exercise-index,
 .set-label {
   color: var(--muted);

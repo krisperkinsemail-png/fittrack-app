@@ -720,6 +720,25 @@ export function WorkoutSection({
     setRemovedExerciseUndo(null);
   }
 
+  function copySetDown(exerciseId, setIndex) {
+    updateDraft((current) =>
+      current.map((exercise) => {
+        if (exercise.id !== exerciseId) return exercise;
+        const source = exercise.sets[setIndex];
+        const target = exercise.sets[setIndex + 1];
+        if (!source || !target) return exercise;
+        return {
+          ...exercise,
+          sets: exercise.sets.map((set, i) =>
+            i === setIndex + 1
+              ? { ...set, reps: source.reps, weight: source.weight }
+              : set
+          ),
+        };
+      })
+    );
+  }
+
   function moveSet(exerciseId, setId, direction) {
     updateDraft((current) =>
       current.map((exercise) => {
@@ -1184,6 +1203,19 @@ export function WorkoutSection({
                           />
                         </div>
                         <div className="set-row-actions">
+                          <button
+                            type="button"
+                            className="secondary-button set-copy-down-btn"
+                            onClick={() => copySetDown(exercise.id, setIndex)}
+                            disabled={
+                              setIndex === exercise.sets.length - 1 ||
+                              (!set.reps && !set.weight)
+                            }
+                            aria-label={`Copy set ${setIndex + 1} down to set ${setIndex + 2}`}
+                            title="Copy reps & weight to next set"
+                          >
+                            Copy ↓
+                          </button>
                           <button
                             type="button"
                             className="secondary-button"
