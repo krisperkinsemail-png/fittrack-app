@@ -1427,9 +1427,48 @@ button {
 }
 
 .log-card {
+  padding: 0;
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+.log-card__toggle {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
   padding: 16px;
   display: grid;
   gap: 10px;
+}
+
+.log-card__toggle:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.log-card .exercise-history-list,
+.log-card .button-row {
+  padding: 0 16px 16px;
+}
+
+.log-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.log-card__meta span:first-child {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.log-card__volume {
+  margin: 0;
 }
 
 .inline-edit-panel {

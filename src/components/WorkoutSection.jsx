@@ -115,6 +115,7 @@ export function WorkoutSection({
   const [removedExerciseUndo, setRemovedExerciseUndo] = useState(null);
   const [openExerciseId, setOpenExerciseId] = useState(null);
   const exerciseCardRefs = useRef({});
+  const [openHistoryEntryId, setOpenHistoryEntryId] = useState(null);
   const [customExerciseForm, setCustomExerciseForm] = useState({
     name: "",
     target: "",
@@ -1382,40 +1383,63 @@ export function WorkoutSection({
           <div className="list-stack">
             {entries.map((entry) => {
               const summary = summarizeSession(entry);
+              const isOpen = openHistoryEntryId === entry.id;
 
               return (
                 <article className="log-card" key={entry.id}>
-                  <div className="log-card__top">
-                    <div>
-                      <h3>{entry.workoutName}</h3>
-                      <p className="muted">
-                        {entry.systemName} • {formatLongDate(entry.date)}
-                      </p>
-                    </div>
-                    <strong>{summary.totalSets} sets</strong>
-                  </div>
-                  <p className="muted">{Math.round(summary.totalVolume)} total volume</p>
-                  <div className="exercise-history-list">
-                    {entry.exercises.map((exercise) => (
-                      <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
-                        <span>{exercise.name}</span>
-                        <span>
-                          {exercise.sets
-                            .map((set) => `${set.reps} x ${set.weight}`)
-                            .join(" • ")}
-                        </span>
+                  <button
+                    type="button"
+                    className="log-card__toggle"
+                    onClick={() =>
+                      setOpenHistoryEntryId((current) =>
+                        current === entry.id ? null : entry.id
+                      )
+                    }
+                    aria-expanded={isOpen}
+                  >
+                    <div className="log-card__top">
+                      <div>
+                        <h3>{entry.workoutName}</h3>
+                        <p className="muted">
+                          {entry.systemName} • {formatLongDate(entry.date)}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                  <div className="button-row">
-                    <button
-                      type="button"
-                      className="secondary-button danger-button"
-                      onClick={() => onDeleteEntry(entry.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                      <div className="log-card__meta">
+                        <span>{summary.totalSets} sets</span>
+                        <span className="exercise-card__chevron">{isOpen ? "−" : "+"}</span>
+                      </div>
+                    </div>
+                    {!isOpen && (
+                      <p className="muted log-card__volume">
+                        {entry.exercises.length} exercise{entry.exercises.length !== 1 ? "s" : ""} • {Math.round(summary.totalVolume)} total volume
+                      </p>
+                    )}
+                  </button>
+                  {isOpen && (
+                    <>
+                      <div className="exercise-history-list">
+                        {entry.exercises.map((exercise) => (
+                          <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
+                            <span>{exercise.name}</span>
+                            <span>
+                              {exercise.sets
+                                .map((set) => `${set.reps} × ${set.weight}`)
+                                .join(" • ")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="button-row">
+                        <button
+                          type="button"
+                          className="secondary-button danger-button"
+                          onClick={() => onDeleteEntry(entry.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </article>
               );
             })}
@@ -1437,17 +1461,48 @@ export function WorkoutSection({
             <div className="list-stack">
               {recentEntries.map((entry) => {
                 const summary = summarizeSession(entry);
+                const isOpen = openHistoryEntryId === entry.id;
 
                 return (
                   <article className="log-card" key={entry.id}>
-                    <div className="log-card__top">
-                      <div>
-                        <h3>{entry.workoutName}</h3>
-                        <p className="muted">{formatLongDate(entry.date)}</p>
+                    <button
+                      type="button"
+                      className="log-card__toggle"
+                      onClick={() =>
+                        setOpenHistoryEntryId((current) =>
+                          current === entry.id ? null : entry.id
+                        )
+                      }
+                      aria-expanded={isOpen}
+                    >
+                      <div className="log-card__top">
+                        <div>
+                          <h3>{entry.workoutName}</h3>
+                          <p className="muted">{formatLongDate(entry.date)}</p>
+                        </div>
+                        <div className="log-card__meta">
+                          <span>{summary.totalSets} sets</span>
+                          <span className="exercise-card__chevron">{isOpen ? "−" : "+"}</span>
+                        </div>
                       </div>
-                      <strong>{summary.totalSets} sets</strong>
-                    </div>
-                    <p className="muted">{entry.systemName}</p>
+                      {!isOpen && (
+                        <p className="muted log-card__volume">{entry.systemName}</p>
+                      )}
+                    </button>
+                    {isOpen && (
+                      <div className="exercise-history-list">
+                        {entry.exercises.map((exercise) => (
+                          <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
+                            <span>{exercise.name}</span>
+                            <span>
+                              {exercise.sets
+                                .map((set) => `${set.reps} × ${set.weight}`)
+                                .join(" • ")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </article>
                 );
               })}
