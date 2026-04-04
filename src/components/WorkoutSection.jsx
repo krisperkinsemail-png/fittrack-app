@@ -96,11 +96,6 @@ export function WorkoutSection({
   const initialWorkouts = workoutPrograms[0].phases?.[0]?.workouts || workoutPrograms[0].workouts;
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(initialWorkouts[0].id);
   const [draftExercises, setDraftExercises] = useState(createWorkoutDraft(initialWorkouts[0]));
-  const [templateForm, setTemplateForm] = useState({
-    systemName: "",
-    workoutName: "",
-    summary: "",
-  });
   const [restDuration, setRestDuration] = useState(90);
   const [timeLeft, setTimeLeft] = useState(90);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -190,13 +185,6 @@ export function WorkoutSection({
     setOpenExerciseId(null);
   }, [selectedDate, selectedWorkout]);
 
-  useEffect(() => {
-    setTemplateForm({
-      systemName: selectedProgram.name,
-      workoutName: selectedWorkout.name,
-      summary: selectedWorkout.summary,
-    });
-  }, [selectedProgram, selectedWorkout]);
 
   useEffect(() => {
     let intervalId;
@@ -623,56 +611,6 @@ export function WorkoutSection({
     setDraftExercises(createWorkoutDraft(selectedWorkout));
   }
 
-  function saveTemplate(overwrite = false) {
-    const systemName = templateForm.systemName.trim();
-    const workoutName = templateForm.workoutName.trim();
-    const summary = templateForm.summary.trim();
-
-    if (!systemName || !workoutName || !draftExercises.length) {
-      return;
-    }
-
-    const templateExercises = draftExercises
-      .filter((exercise) => exercise.name.trim())
-      .map((exercise) => ({
-        name: exercise.name.trim(),
-        target: exercise.target.trim() || "Custom",
-        defaultSets: exercise.sets.length || 1,
-      }));
-
-    const existingCustomSystem = customSystems.find(
-      (system) => system.name.toLowerCase() === systemName.toLowerCase()
-    );
-
-    const systemId = overwrite && selectedProgram.isCustom
-      ? selectedProgram.id
-      : existingCustomSystem?.id;
-
-    const existingWorkouts = systemId
-      ? (customSystems.find((system) => system.id === systemId)?.workouts || [])
-      : [];
-
-    const nextWorkout = {
-      id: overwrite && selectedProgram.isCustom ? selectedWorkout.id : undefined,
-      name: workoutName,
-      summary: summary || "Custom workout",
-      exercises: templateExercises,
-    };
-
-    const mergedWorkouts = overwrite && selectedProgram.isCustom
-      ? existingWorkouts.map((workout) =>
-          workout.id === selectedWorkout.id ? { ...workout, ...nextWorkout } : workout
-        )
-      : [...existingWorkouts, nextWorkout];
-
-    onSaveSystem({
-      id: systemId,
-      name: systemName,
-      description: "Custom workout system",
-      isCustom: true,
-      workouts: mergedWorkouts,
-    });
-  }
 
   function formatTimer(seconds) {
     const minutes = Math.floor(seconds / 60);
@@ -1356,73 +1294,6 @@ export function WorkoutSection({
           >
             Finish later
           </button>
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Program editor</p>
-            <h2>Save custom systems and workout templates</h2>
-          </div>
-          <p className="muted">Use the current active workout as the template source.</p>
-        </div>
-
-        <div className="form-grid">
-          <label>
-            System name
-            <input
-              value={templateForm.systemName}
-              onChange={(event) =>
-                setTemplateForm((current) => ({ ...current, systemName: event.target.value }))
-              }
-              placeholder="Upper / Lower Block"
-            />
-          </label>
-          <label>
-            Workout name
-            <input
-              value={templateForm.workoutName}
-              onChange={(event) =>
-                setTemplateForm((current) => ({ ...current, workoutName: event.target.value }))
-              }
-              placeholder="Upper A"
-            />
-          </label>
-          <label>
-            Summary
-            <input
-              value={templateForm.summary}
-              onChange={(event) =>
-                setTemplateForm((current) => ({ ...current, summary: event.target.value }))
-              }
-              placeholder="Chest, back, delts"
-            />
-          </label>
-        </div>
-
-        <div className="button-row">
-          <button type="button" className="primary-button" onClick={() => saveTemplate(false)}>
-            Save as custom template
-          </button>
-          {selectedProgram.isCustom ? (
-            <>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => saveTemplate(true)}
-              >
-                Update selected template
-              </button>
-              <button
-                type="button"
-                className="secondary-button danger-button"
-                onClick={() => onDeleteSystem(selectedProgram.id)}
-              >
-                Delete custom system
-              </button>
-            </>
-          ) : null}
         </div>
       </section>
 
