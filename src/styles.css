@@ -1114,12 +1114,10 @@ button {
   margin-top: 14px;
 }
 
-.food-history-content .log-card__top {
-  padding: 16px 16px 0;
-}
-
-.food-history-content .log-card > p {
-  padding: 6px 16px 0;
+.food-log-entry-body {
+  padding: 16px 16px 8px;
+  display: grid;
+  gap: 6px;
 }
 
 .weight-history-toggle {

@@ -243,6 +243,7 @@ export function FoodLogSection({
   const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
   const [isFoodLogOpen, setIsFoodLogOpen] = useState(false);
+  const [hasTriedFoodSubmit, setHasTriedFoodSubmit] = useState(false);
   const [isDayHistoryOpen, setIsDayHistoryOpen] = useState(false);
   const [isQuickPicksOpen, setIsQuickPicksOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -519,6 +520,7 @@ export function FoodLogSection({
   function resetForm() {
     setForm(EMPTY_FORM);
     setSelectedPreset(null);
+    setHasTriedFoodSubmit(false);
     setQuickSearch("");
     setQuickRestaurantSearch("");
     setQuickSearchResults([]);
@@ -591,9 +593,11 @@ export function FoodLogSection({
 
   function submitEntry({ saveTemplateType = null }) {
     if (!canSaveCurrentForm()) {
+      setHasTriedFoodSubmit(true);
       return;
     }
 
+    setHasTriedFoodSubmit(false);
     const payload = buildPayload();
     onAddEntry(payload);
 
@@ -760,6 +764,31 @@ export function FoodLogSection({
     resetForm();
   }
 
+  function isMainFieldMissing(field) {
+    switch (field) {
+      case "foodName":
+        return !form.foodName.trim();
+      case "serving":
+        return selectedPreset?.isScalable
+          ? !(Number(form.servingAmount) > 0 && form.servingUnit.trim())
+          : !form.servingSize.trim();
+      case "servingAmount":
+        return !(Number(form.servingAmount) > 0);
+      case "servingUnit":
+        return !form.servingUnit.trim();
+      case "calories":
+        return form.calories === "";
+      case "protein":
+        return form.protein === "";
+      case "carbs":
+        return form.carbs === "";
+      case "fat":
+        return form.fat === "";
+      default:
+        return false;
+    }
+  }
+
   return (
     <div className="section-stack">
       <section className="card food-log-card">
@@ -861,6 +890,9 @@ export function FoodLogSection({
             <form className="form-grid food-log-content" onSubmit={handleSubmit}>
           <label>
             Food name
+            {hasTriedFoodSubmit && isMainFieldMissing("foodName") ? (
+              <span className="required-indicator">*</span>
+            ) : null}
             <input
               value={form.foodName}
               onChange={(event) => setForm((current) => ({ ...current, foodName: event.target.value }))}
@@ -874,6 +906,9 @@ export function FoodLogSection({
               <div className="compact-grid compact-grid--two">
                 <label>
                   Amount
+                  {hasTriedFoodSubmit && isMainFieldMissing("servingAmount") ? (
+                    <span className="required-indicator">*</span>
+                  ) : null}
                   <input
                     type="number"
                     inputMode="decimal"
@@ -887,6 +922,9 @@ export function FoodLogSection({
 
                 <label>
                   Unit
+                  {hasTriedFoodSubmit && isMainFieldMissing("servingUnit") ? (
+                    <span className="required-indicator">*</span>
+                  ) : null}
                   <input value={form.servingUnit} readOnly />
                 </label>
               </div>
@@ -898,6 +936,9 @@ export function FoodLogSection({
           ) : (
             <label>
               Serving size
+              {hasTriedFoodSubmit && isMainFieldMissing("serving") ? (
+                <span className="required-indicator">*</span>
+              ) : null}
               <input
                 value={form.servingSize}
                 onChange={(event) =>
@@ -912,6 +953,9 @@ export function FoodLogSection({
           <div className="compact-grid compact-grid--mobile-two">
             <label>
               Calories
+              {hasTriedFoodSubmit && isMainFieldMissing("calories") ? (
+                <span className="required-indicator">*</span>
+              ) : null}
               <input
                 type="number"
                 inputMode="numeric"
@@ -927,6 +971,9 @@ export function FoodLogSection({
 
             <label>
               Protein (g)
+              {hasTriedFoodSubmit && isMainFieldMissing("protein") ? (
+                <span className="required-indicator">*</span>
+              ) : null}
               <input
                 type="number"
                 inputMode="decimal"
@@ -942,6 +989,9 @@ export function FoodLogSection({
 
             <label>
               Carbs (g)
+              {hasTriedFoodSubmit && isMainFieldMissing("carbs") ? (
+                <span className="required-indicator">*</span>
+              ) : null}
               <input
                 type="number"
                 inputMode="decimal"
@@ -957,6 +1007,9 @@ export function FoodLogSection({
 
             <label>
               Fat (g)
+              {hasTriedFoodSubmit && isMainFieldMissing("fat") ? (
+                <span className="required-indicator">*</span>
+              ) : null}
               <input
                 type="number"
                 inputMode="decimal"
@@ -976,7 +1029,6 @@ export function FoodLogSection({
               type="button"
               className="primary-button"
               onClick={() => submitEntry({ saveTemplateType: null })}
-              disabled={!canSaveCurrentForm()}
             >
               Add Food
             </button>
@@ -984,7 +1036,6 @@ export function FoodLogSection({
               type="button"
               className="secondary-button"
               onClick={() => submitEntry({ saveTemplateType: "food" })}
-              disabled={!canSaveCurrentForm()}
             >
               Add Food + Save
             </button>
@@ -992,7 +1043,6 @@ export function FoodLogSection({
               type="button"
               className="secondary-button"
               onClick={() => submitEntry({ saveTemplateType: null })}
-              disabled={!canSaveCurrentForm()}
             >
               Add Meal
             </button>
@@ -1000,7 +1050,6 @@ export function FoodLogSection({
               type="button"
               className="secondary-button"
               onClick={() => submitEntry({ saveTemplateType: "meal" })}
-              disabled={!canSaveCurrentForm()}
             >
               Add Meal + Save
             </button>
@@ -1037,16 +1086,18 @@ export function FoodLogSection({
           <div className="food-history-content list-stack">
             {entries.map((entry) => (
               <article className="log-card" key={entry.id}>
-                <div className="log-card__top">
-                  <div>
-                    <h3>{entry.foodName}</h3>
-                    <p className="muted">{entry.servingSize}</p>
+                <div className="food-log-entry-body">
+                  <div className="log-card__top">
+                    <div>
+                      <h3>{entry.foodName}</h3>
+                      <p className="muted">{entry.servingSize}</p>
+                    </div>
+                    <strong>{entry.calories} cal</strong>
                   </div>
-                  <strong>{entry.calories} cal</strong>
+                  <p className="muted">
+                    P {entry.protein}g • C {entry.carbs}g • F {entry.fat}g
+                  </p>
                 </div>
-                <p className="muted">
-                  P {entry.protein}g • C {entry.carbs}g • F {entry.fat}g
-                </p>
                 <div className="button-row">
                   <button
                     type="button"
