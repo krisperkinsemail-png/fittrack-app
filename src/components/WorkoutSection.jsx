@@ -114,6 +114,7 @@ export function WorkoutSection({
   const [isDraftActive, setIsDraftActive] = useState(false);
   const [removedExerciseUndo, setRemovedExerciseUndo] = useState(null);
   const [openExerciseId, setOpenExerciseId] = useState(null);
+  const exerciseCardRefs = useRef({});
   const [customExerciseForm, setCustomExerciseForm] = useState({
     name: "",
     target: "",
@@ -237,6 +238,21 @@ export function WorkoutSection({
       setBuilderFocusId(null);
     }
   }, [builderFocusId]);
+
+  useEffect(() => {
+    if (!openExerciseId) {
+      return undefined;
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      const el = exerciseCardRefs.current[openExerciseId];
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, [openExerciseId]);
 
   const isDraftDirty = useMemo(
     () => hasDraftChanges(draftExercises, selectedWorkout),
@@ -1092,7 +1108,11 @@ export function WorkoutSection({
             const isExpanded = openExerciseId === exercise.id;
 
             return (
-            <article className="exercise-card" key={exercise.id}>
+            <article
+              className="exercise-card"
+              key={exercise.id}
+              ref={(el) => { exerciseCardRefs.current[exercise.id] = el; }}
+            >
               <button
                 type="button"
                 className="exercise-card__toggle"
