@@ -1681,8 +1681,44 @@ export function WorkoutSection({
               phases.
             </p>
 
+            {workoutPrograms.some((p) => p.isCustom) && (
+              <div className="workout-system-grid">
+                {workoutPrograms.filter((p) => p.isCustom).map((program) => (
+                  <button
+                    key={program.id}
+                    type="button"
+                    className={
+                      program.id === selectedProgramId
+                        ? "workout-chip workout-chip--selected"
+                        : "workout-chip"
+                    }
+                    onClick={() => handleProgramChange(program.id)}
+                  >
+                    <strong>{program.name}</strong>
+                    <span>{program.description || "Custom workout system"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              type="button"
+              className="workout-chip builder-create-chip"
+              onClick={openCustomBuilder}
+            >
+              <strong>+ Build Custom Workout</strong>
+              <span>Design your own exercises, sets &amp; reps</span>
+            </button>
+
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Programs</p>
+                <h2>Training systems</h2>
+              </div>
+            </div>
+
             <div className="workout-system-grid">
-              {workoutPrograms.map((program) => (
+              {workoutPrograms.filter((p) => !p.isCustom).map((program) => (
                 <button
                   key={program.id}
                   type="button"
@@ -1697,14 +1733,6 @@ export function WorkoutSection({
                   <span>{program.description || "Workout program"}</span>
                 </button>
               ))}
-              <button
-                type="button"
-                className="workout-chip builder-create-chip"
-                onClick={openCustomBuilder}
-              >
-                <strong>+ Build Custom Workout</strong>
-                <span>Design your own exercises, sets &amp; reps</span>
-              </button>
             </div>
 
             {selectedProgram.phases?.length ? (
