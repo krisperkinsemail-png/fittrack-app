@@ -85,6 +85,7 @@ export function WorkoutSection({
   customSystems,
   onAddEntry,
   onDeleteEntry,
+  onUpdateEntry,
   onSaveSystem,
   onDeleteSystem,
 }) {
@@ -113,6 +114,8 @@ export function WorkoutSection({
   const exerciseCardRefs = useRef({});
   const timerFloatRef = useRef(null);
   const [openHistoryEntryId, setOpenHistoryEntryId] = useState(null);
+  const [editingDateEntryId, setEditingDateEntryId] = useState(null);
+  const [editingDateValue, setEditingDateValue] = useState("");
   const [customExerciseForm, setCustomExerciseForm] = useState({
     name: "",
     target: "",
@@ -1356,15 +1359,62 @@ export function WorkoutSection({
                           </div>
                         ))}
                       </div>
-                      <div className="button-row">
-                        <button
-                          type="button"
-                          className="secondary-button danger-button"
-                          onClick={() => onDeleteEntry(entry.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      {editingDateEntryId === entry.id ? (
+                        <div className="log-card__date-editor">
+                          <label className="log-card__date-label">
+                            Move to date
+                            <input
+                              type="date"
+                              value={editingDateValue}
+                              onChange={(e) => setEditingDateValue(e.target.value)}
+                            />
+                          </label>
+                          <div className="button-row">
+                            <button
+                              type="button"
+                              className="primary-button"
+                              disabled={!editingDateValue || editingDateValue === entry.date}
+                              onClick={() => {
+                                onUpdateEntry({ ...entry, date: editingDateValue });
+                                setEditingDateEntryId(null);
+                                setEditingDateValue("");
+                              }}
+                            >
+                              Save date
+                            </button>
+                            <button
+                              type="button"
+                              className="secondary-button"
+                              onClick={() => {
+                                setEditingDateEntryId(null);
+                                setEditingDateValue("");
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="button-row">
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => {
+                              setEditingDateEntryId(entry.id);
+                              setEditingDateValue(entry.date);
+                            }}
+                          >
+                            Change date
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button danger-button"
+                            onClick={() => onDeleteEntry(entry.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </>
                   )}
                 </article>
@@ -1417,18 +1467,76 @@ export function WorkoutSection({
                       )}
                     </button>
                     {isOpen && (
-                      <div className="exercise-history-list">
-                        {entry.exercises.map((exercise) => (
-                          <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
-                            <span>{exercise.name}</span>
-                            <span>
-                              {exercise.sets
-                                .map((set) => `${set.reps} × ${set.weight}`)
-                                .join(" • ")}
-                            </span>
+                      <>
+                        <div className="exercise-history-list">
+                          {entry.exercises.map((exercise) => (
+                            <div className="exercise-history-row" key={`${entry.id}-${exercise.name}`}>
+                              <span>{exercise.name}</span>
+                              <span>
+                                {exercise.sets
+                                  .map((set) => `${set.reps} × ${set.weight}`)
+                                  .join(" • ")}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        {editingDateEntryId === entry.id ? (
+                          <div className="log-card__date-editor">
+                            <label className="log-card__date-label">
+                              Move to date
+                              <input
+                                type="date"
+                                value={editingDateValue}
+                                onChange={(e) => setEditingDateValue(e.target.value)}
+                              />
+                            </label>
+                            <div className="button-row">
+                              <button
+                                type="button"
+                                className="primary-button"
+                                disabled={!editingDateValue || editingDateValue === entry.date}
+                                onClick={() => {
+                                  onUpdateEntry({ ...entry, date: editingDateValue });
+                                  setEditingDateEntryId(null);
+                                  setEditingDateValue("");
+                                }}
+                              >
+                                Save date
+                              </button>
+                              <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={() => {
+                                  setEditingDateEntryId(null);
+                                  setEditingDateValue("");
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </div>
-                        ))}
-                      </div>
+                        ) : (
+                          <div className="button-row log-card__actions">
+                            <button
+                              type="button"
+                              className="secondary-button"
+                              onClick={() => {
+                                setEditingDateEntryId(entry.id);
+                                setEditingDateValue(entry.date);
+                              }}
+                            >
+                              Change date
+                            </button>
+                            <button
+                              type="button"
+                              className="secondary-button danger-button"
+                              onClick={() => onDeleteEntry(entry.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </article>
                 );

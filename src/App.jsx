@@ -4,7 +4,7 @@ import { useAuth } from "./components/AuthGate";
 import { DateNavigator } from "./components/DateNavigator";
 import { FoodLogSection } from "./components/FoodLogSection";
 import { MobileTabs } from "./components/MobileTabs";
-import { SettingsSection } from "./components/SettingsSection";
+import { FeedbackModal, SettingsSection } from "./components/SettingsSection";
 import { WeightSection } from "./components/WeightSection";
 import { WorkoutSection } from "./components/WorkoutSection";
 import { useFitTrackStore } from "./hooks/useFitTrackStore";
@@ -55,6 +55,7 @@ export default function App() {
   } = useFitTrackStore();
 
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [undoToast, setUndoToast] = useState(null);
   const firstName = useMemo(() => {
     const metadataName = session?.user?.user_metadata?.first_name || session?.user?.user_metadata?.name;
@@ -333,9 +334,20 @@ export default function App() {
             <p className="eyebrow">AI Fit</p>
             <h1>Welcome back, {firstName}.</h1>
           </div>
-          <button type="button" className="secondary-button topbar-home-link" onClick={goToHomepage}>
-            Homepage
-          </button>
+          <div className="topbar-actions">
+            <button type="button" className="secondary-button topbar-home-link" onClick={goToHomepage}>
+              Homepage
+            </button>
+            <button
+              type="button"
+              className="secondary-button topbar-icon-button"
+              aria-label="Feedback / Report Issue"
+              title="Feedback / Report Issue"
+              onClick={() => setIsFeedbackOpen(true)}
+            >
+              ?
+            </button>
+          </div>
         </div>
         <p className="topbar-copy">Let&apos;s build the version of you that your future self is proud of.</p>
         <div className="accent-switcher" aria-label="Accent color">
@@ -385,6 +397,14 @@ export default function App() {
       ) : null}
 
       <MobileTabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        userEmail={session?.user?.email || ""}
+        activeTab={activeTab}
+        selectedDate={state.selectedDate}
+      />
 
       <main className="content-grid">
         <section className={activeTab === "dashboard" ? "section is-active" : "section"}>
@@ -463,6 +483,7 @@ export default function App() {
             customSystems={state.customWorkoutSystems}
             onAddEntry={addWorkoutEntry}
             onDeleteEntry={handleDeleteWorkoutEntry}
+            onUpdateEntry={restoreWorkoutEntry}
             onSaveSystem={saveCustomWorkoutSystem}
             onDeleteSystem={deleteCustomWorkoutSystem}
           />
@@ -474,8 +495,6 @@ export default function App() {
             onSave={updateSettings}
             syncStatus={syncStatus}
             syncError={syncError}
-            activeTab={activeTab}
-            selectedDate={state.selectedDate}
           />
         </section>
       </main>
