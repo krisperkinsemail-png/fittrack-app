@@ -1,3 +1,4 @@
+import { loadCachedWaterEntries, saveCachedWaterEntries } from "./storage.local";
 import { supabase } from "./supabase";
 
 let lastSyncedState = null;
@@ -327,11 +328,15 @@ export const supabaseStorageAdapter = {
       foodEntries: foodResult.data.map(mapFoodEntryFromRow),
       mealTemplates: mealResult.data.map(mapMealTemplateFromRow),
       weightEntries: weightResult.data.map(mapWeightEntryFromRow),
-      waterEntries: waterResult.data.map(mapWaterEntryFromRow),
+      waterEntries:
+        waterResult.data.length > 0 || !waterResultRaw.error
+          ? waterResult.data.map(mapWaterEntryFromRow)
+          : loadCachedWaterEntries(),
       workoutEntries: workoutResult.data.map(mapWorkoutEntryFromRow),
       customWorkoutSystems: customSystemResult.data.map(mapWorkoutSystemFromRow),
     };
 
+    saveCachedWaterEntries(snapshot.waterEntries);
     lastSyncedState = cloneState(snapshot);
     return snapshot;
   },
@@ -543,10 +548,16 @@ export const supabaseStorageAdapter = {
     } catch (error) {
       if (isMissingWaterEntriesError(error)) {
         console.warn("Skipping water entry sync because the water_entries table is unavailable.", error);
+        saveCachedWaterEntries(waterEntries);
+        lastSyncedState = {
+          ...(lastSyncedState || {}),
+          waterEntries: cloneState(waterEntries),
+        };
         return;
       }
       throw error;
     }
+    saveCachedWaterEntries(waterEntries);
     lastSyncedState = {
       ...(lastSyncedState || {}),
       waterEntries: cloneState(waterEntries),

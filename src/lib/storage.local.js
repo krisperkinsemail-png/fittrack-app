@@ -1,5 +1,6 @@
 const STORAGE_KEY = "fittrack.app.v1";
 const THEME_KEY = "fittrack.theme-accent.v1";
+const WATER_CACHE_KEY = "fittrack.water-cache.v1";
 
 export function hasMeaningfulLocalData(snapshot) {
   if (!snapshot) {
@@ -38,6 +39,42 @@ export const localStorageAdapter = {
     }
   },
 };
+
+export function loadCachedWaterEntries() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const value = window.localStorage.getItem(WATER_CACHE_KEY);
+    if (!value) {
+      return [];
+    }
+
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("Failed to load FitTrack water cache from localStorage.", error);
+    return [];
+  }
+}
+
+export function saveCachedWaterEntries(entries) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    if (!entries?.length) {
+      window.localStorage.removeItem(WATER_CACHE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(WATER_CACHE_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error("Failed to save FitTrack water cache to localStorage.", error);
+  }
+}
 
 export function getStoredAccentColor() {
   if (typeof window === "undefined") {
