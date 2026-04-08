@@ -353,21 +353,21 @@ export default function App() {
             </button>
             <button
               type="button"
-              className="secondary-button topbar-refresh-button"
-              aria-label="Update app"
-              title="Update app"
-              onClick={handleHardRefresh}
-            >
-              ↻
-            </button>
-            <button
-              type="button"
               className="secondary-button topbar-icon-button"
               aria-label="Feedback / Report Issue"
               title="Feedback / Report Issue"
               onClick={() => setIsFeedbackOpen(true)}
             >
               ?
+            </button>
+            <button
+              type="button"
+              className="secondary-button topbar-refresh-button"
+              aria-label="Update app"
+              title="Update app"
+              onClick={handleHardRefresh}
+            >
+              ↻
             </button>
           </div>
         </div>
