@@ -39,6 +39,8 @@ export default function App() {
     addWeightEntry,
     deleteWeightEntry,
     restoreWeightEntry,
+    addWaterEntry,
+    deleteWaterEntry,
     addWorkoutEntry,
     deleteWorkoutEntry,
     restoreWorkoutEntry,
@@ -98,6 +100,11 @@ export default function App() {
   const selectedWeightEntry = useMemo(
     () => state.weightEntries.find((entry) => isSameDate(entry.date, state.selectedDate)) || null,
     [state.weightEntries, state.selectedDate]
+  );
+
+  const selectedWaterEntry = useMemo(
+    () => state.waterEntries.find((entry) => isSameDate(entry.date, state.selectedDate)) || null,
+    [state.waterEntries, state.selectedDate]
   );
 
   const dailyTotals = useMemo(() => {
@@ -453,12 +460,15 @@ export default function App() {
             entries={selectedFoodEntries}
             mealTemplates={state.mealTemplates}
             allEntries={state.foodEntries}
+            waterOunces={selectedWaterEntry?.ounces || 0}
             onAddEntry={addFoodEntry}
             onAddEntries={addFoodEntries}
             onUpdateEntry={updateFoodEntry}
             onDeleteEntry={handleDeleteFoodEntry}
             onSaveMeal={addMealTemplate}
             onDeleteMeal={deleteMealTemplate}
+            onAddWater={(ounces) => addWaterEntry({ date: state.selectedDate, ounces })}
+            onResetWater={() => deleteWaterEntry(state.selectedDate)}
           />
         </section>
 

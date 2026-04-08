@@ -505,6 +505,35 @@ button {
   padding-bottom: 16px;
 }
 
+.water-tracker-card {
+  gap: 18px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 14%, transparent), transparent 28%),
+    linear-gradient(180deg, rgba(11, 19, 31, 0.96), rgba(9, 14, 24, 0.96));
+}
+
+.water-tracker-heading {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.water-tracker-summary {
+  display: grid;
+  gap: 6px;
+  text-align: right;
+}
+
+.water-tracker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.water-preset-button {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
 .sync-row {
   display: flex;
   justify-content: space-between;

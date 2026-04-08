@@ -19,6 +19,7 @@ const EMPTY_FORM = {
 };
 
 const QUICK_SEARCH_LIMIT = 50;
+const WATER_PRESETS = [8, 12, 16, 24, 32];
 
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
@@ -223,12 +224,15 @@ export function FoodLogSection({
   entries,
   allEntries,
   mealTemplates,
+  waterOunces,
   onAddEntry,
   onAddEntries,
   onUpdateEntry,
   onDeleteEntry,
   onSaveMeal,
   onDeleteMeal,
+  onAddWater,
+  onResetWater,
 }) {
   const { session } = useAuth();
   const [form, setForm] = useState(EMPTY_FORM);
@@ -791,6 +795,45 @@ export function FoodLogSection({
 
   return (
     <div className="section-stack">
+      <section className="card water-tracker-card">
+        <div className="section-heading water-tracker-heading">
+          <div>
+            <p className="eyebrow">Water tracker</p>
+            <h2>{waterOunces} oz</h2>
+          </div>
+          <div className="water-tracker-summary">
+            <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
+            <p className="muted">
+              {waterOunces >= 64 ? "Hydration is moving." : "Tap a serving to add water."}
+            </p>
+          </div>
+        </div>
+
+        <div className="water-tracker-grid">
+          {WATER_PRESETS.map((ounces) => (
+            <button
+              key={ounces}
+              type="button"
+              className="secondary-button water-preset-button"
+              onClick={() => onAddWater(ounces)}
+            >
+              +{ounces} oz
+            </button>
+          ))}
+        </div>
+
+        <div className="button-row">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onResetWater}
+            disabled={!waterOunces}
+          >
+            Reset day
+          </button>
+        </div>
+      </section>
+
       <section className="card food-log-card">
         <button
           type="button"

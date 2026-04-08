@@ -131,6 +131,23 @@ function mapWeightEntryToRow(userId, entry) {
   };
 }
 
+function mapWaterEntryFromRow(row) {
+  return {
+    id: row.id,
+    date: row.date,
+    ounces: row.ounces,
+  };
+}
+
+function mapWaterEntryToRow(userId, entry) {
+  return {
+    id: entry.id,
+    user_id: userId,
+    date: entry.date,
+    ounces: entry.ounces,
+  };
+}
+
 function mapWorkoutEntryFromRow(row) {
   return {
     id: row.id,
@@ -231,7 +248,15 @@ export const supabaseStorageAdapter = {
       return {};
     }
 
-    const [settingsResult, foodResult, mealResult, weightResult, workoutResult, customSystemResult] =
+    const [
+      settingsResult,
+      foodResult,
+      mealResult,
+      weightResult,
+      waterResult,
+      workoutResult,
+      customSystemResult,
+    ] =
       await Promise.all([
         supabase.from("settings").select("*").eq("user_id", session.user.id).maybeSingle(),
         supabase
@@ -246,6 +271,11 @@ export const supabaseStorageAdapter = {
           .order("updated_at", { ascending: false }),
         supabase
           .from("weight_entries")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("date", { ascending: false }),
+        supabase
+          .from("water_entries")
           .select("*")
           .eq("user_id", session.user.id)
           .order("date", { ascending: false }),
@@ -266,6 +296,7 @@ export const supabaseStorageAdapter = {
       foodResult,
       mealResult,
       weightResult,
+      waterResult,
       workoutResult,
       customSystemResult,
     ]) {
@@ -279,6 +310,7 @@ export const supabaseStorageAdapter = {
       foodEntries: foodResult.data.map(mapFoodEntryFromRow),
       mealTemplates: mealResult.data.map(mapMealTemplateFromRow),
       weightEntries: weightResult.data.map(mapWeightEntryFromRow),
+      waterEntries: waterResult.data.map(mapWaterEntryFromRow),
       workoutEntries: workoutResult.data.map(mapWorkoutEntryFromRow),
       customWorkoutSystems: customSystemResult.data.map(mapWorkoutSystemFromRow),
     };
@@ -307,6 +339,7 @@ export const supabaseStorageAdapter = {
       foodEntries: [],
       mealTemplates: [],
       weightEntries: [],
+      waterEntries: [],
       workoutEntries: [],
       customWorkoutSystems: [],
     };
@@ -342,6 +375,13 @@ export const supabaseStorageAdapter = {
         previousState.weightEntries || [],
         state.weightEntries,
         mapWeightEntryToRow
+      ),
+      syncCollection(
+        "water_entries",
+        userId,
+        previousState.waterEntries || [],
+        state.waterEntries,
+        mapWaterEntryToRow
       ),
       syncCollection(
         "workout_entries",
@@ -460,6 +500,31 @@ export const supabaseStorageAdapter = {
     lastSyncedState = {
       ...(lastSyncedState || {}),
       weightEntries: cloneState(weightEntries),
+    };
+  },
+
+  async syncWaterEntries(waterEntries) {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+    if (error || !session?.user) {
+      if (error) {
+        throw error;
+      }
+      return;
+    }
+
+    await syncCollection(
+      "water_entries",
+      session.user.id,
+      lastSyncedState?.waterEntries || [],
+      waterEntries,
+      mapWaterEntryToRow
+    );
+    lastSyncedState = {
+      ...(lastSyncedState || {}),
+      waterEntries: cloneState(waterEntries),
     };
   },
 

@@ -10,6 +10,7 @@ export function hasMeaningfulLocalData(snapshot) {
     snapshot.foodEntries?.length ||
       snapshot.mealTemplates?.length ||
       snapshot.weightEntries?.length ||
+      snapshot.waterEntries?.length ||
       snapshot.workoutEntries?.length ||
       snapshot.customWorkoutSystems?.length ||
       snapshot.settings?.weightGoal

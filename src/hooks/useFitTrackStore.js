@@ -33,6 +33,7 @@ const initialState = {
   mealTemplates: [],
   customWorkoutSystems: [],
   weightEntries: [],
+  waterEntries: [],
   workoutEntries: [],
 };
 
@@ -96,6 +97,12 @@ function normalizeHydratedState(payload, currentState = initialState) {
         : currentState.customWorkoutSystems,
     weightEntries:
       payload.weightEntries !== undefined ? payload.weightEntries : currentState.weightEntries,
+    waterEntries:
+      payload.waterEntries !== undefined
+        ? Array.isArray(payload.waterEntries)
+          ? payload.waterEntries
+          : []
+        : currentState.waterEntries,
   };
 }
 
@@ -637,6 +644,43 @@ export function useFitTrackStore() {
           .catch((error) => {
             setSyncStatus("error");
             setSyncError(error.message || "Failed to sync weight entries.");
+          });
+      }
+    },
+    addWaterEntry: ({ date, ounces }) => {
+      const existing = state.waterEntries.find((item) => item.date === date);
+      const nextWaterEntries = existing
+        ? state.waterEntries.map((item) =>
+            item.id === existing.id ? { ...item, ounces: Math.max(0, item.ounces + ounces) } : item
+          )
+        : [{ id: createId(), date, ounces: Math.max(0, ounces) }, ...state.waterEntries];
+      dispatch({ type: "hydrate", payload: { waterEntries: nextWaterEntries } });
+      if (storageCapabilities.supportsGranularSync) {
+        setSyncStatus("saving");
+        appStorage
+          .syncWaterEntries(nextWaterEntries)
+          .then(() => {
+            handleSyncSuccess();
+          })
+          .catch((error) => {
+            setSyncStatus("error");
+            setSyncError(error.message || "Failed to sync water entries.");
+          });
+      }
+    },
+    deleteWaterEntry: (date) => {
+      const nextWaterEntries = state.waterEntries.filter((entry) => entry.date !== date);
+      dispatch({ type: "hydrate", payload: { waterEntries: nextWaterEntries } });
+      if (storageCapabilities.supportsGranularSync) {
+        setSyncStatus("saving");
+        appStorage
+          .syncWaterEntries(nextWaterEntries)
+          .then(() => {
+            handleSyncSuccess();
+          })
+          .catch((error) => {
+            setSyncStatus("error");
+            setSyncError(error.message || "Failed to sync water entries.");
           });
       }
     },

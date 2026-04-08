@@ -63,6 +63,15 @@ create table if not exists public.weight_entries (
   unique (user_id, date)
 );
 
+create table if not exists public.water_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  date date not null,
+  ounces integer not null default 0,
+  created_at timestamptz not null default now(),
+  unique (user_id, date)
+);
+
 create table if not exists public.workout_entries (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -155,6 +164,7 @@ create table if not exists public.restaurant_library (
 create index if not exists food_entries_user_id_date_idx on public.food_entries(user_id, date);
 create index if not exists meal_templates_user_id_idx on public.meal_templates(user_id);
 create index if not exists weight_entries_user_id_date_idx on public.weight_entries(user_id, date);
+create index if not exists water_entries_user_id_date_idx on public.water_entries(user_id, date);
 create index if not exists workout_entries_user_id_date_idx on public.workout_entries(user_id, date);
 create index if not exists custom_workout_systems_user_id_idx on public.custom_workout_systems(user_id);
 create index if not exists restaurant_library_brand_item_idx on public.restaurant_library(brand, item_name);
@@ -167,6 +177,7 @@ alter table public.settings enable row level security;
 alter table public.food_entries enable row level security;
 alter table public.meal_templates enable row level security;
 alter table public.weight_entries enable row level security;
+alter table public.water_entries enable row level security;
 alter table public.workout_entries enable row level security;
 alter table public.custom_workout_systems enable row level security;
 alter table public.restaurant_library enable row level security;
@@ -194,6 +205,11 @@ create policy "weight_entries_select_own" on public.weight_entries for select us
 create policy "weight_entries_insert_own" on public.weight_entries for insert with check (auth.uid() = user_id);
 create policy "weight_entries_update_own" on public.weight_entries for update using (auth.uid() = user_id);
 create policy "weight_entries_delete_own" on public.weight_entries for delete using (auth.uid() = user_id);
+
+create policy "water_entries_select_own" on public.water_entries for select using (auth.uid() = user_id);
+create policy "water_entries_insert_own" on public.water_entries for insert with check (auth.uid() = user_id);
+create policy "water_entries_update_own" on public.water_entries for update using (auth.uid() = user_id);
+create policy "water_entries_delete_own" on public.water_entries for delete using (auth.uid() = user_id);
 
 create policy "workout_entries_select_own" on public.workout_entries for select using (auth.uid() = user_id);
 create policy "workout_entries_insert_own" on public.workout_entries for insert with check (auth.uid() = user_id);
