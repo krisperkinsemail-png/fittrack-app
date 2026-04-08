@@ -8,6 +8,7 @@ import { FeedbackModal, SettingsSection } from "./components/SettingsSection";
 import { WeightSection } from "./components/WeightSection";
 import { WorkoutSection } from "./components/WorkoutSection";
 import { useFitTrackStore } from "./hooks/useFitTrackStore";
+import { refreshAppToLatest } from "./lib/appUpdate";
 import {
   addDays,
   formatLongDate,
@@ -334,10 +335,8 @@ export default function App() {
     }).format(lastSyncedAt);
   }, [lastSyncedAt]);
 
-  function handleHardRefresh() {
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.set("refresh", String(Date.now()));
-    window.location.assign(nextUrl.toString());
+  async function handleHardRefresh() {
+    await refreshAppToLatest();
   }
 
   return (
@@ -381,8 +380,8 @@ export default function App() {
           <button
             type="button"
             className="secondary-button topbar-refresh-button"
-            aria-label="Hard refresh"
-            title="Hard refresh"
+            aria-label="Update app"
+            title="Update app"
             onClick={handleHardRefresh}
           >
             ↻
