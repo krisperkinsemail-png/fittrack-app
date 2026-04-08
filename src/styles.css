@@ -1747,6 +1747,13 @@ button:focus {
   flex-wrap: wrap;
 }
 
+.topbar-shortcuts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
 .topbar-home-link {
   justify-self: start;
   min-height: 40px;
@@ -1776,6 +1783,19 @@ button:focus {
 
 .accent-switcher .home-button {
   width: 100%;
+}
+
+.topbar-refresh-button {
+  min-height: 34px;
+  min-width: 34px;
+  width: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 .form-grid + .button-row,

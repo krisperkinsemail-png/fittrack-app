@@ -334,6 +334,12 @@ export default function App() {
     }).format(lastSyncedAt);
   }, [lastSyncedAt]);
 
+  function handleHardRefresh() {
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("refresh", String(Date.now()));
+    window.location.assign(nextUrl.toString());
+  }
+
   return (
     <div className="app-shell theme-shell" data-accent={state.settings.accentColor}>
       <header className="topbar">
@@ -358,17 +364,28 @@ export default function App() {
           </div>
         </div>
         <p className="topbar-copy">Let&apos;s get started!</p>
-        <div className="accent-switcher" aria-label="Accent color">
+        <div className="topbar-shortcuts">
+          <div className="accent-switcher" aria-label="Accent color">
+            <button
+              type="button"
+              className={
+                activeTab === "dashboard"
+                  ? "secondary-button home-button is-selected-accent"
+                  : "secondary-button home-button"
+              }
+              onClick={() => setActiveTab("dashboard")}
+            >
+              Data Snapshot
+            </button>
+          </div>
           <button
             type="button"
-            className={
-              activeTab === "dashboard"
-                ? "secondary-button home-button is-selected-accent"
-                : "secondary-button home-button"
-            }
-            onClick={() => setActiveTab("dashboard")}
+            className="secondary-button topbar-refresh-button"
+            aria-label="Hard refresh"
+            title="Hard refresh"
+            onClick={handleHardRefresh}
           >
-            Data Snapshot
+            ↻
           </button>
         </div>
       </header>
