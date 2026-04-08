@@ -36,6 +36,7 @@ function mapSettingsRow(row) {
     weightGoal: mapNullableNumber(row.weight_goal),
     weightUnit: row.weight_unit || "lb",
     accentColor: row.accent_color || "blue",
+    lastSelectedWorkoutProgramId: row.last_selected_workout_program_id || "",
   };
 }
 
@@ -53,6 +54,7 @@ function mapSettingsToRow(userId, settings) {
     weight_goal: toNullableNumber(settings.weightGoal),
     weight_unit: settings.weightUnit || "lb",
     accent_color: settings.accentColor || "blue",
+    last_selected_workout_program_id: settings.lastSelectedWorkoutProgramId || null,
   };
 }
 
@@ -379,6 +381,11 @@ export const supabaseStorageAdapter = {
     if (upsertError) {
       throw upsertError;
     }
+
+    lastSyncedState = {
+      ...(lastSyncedState || {}),
+      settings: cloneState(settings),
+    };
   },
 
   async syncFoodEntries(foodEntries) {

@@ -27,6 +27,7 @@ const initialState = {
     weightGoal: "",
     weightUnit: "lb",
     accentColor: getStoredAccentColor() || "blue",
+    lastSelectedWorkoutProgramId: "",
   },
   foodEntries: [],
   mealTemplates: [],

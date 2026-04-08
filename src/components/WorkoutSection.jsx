@@ -83,15 +83,21 @@ export function WorkoutSection({
   recentEntries,
   allEntries,
   customSystems,
+  preferredProgramId,
   onAddEntry,
   onDeleteEntry,
   onUpdateEntry,
   onSetSelectedDate,
+  onSavePreferredProgramId,
   onSaveSystem,
   onDeleteSystem,
 }) {
   const workoutPrograms = useMemo(() => getAllWorkoutSystems(customSystems), [customSystems]);
-  const [selectedProgramId, setSelectedProgramId] = useState(workoutPrograms[0].id);
+  const [selectedProgramId, setSelectedProgramId] = useState(
+    () =>
+      workoutPrograms.find((program) => program.id === preferredProgramId)?.id ||
+      workoutPrograms[0].id
+  );
   const [selectedPhaseId, setSelectedPhaseId] = useState(
     workoutPrograms[0].phases?.[0]?.id || null
   );
@@ -155,10 +161,16 @@ export function WorkoutSection({
   );
 
   useEffect(() => {
+    const preferredProgramExists = workoutPrograms.some((program) => program.id === preferredProgramId);
+    if (preferredProgramId && preferredProgramExists && preferredProgramId !== selectedProgramId) {
+      setSelectedProgramId(preferredProgramId);
+      return;
+    }
+
     if (!workoutPrograms.some((program) => program.id === selectedProgramId)) {
       setSelectedProgramId(workoutPrograms[0].id);
     }
-  }, [selectedProgramId, workoutPrograms]);
+  }, [preferredProgramId, selectedProgramId, workoutPrograms]);
 
   useEffect(() => {
     if (selectedProgram.phases?.length) {
@@ -624,6 +636,7 @@ export function WorkoutSection({
 
   function handleProgramChange(programId) {
     setSelectedProgramId(programId);
+    onSavePreferredProgramId?.(programId);
     setIsProgramPickerOpen(false);
     setIsWorkoutPickerOpen(false);
   }

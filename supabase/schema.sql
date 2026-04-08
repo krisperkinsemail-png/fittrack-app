@@ -20,8 +20,12 @@ create table if not exists public.settings (
   weight_goal numeric,
   weight_unit text not null default 'lb',
   accent_color text not null default 'blue',
+  last_selected_workout_program_id text,
   updated_at timestamptz not null default now()
 );
+
+alter table public.settings
+  add column if not exists last_selected_workout_program_id text;
 
 create table if not exists public.food_entries (
   id uuid primary key default gen_random_uuid(),

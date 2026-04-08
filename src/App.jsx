@@ -482,10 +482,14 @@ export default function App() {
             recentEntries={state.workoutEntries.slice().sort(sortByDateDescending).slice(0, 8)}
             allEntries={state.workoutEntries}
             customSystems={state.customWorkoutSystems}
+            preferredProgramId={state.settings.lastSelectedWorkoutProgramId}
             onAddEntry={addWorkoutEntry}
             onDeleteEntry={handleDeleteWorkoutEntry}
             onUpdateEntry={updateWorkoutEntry}
             onSetSelectedDate={setSelectedDate}
+            onSavePreferredProgramId={(programId) =>
+              updateSettings({ lastSelectedWorkoutProgramId: programId })
+            }
             onSaveSystem={saveCustomWorkoutSystem}
             onDeleteSystem={deleteCustomWorkoutSystem}
           />
