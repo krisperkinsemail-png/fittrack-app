@@ -1745,13 +1745,7 @@ button:focus {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-}
-
-.topbar-shortcuts {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+  justify-content: center;
 }
 
 .topbar-home-link {
@@ -1786,9 +1780,9 @@ button:focus {
 }
 
 .topbar-refresh-button {
-  min-height: 34px;
-  min-width: 34px;
-  width: 34px;
+  min-height: 40px;
+  min-width: 40px;
+  width: 40px;
   padding: 0;
   display: inline-flex;
   align-items: center;

@@ -353,6 +353,15 @@ export default function App() {
             </button>
             <button
               type="button"
+              className="secondary-button topbar-refresh-button"
+              aria-label="Update app"
+              title="Update app"
+              onClick={handleHardRefresh}
+            >
+              ↻
+            </button>
+            <button
+              type="button"
               className="secondary-button topbar-icon-button"
               aria-label="Feedback / Report Issue"
               title="Feedback / Report Issue"
@@ -363,28 +372,17 @@ export default function App() {
           </div>
         </div>
         <p className="topbar-copy">Let&apos;s get started!</p>
-        <div className="topbar-shortcuts">
-          <div className="accent-switcher" aria-label="Accent color">
-            <button
-              type="button"
-              className={
-                activeTab === "dashboard"
-                  ? "secondary-button home-button is-selected-accent"
-                  : "secondary-button home-button"
-              }
-              onClick={() => setActiveTab("dashboard")}
-            >
-              Data Snapshot
-            </button>
-          </div>
+        <div className="accent-switcher" aria-label="Accent color">
           <button
             type="button"
-            className="secondary-button topbar-refresh-button"
-            aria-label="Update app"
-            title="Update app"
-            onClick={handleHardRefresh}
+            className={
+              activeTab === "dashboard"
+                ? "secondary-button home-button is-selected-accent"
+                : "secondary-button home-button"
+            }
+            onClick={() => setActiveTab("dashboard")}
           >
-            ↻
+            Data Snapshot
           </button>
         </div>
       </header>
