@@ -513,14 +513,8 @@ button {
 }
 
 .water-tracker-heading {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-}
-
-.water-tracker-summary {
-  display: grid;
-  gap: 6px;
-  text-align: right;
+  justify-items: center;
+  text-align: center;
 }
 
 .water-tracker-grid {
@@ -532,6 +526,10 @@ button {
 .water-preset-button {
   font-weight: 800;
   letter-spacing: 0.01em;
+}
+
+.water-tracker-actions {
+  margin-top: 6px;
 }
 
 .sync-row {

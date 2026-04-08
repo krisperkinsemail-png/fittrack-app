@@ -797,16 +797,8 @@ export function FoodLogSection({
     <div className="section-stack">
       <section className="card water-tracker-card">
         <div className="section-heading water-tracker-heading">
-          <div>
-            <p className="eyebrow">Water tracker</p>
-            <h2>{waterOunces} oz</h2>
-          </div>
-          <div className="water-tracker-summary">
-            <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
-            <p className="muted">
-              {waterOunces >= 64 ? "Hydration is moving." : "Tap a serving to add water."}
-            </p>
-          </div>
+          <p className="eyebrow">Water tracker</p>
+          <h2>{waterOunces} oz</h2>
         </div>
 
         <div className="water-tracker-grid">
@@ -822,7 +814,7 @@ export function FoodLogSection({
           ))}
         </div>
 
-        <div className="button-row">
+        <div className="button-row water-tracker-actions">
           <button
             type="button"
             className="secondary-button"
