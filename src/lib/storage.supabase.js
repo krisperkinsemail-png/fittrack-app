@@ -6,6 +6,19 @@ function cloneState(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function isMissingWaterEntriesError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  const details = String(error?.details || "").toLowerCase();
+  const code = String(error?.code || "").toUpperCase();
+
+  return (
+    message.includes("water_entries") ||
+    details.includes("water_entries") ||
+    code === "42P01" ||
+    code === "PGRST205"
+  );
+}
+
 function mapNullableNumber(value) {
   return value ?? "";
 }
@@ -253,43 +266,47 @@ export const supabaseStorageAdapter = {
       foodResult,
       mealResult,
       weightResult,
-      waterResult,
+      waterResultRaw,
       workoutResult,
       customSystemResult,
-    ] =
-      await Promise.all([
-        supabase.from("settings").select("*").eq("user_id", session.user.id).maybeSingle(),
-        supabase
-          .from("food_entries")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("date", { ascending: false }),
-        supabase
-          .from("meal_templates")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("updated_at", { ascending: false }),
-        supabase
-          .from("weight_entries")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("date", { ascending: false }),
-        supabase
-          .from("water_entries")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("date", { ascending: false }),
-        supabase
-          .from("workout_entries")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("date", { ascending: false }),
-        supabase
-          .from("custom_workout_systems")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("updated_at", { ascending: false }),
-      ]);
+    ] = await Promise.all([
+      supabase.from("settings").select("*").eq("user_id", session.user.id).maybeSingle(),
+      supabase
+        .from("food_entries")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("date", { ascending: false }),
+      supabase
+        .from("meal_templates")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("updated_at", { ascending: false }),
+      supabase
+        .from("weight_entries")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("date", { ascending: false }),
+      supabase
+        .from("water_entries")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("date", { ascending: false }),
+      supabase
+        .from("workout_entries")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("date", { ascending: false }),
+      supabase
+        .from("custom_workout_systems")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("updated_at", { ascending: false }),
+    ]);
+
+    const waterResult =
+      waterResultRaw.error && isMissingWaterEntriesError(waterResultRaw.error)
+        ? { data: [], error: null }
+        : waterResultRaw;
 
     for (const result of [
       settingsResult,
@@ -515,13 +532,21 @@ export const supabaseStorageAdapter = {
       return;
     }
 
-    await syncCollection(
-      "water_entries",
-      session.user.id,
-      lastSyncedState?.waterEntries || [],
-      waterEntries,
-      mapWaterEntryToRow
-    );
+    try {
+      await syncCollection(
+        "water_entries",
+        session.user.id,
+        lastSyncedState?.waterEntries || [],
+        waterEntries,
+        mapWaterEntryToRow
+      );
+    } catch (error) {
+      if (isMissingWaterEntriesError(error)) {
+        console.warn("Skipping water entry sync because the water_entries table is unavailable.", error);
+        return;
+      }
+      throw error;
+    }
     lastSyncedState = {
       ...(lastSyncedState || {}),
       waterEntries: cloneState(waterEntries),
