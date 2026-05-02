@@ -5,6 +5,7 @@ import { formatLongDate } from "../lib/date";
 const REST_PRESETS = [60, 90, 120, 180];
 const CUSTOM_EXERCISE_BANK_KEY = "fittrack.custom-exercise-bank.v1";
 const WORKOUT_DRAFTS_KEY = "fittrack.workout-drafts.v1";
+const ACTIVE_WORKOUT_SELECTION_KEY = "fittrack.active-workout-selection.v1";
 
 function createSet() {
   return {
@@ -93,17 +94,15 @@ export function WorkoutSection({
   onDeleteSystem,
 }) {
   const workoutPrograms = useMemo(() => getAllWorkoutSystems(customSystems), [customSystems]);
-  const [selectedProgramId, setSelectedProgramId] = useState(
-    () =>
-      workoutPrograms.find((program) => program.id === preferredProgramId)?.id ||
-      workoutPrograms[0].id
+  const initialSelection = getInitialWorkoutSelection(
+    workoutPrograms,
+    preferredProgramId,
+    selectedDate
   );
-  const [selectedPhaseId, setSelectedPhaseId] = useState(
-    workoutPrograms[0].phases?.[0]?.id || null
-  );
-  const initialWorkouts = workoutPrograms[0].phases?.[0]?.workouts || workoutPrograms[0].workouts;
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState(initialWorkouts[0].id);
-  const [draftExercises, setDraftExercises] = useState(createWorkoutDraft(initialWorkouts[0]));
+  const [selectedProgramId, setSelectedProgramId] = useState(initialSelection.programId);
+  const [selectedPhaseId, setSelectedPhaseId] = useState(initialSelection.phaseId);
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState(initialSelection.workoutId);
+  const [draftExercises, setDraftExercises] = useState(createWorkoutDraft(initialSelection.workout));
   const [restDuration, setRestDuration] = useState(90);
   const [timeLeft, setTimeLeft] = useState(90);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -137,6 +136,12 @@ export function WorkoutSection({
   const [builderFocusedExId, setBuilderFocusedExId] = useState(null);
   const audioContextRef = useRef(null);
   const previousTimeLeftRef = useRef(timeLeft);
+  const latestDraftRef = useRef(draftExercises);
+  const latestSelectedDateRef = useRef(selectedDate);
+  const latestSelectedWorkoutRef = useRef(initialSelection.workout);
+  const latestIsDraftActiveRef = useRef(false);
+  const latestIsDraftDirtyRef = useRef(false);
+  const restoredSelectionDateRef = useRef(null);
 
   const selectedProgram = useMemo(
     () => workoutPrograms.find((program) => program.id === selectedProgramId) || workoutPrograms[0],
@@ -161,8 +166,30 @@ export function WorkoutSection({
   );
 
   useEffect(() => {
+    latestDraftRef.current = draftExercises;
+  }, [draftExercises]);
+
+  useEffect(() => {
+    latestSelectedDateRef.current = selectedDate;
+  }, [selectedDate]);
+
+  useEffect(() => {
+    latestSelectedWorkoutRef.current = selectedWorkout;
+  }, [selectedWorkout]);
+
+  useEffect(() => {
     const preferredProgramExists = workoutPrograms.some((program) => program.id === preferredProgramId);
-    if (preferredProgramId && preferredProgramExists && preferredProgramId !== selectedProgramId) {
+    const savedSelection = loadActiveWorkoutSelection(selectedDate);
+    const savedSelectionExists =
+      savedSelection &&
+      findWorkoutSelection(workoutPrograms, savedSelection.programId, savedSelection.workoutId);
+
+    if (
+      preferredProgramId &&
+      preferredProgramExists &&
+      preferredProgramId !== selectedProgramId &&
+      !savedSelectionExists
+    ) {
       setSelectedProgramId(preferredProgramId);
       return;
     }
@@ -170,33 +197,86 @@ export function WorkoutSection({
     if (!workoutPrograms.some((program) => program.id === selectedProgramId)) {
       setSelectedProgramId(workoutPrograms[0].id);
     }
-  }, [preferredProgramId, selectedProgramId, workoutPrograms]);
+  }, [preferredProgramId, selectedDate, selectedProgramId, workoutPrograms]);
 
   useEffect(() => {
-    if (selectedProgram.phases?.length) {
-      setSelectedPhaseId(selectedProgram.phases[0].id);
-      setSelectedWorkoutId(selectedProgram.phases[0].workouts[0].id);
+    if (restoredSelectionDateRef.current === selectedDate) {
       return;
     }
 
-    setSelectedPhaseId(null);
-    setSelectedWorkoutId(selectedProgram.workouts[0].id);
-  }, [selectedProgramId, selectedProgram]);
+    const savedSelection = loadActiveWorkoutSelection(selectedDate);
+    if (!savedSelection) {
+      restoredSelectionDateRef.current = selectedDate;
+      return;
+    }
+
+    const restoredSelection = findWorkoutSelection(
+      workoutPrograms,
+      savedSelection.programId,
+      savedSelection.workoutId,
+      savedSelection.phaseId
+    );
+
+    if (!restoredSelection) {
+      return;
+    }
+
+    restoredSelectionDateRef.current = selectedDate;
+    setSelectedProgramId(restoredSelection.programId);
+    setSelectedPhaseId(restoredSelection.phaseId);
+    setSelectedWorkoutId(restoredSelection.workoutId);
+  }, [selectedDate, workoutPrograms]);
+
+  useEffect(() => {
+    if (selectedProgram.phases?.length) {
+      const nextPhase =
+        selectedProgram.phases.find((phase) => phase.id === selectedPhaseId) ||
+        selectedProgram.phases[0];
+
+      if (selectedPhaseId !== nextPhase.id) {
+        setSelectedPhaseId(nextPhase.id);
+      }
+
+      if (!nextPhase.workouts.some((workout) => workout.id === selectedWorkoutId)) {
+        setSelectedWorkoutId(nextPhase.workouts[0].id);
+      }
+      return;
+    }
+
+    if (selectedPhaseId !== null) {
+      setSelectedPhaseId(null);
+    }
+
+    if (!selectedProgram.workouts.some((workout) => workout.id === selectedWorkoutId)) {
+      setSelectedWorkoutId(selectedProgram.workouts[0].id);
+    }
+  }, [selectedPhaseId, selectedProgramId, selectedProgram, selectedWorkoutId]);
 
   useEffect(() => {
     if (!selectedPhase) {
       return;
     }
 
-    setSelectedWorkoutId(selectedPhase.workouts[0].id);
-  }, [selectedPhaseId, selectedPhase]);
+    if (!selectedPhase.workouts.some((workout) => workout.id === selectedWorkoutId)) {
+      setSelectedWorkoutId(selectedPhase.workouts[0].id);
+    }
+  }, [selectedPhaseId, selectedPhase, selectedWorkoutId]);
+
+  useEffect(() => {
+    saveActiveWorkoutSelection({
+      date: selectedDate,
+      programId: selectedProgram.id,
+      phaseId: selectedPhase?.id || null,
+      workoutId: selectedWorkout.id,
+    });
+  }, [selectedDate, selectedProgram.id, selectedPhase?.id, selectedWorkout.id]);
 
   useEffect(() => {
     const templateDraft = createWorkoutDraft(selectedWorkout);
     const nextSavedDraft = loadWorkoutDraft(selectedDate, selectedWorkout.id);
-    setDraftExercises(templateDraft);
+    setDraftExercises(nextSavedDraft ? cloneWorkoutDraft(nextSavedDraft.exercises) : templateDraft);
     setSavedWorkoutDraft(nextSavedDraft);
-    setIsDraftActive(false);
+    setIsDraftActive(Boolean(nextSavedDraft));
     setRemovedExerciseUndo(null);
     setOpenExerciseId(null);
   }, [selectedDate, selectedWorkout]);
@@ -274,6 +354,14 @@ export function WorkoutSection({
     () => hasDraftChanges(draftExercises, selectedWorkout),
     [draftExercises, selectedWorkout]
   );
+
+  useEffect(() => {
+    latestIsDraftActiveRef.current = isDraftActive;
+  }, [isDraftActive]);
+
+  useEffect(() => {
+    latestIsDraftDirtyRef.current = isDraftDirty;
+  }, [isDraftDirty]);
 
   const latestMatchingWorkout = useMemo(
     () =>
@@ -404,22 +492,65 @@ export function WorkoutSection({
       return;
     }
 
-    const nextDraft = {
-      date: selectedDate,
-      workoutId: selectedWorkout.id,
-      workoutName: selectedWorkout.name,
-      exercises: cloneWorkoutDraft(draftExercises),
-      updatedAt: new Date().toISOString(),
-    };
+    const nextDraft = createSavedWorkoutDraft(selectedDate, selectedWorkout, draftExercises);
     saveWorkoutDraft(nextDraft);
     setSavedWorkoutDraft(nextDraft);
   }, [draftExercises, isDraftActive, isDraftDirty, selectedDate, selectedWorkout]);
 
+  useEffect(() => {
+    function flushDraft() {
+      const currentWorkout = latestSelectedWorkoutRef.current;
+      const currentDraft = latestDraftRef.current;
+
+      if (
+        !latestIsDraftActiveRef.current ||
+        !latestIsDraftDirtyRef.current ||
+        !currentWorkout
+      ) {
+        return;
+      }
+
+      saveWorkoutDraft(
+        createSavedWorkoutDraft(latestSelectedDateRef.current, currentWorkout, currentDraft)
+      );
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        flushDraft();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", flushDraft);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", flushDraft);
+    };
+  }, []);
+
   function updateDraft(updater) {
     setIsDraftActive(true);
-    setDraftExercises((current) =>
-      typeof updater === "function" ? updater(current) : updater
-    );
+    setDraftExercises((current) => {
+      const nextDraftExercises = typeof updater === "function" ? updater(current) : updater;
+
+      if (!hasDraftChanges(nextDraftExercises, selectedWorkout)) {
+        clearWorkoutDraft(selectedDate, selectedWorkout.id);
+        setSavedWorkoutDraft(null);
+        setIsDraftActive(false);
+        return nextDraftExercises;
+      }
+
+      const nextDraft = createSavedWorkoutDraft(
+        selectedDate,
+        selectedWorkout,
+        nextDraftExercises
+      );
+      saveWorkoutDraft(nextDraft);
+      setSavedWorkoutDraft(nextDraft);
+      return nextDraftExercises;
+    });
   }
 
   function addCustomExerciseDraft({ name, target, setCount }) {
@@ -666,13 +797,7 @@ export function WorkoutSection({
       return;
     }
 
-    const nextDraft = {
-      date: selectedDate,
-      workoutId: selectedWorkout.id,
-      workoutName: selectedWorkout.name,
-      exercises: cloneWorkoutDraft(draftExercises),
-      updatedAt: new Date().toISOString(),
-    };
+    const nextDraft = createSavedWorkoutDraft(selectedDate, selectedWorkout, draftExercises);
 
     saveWorkoutDraft(nextDraft);
     setSavedWorkoutDraft(nextDraft);
@@ -2394,6 +2519,136 @@ function cloneWorkoutDraft(exercises) {
     ...exercise,
     sets: exercise.sets.map((set) => ({ ...set })),
   }));
+}
+
+function createSavedWorkoutDraft(date, workout, exercises) {
+  return {
+    date,
+    workoutId: workout.id,
+    workoutName: workout.name,
+    exercises: cloneWorkoutDraft(exercises),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function findWorkoutSelection(programs, programId, workoutId, phaseId = null) {
+  const program = programs.find((entry) => entry.id === programId);
+  if (!program) {
+    return null;
+  }
+
+  if (program.phases?.length) {
+    const candidatePhases = phaseId
+      ? [
+          program.phases.find((phase) => phase.id === phaseId),
+          ...program.phases.filter((phase) => phase.id !== phaseId),
+        ].filter(Boolean)
+      : program.phases;
+
+    for (const phase of candidatePhases) {
+      const workout = phase.workouts.find((entry) => entry.id === workoutId);
+      if (workout) {
+        return {
+          program,
+          phase,
+          workout,
+          programId: program.id,
+          phaseId: phase.id,
+          workoutId: workout.id,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  const workout = program.workouts.find((entry) => entry.id === workoutId);
+  if (!workout) {
+    return null;
+  }
+
+  return {
+    program,
+    phase: null,
+    workout,
+    programId: program.id,
+    phaseId: null,
+    workoutId: workout.id,
+  };
+}
+
+function getFirstWorkoutSelection(program) {
+  if (program.phases?.length) {
+    const phase = program.phases[0];
+    const workout = phase.workouts[0];
+    return {
+      program,
+      phase,
+      workout,
+      programId: program.id,
+      phaseId: phase.id,
+      workoutId: workout.id,
+    };
+  }
+
+  const workout = program.workouts[0];
+  return {
+    program,
+    phase: null,
+    workout,
+    programId: program.id,
+    phaseId: null,
+    workoutId: workout.id,
+  };
+}
+
+function getInitialWorkoutSelection(programs, preferredProgramId, selectedDate) {
+  const savedSelection = loadActiveWorkoutSelection(selectedDate);
+  const restoredSelection =
+    savedSelection &&
+    findWorkoutSelection(
+      programs,
+      savedSelection.programId,
+      savedSelection.workoutId,
+      savedSelection.phaseId
+    );
+
+  if (restoredSelection) {
+    return restoredSelection;
+  }
+
+  const preferredProgram = programs.find((program) => program.id === preferredProgramId);
+  return getFirstWorkoutSelection(preferredProgram || programs[0]);
+}
+
+function loadActiveWorkoutSelection(selectedDate) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const savedValue = window.localStorage.getItem(ACTIVE_WORKOUT_SELECTION_KEY);
+    if (!savedValue) {
+      return null;
+    }
+
+    const parsed = JSON.parse(savedValue);
+    return parsed?.date === selectedDate ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveActiveWorkoutSelection(selection) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(ACTIVE_WORKOUT_SELECTION_KEY, JSON.stringify(selection));
+  } catch {
+    // Ignore active workout selection persistence failures.
+  }
 }
 
 function loadAllWorkoutDrafts() {
