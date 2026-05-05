@@ -1297,6 +1297,11 @@ button {
   gap: 14px;
 }
 
+.exercise-card--has-notes {
+  position: relative;
+  padding-bottom: 58px;
+}
+
 .exercise-card__toggle {
   width: 100%;
   display: grid;
@@ -1336,9 +1341,12 @@ button {
 .exercise-note-box__close {
   width: 34px;
   height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   display: inline-grid;
   place-items: center;
-  border-radius: 50%;
+  padding: 0;
+  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(96, 114, 139, 0.28));
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: #f8fafc;
@@ -1348,7 +1356,9 @@ button {
 }
 
 .exercise-note-button {
-  justify-self: end;
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
 }
 
 .exercise-note-button[aria-expanded="true"] {

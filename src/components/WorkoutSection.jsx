@@ -1248,7 +1248,7 @@ export function WorkoutSection({
 
             return (
             <article
-              className="exercise-card"
+              className={exercise.notes ? "exercise-card exercise-card--has-notes" : "exercise-card"}
               key={exercise.id}
               ref={(el) => { exerciseCardRefs.current[exercise.id] = el; }}
             >
