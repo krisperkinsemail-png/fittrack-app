@@ -1252,38 +1252,36 @@ export function WorkoutSection({
               key={exercise.id}
               ref={(el) => { exerciseCardRefs.current[exercise.id] = el; }}
             >
-              <div className="exercise-card__header">
+              <button
+                type="button"
+                className="exercise-card__toggle"
+                onClick={() => setOpenExerciseId((current) => (current === exercise.id ? null : exercise.id))}
+                aria-expanded={isExpanded}
+              >
+                <div className="exercise-title-group">
+                  <span className="exercise-index">{exerciseIndex + 1}</span>
+                  <div className="exercise-card__summary">
+                    <strong>{exercise.name || `Exercise ${exerciseIndex + 1}`}</strong>
+                    <span>{exercise.target || "Tap to log sets"}</span>
+                  </div>
+                </div>
+                <span className="exercise-card__chevron">{isExpanded ? "−" : "+"}</span>
+              </button>
+
+              {exercise.notes ? (
                 <button
                   type="button"
-                  className="exercise-card__toggle"
-                  onClick={() => setOpenExerciseId((current) => (current === exercise.id ? null : exercise.id))}
-                  aria-expanded={isExpanded}
+                  className="exercise-note-button"
+                  onClick={() =>
+                    setOpenNoteExerciseId((current) => (current === exercise.id ? null : exercise.id))
+                  }
+                  aria-expanded={isNoteOpen}
+                  aria-label={`Show coaching notes for ${exercise.name || `exercise ${exerciseIndex + 1}`}`}
+                  title="Coaching notes"
                 >
-                  <div className="exercise-title-group">
-                    <span className="exercise-index">{exerciseIndex + 1}</span>
-                    <div className="exercise-card__summary">
-                      <strong>{exercise.name || `Exercise ${exerciseIndex + 1}`}</strong>
-                      <span>{exercise.target || "Tap to log sets"}</span>
-                    </div>
-                  </div>
-                  <span className="exercise-card__chevron">{isExpanded ? "−" : "+"}</span>
+                  ?
                 </button>
-
-                {exercise.notes ? (
-                  <button
-                    type="button"
-                    className="exercise-note-button"
-                    onClick={() =>
-                      setOpenNoteExerciseId((current) => (current === exercise.id ? null : exercise.id))
-                    }
-                    aria-expanded={isNoteOpen}
-                    aria-label={`Show coaching notes for ${exercise.name || `exercise ${exerciseIndex + 1}`}`}
-                    title="Coaching notes"
-                  >
-                    ?
-                  </button>
-                ) : null}
-              </div>
+              ) : null}
 
               {exercise.notes && isNoteOpen ? (
                 <div className="exercise-note-box">
