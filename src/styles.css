@@ -1297,6 +1297,13 @@ button {
   gap: 14px;
 }
 
+.exercise-card__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
 .exercise-card__toggle {
   width: 100%;
   display: grid;
@@ -1330,6 +1337,54 @@ button {
   font-size: 1.4rem;
   line-height: 1;
   color: #f8fafc;
+}
+
+.exercise-note-button,
+.exercise-note-box__close {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(96, 114, 139, 0.28));
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: #f8fafc;
+  font-weight: 800;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.exercise-note-button[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.exercise-note-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, rgba(96, 114, 139, 0.22));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.exercise-note-box strong,
+.exercise-note-box p {
+  margin: 0;
+}
+
+.exercise-note-box p {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.exercise-note-box__close {
+  width: 30px;
+  height: 30px;
+  background: rgba(15, 23, 42, 0.28);
 }
 
 .exercise-card__editor {

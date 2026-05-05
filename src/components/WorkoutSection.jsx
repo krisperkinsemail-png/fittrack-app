@@ -117,6 +117,7 @@ export function WorkoutSection({
   const [isDraftActive, setIsDraftActive] = useState(false);
   const [removedExerciseUndo, setRemovedExerciseUndo] = useState(null);
   const [openExerciseId, setOpenExerciseId] = useState(null);
+  const [openNoteExerciseId, setOpenNoteExerciseId] = useState(null);
   const exerciseCardRefs = useRef({});
   const timerFloatRef = useRef(null);
   const [openHistoryEntryId, setOpenHistoryEntryId] = useState(null);
@@ -1243,6 +1244,7 @@ export function WorkoutSection({
               normalizeExerciseName(exercise.name)
             );
             const isExpanded = openExerciseId === exercise.id;
+            const isNoteOpen = openNoteExerciseId === exercise.id;
 
             return (
             <article
@@ -1250,22 +1252,55 @@ export function WorkoutSection({
               key={exercise.id}
               ref={(el) => { exerciseCardRefs.current[exercise.id] = el; }}
             >
-              <button
-                type="button"
-                className="exercise-card__toggle"
-                onClick={() => setOpenExerciseId((current) => (current === exercise.id ? null : exercise.id))}
-                aria-expanded={isExpanded}
-              >
-                <div className="exercise-title-group">
-                  <span className="exercise-index">{exerciseIndex + 1}</span>
-                  <div className="exercise-card__summary">
-                    <strong>{exercise.name || `Exercise ${exerciseIndex + 1}`}</strong>
-                    <span>{exercise.target || "Tap to log sets"}</span>
-                    {exercise.notes ? <p className="muted">{exercise.notes}</p> : null}
+              <div className="exercise-card__header">
+                <button
+                  type="button"
+                  className="exercise-card__toggle"
+                  onClick={() => setOpenExerciseId((current) => (current === exercise.id ? null : exercise.id))}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="exercise-title-group">
+                    <span className="exercise-index">{exerciseIndex + 1}</span>
+                    <div className="exercise-card__summary">
+                      <strong>{exercise.name || `Exercise ${exerciseIndex + 1}`}</strong>
+                      <span>{exercise.target || "Tap to log sets"}</span>
+                    </div>
                   </div>
+                  <span className="exercise-card__chevron">{isExpanded ? "−" : "+"}</span>
+                </button>
+
+                {exercise.notes ? (
+                  <button
+                    type="button"
+                    className="exercise-note-button"
+                    onClick={() =>
+                      setOpenNoteExerciseId((current) => (current === exercise.id ? null : exercise.id))
+                    }
+                    aria-expanded={isNoteOpen}
+                    aria-label={`Show coaching notes for ${exercise.name || `exercise ${exerciseIndex + 1}`}`}
+                    title="Coaching notes"
+                  >
+                    ?
+                  </button>
+                ) : null}
+              </div>
+
+              {exercise.notes && isNoteOpen ? (
+                <div className="exercise-note-box">
+                  <div>
+                    <strong>Coaching note</strong>
+                    <p>{exercise.notes}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="exercise-note-box__close"
+                    onClick={() => setOpenNoteExerciseId(null)}
+                    aria-label={`Close coaching notes for ${exercise.name || `exercise ${exerciseIndex + 1}`}`}
+                  >
+                    x
+                  </button>
                 </div>
-                <span className="exercise-card__chevron">{isExpanded ? "−" : "+"}</span>
-              </button>
+              ) : null}
 
               {isExpanded ? (
                 <>

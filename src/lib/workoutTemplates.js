@@ -79,7 +79,12 @@ export const WORKOUT_PROGRAMS = [
           { name: "Incline Dumbbell Press", target: "3 x 8-10", defaultSets: 3, notes: "" },
           { name: "Seated Shoulder Press", target: "3 x 8-10", defaultSets: 3, notes: "" },
           { name: "Lateral Raise", target: "3 x 12-15", defaultSets: 3, notes: "" },
-          { name: "Cable Pushdown", target: "3 x 10-12", defaultSets: 3, notes: "" },
+          {
+            name: "Weighted Dip",
+            target: "3 x 6-10",
+            defaultSets: 3,
+            notes: "Bodyweight until form is clean, then load via belt/vest.",
+          },
         ],
       },
       {
@@ -88,7 +93,12 @@ export const WORKOUT_PROGRAMS = [
         summary: "Back, rear delts, biceps",
         exercises: [
           { name: "Barbell Row", target: "4 x 6-8", defaultSets: 4, notes: "" },
-          { name: "Lat Pulldown", target: "3 x 8-10", defaultSets: 3, notes: "" },
+          {
+            name: "Pull-Up (pronated, shoulder-width)",
+            target: "3 x 6-10",
+            defaultSets: 3,
+            notes: "Weighted when bodyweight 10+ reps is easy.",
+          },
           { name: "Chest Supported Row", target: "3 x 10-12", defaultSets: 3, notes: "" },
           { name: "Face Pull", target: "3 x 12-15", defaultSets: 3, notes: "" },
           { name: "EZ Bar Curl", target: "3 x 10-12", defaultSets: 3, notes: "" },
@@ -97,13 +107,19 @@ export const WORKOUT_PROGRAMS = [
       {
         id: "legs-a",
         name: "Legs A",
-        summary: "Quads, posterior chain, calves",
+        summary: "Quads, posterior chain, calves, core",
         exercises: [
           { name: "Back Squat", target: "4 x 5-6", defaultSets: 4, notes: "" },
           { name: "Romanian Deadlift", target: "3 x 8-10", defaultSets: 3, notes: "" },
           { name: "Walking Lunge", target: "3 x 10", defaultSets: 3, notes: "" },
           { name: "Leg Curl", target: "3 x 12-15", defaultSets: 3, notes: "" },
           { name: "Standing Calf Raise", target: "4 x 12-15", defaultSets: 4, notes: "" },
+          {
+            name: "Hanging Leg Raise",
+            target: "3 x 10-15",
+            defaultSets: 3,
+            notes: "Direct core work using the pull-up/dip station.",
+          },
         ],
       },
       {
@@ -112,10 +128,27 @@ export const WORKOUT_PROGRAMS = [
         summary: "Pump work and weak-point volume",
         exercises: [
           { name: "Machine Chest Press", target: "3 x 10-12", defaultSets: 3, notes: "" },
-          { name: "Cable Row", target: "3 x 10-12", defaultSets: 3, notes: "" },
+          {
+            name: "Neutral-Grip Pull-Up",
+            target: "3 x 8-12",
+            defaultSets: 3,
+            notes: "Uses neutral handles on the pull-up bar.",
+          },
           { name: "Dumbbell Shoulder Press", target: "3 x 10", defaultSets: 3, notes: "" },
           { name: "Cable Fly", target: "2 x 15", defaultSets: 2, notes: "" },
           { name: "Hammer Curl", target: "3 x 12", defaultSets: 3, notes: "" },
+          {
+            name: "Bodyweight Dip",
+            target: "3 x 12-15",
+            defaultSets: 3,
+            notes: "High-rep complement to weighted dips on Push A.",
+          },
+          {
+            name: "Cable Row",
+            target: "3 x 10-12",
+            defaultSets: 3,
+            notes: "Keeps horizontal pull volume since vertical pull moved to bar.",
+          },
         ],
       },
     ],
