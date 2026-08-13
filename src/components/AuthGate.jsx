@@ -77,6 +77,7 @@ export function AuthGate({ children }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(hasSupabaseConfig);
   const isUpdatingPassword = mode === "update-password";
+  const needsPasswordResetSession = isUpdatingPassword && !session;
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -193,6 +194,12 @@ export function AuthGate({ children }) {
     }
 
     setLoading(true);
+
+    if (mode === "update-password" && !session) {
+      setMessage("That reset link is expired or missing its recovery session. Request a new reset email.");
+      setLoading(false);
+      return;
+    }
 
     const response =
       mode === "update-password"
@@ -446,14 +453,18 @@ export function AuthGate({ children }) {
                   : mode === "reset"
                     ? "Reset your password"
                     : mode === "update-password"
-                      ? "Choose a new password"
+                      ? needsPasswordResetSession
+                        ? "Reset link expired"
+                        : "Choose a new password"
                       : mode === "magic-link"
                         ? "Email me a sign-in link"
                         : "Sign in to sync your data"}
               </h2>
             </div>
             <p className="muted">
-              {isUpdatingPassword
+              {needsPasswordResetSession
+                ? "Request a fresh password reset email, then open the newest link from your inbox."
+                : isUpdatingPassword
                 ? "Enter and confirm the new password for your account."
                 : "Use email and password for regular login. Magic link stays available as a fallback."}
             </p>
@@ -462,14 +473,16 @@ export function AuthGate({ children }) {
           <form
             className="form-grid"
             onSubmit={
-              mode === "magic-link"
+              needsPasswordResetSession
+                ? handleResetPassword
+                : mode === "magic-link"
                 ? handleMagicLink
                 : mode === "reset"
                   ? handleResetPassword
                   : handlePasswordAuth
             }
           >
-            {isUpdatingPassword ? null : (
+            {isUpdatingPassword && !needsPasswordResetSession ? null : (
               <label>
                 Email
                 <input
@@ -482,7 +495,9 @@ export function AuthGate({ children }) {
               </label>
             )}
 
-            {mode === "sign-in" || mode === "sign-up" || mode === "update-password" ? (
+            {mode === "sign-in" ||
+            mode === "sign-up" ||
+            (mode === "update-password" && !needsPasswordResetSession) ? (
               <>
                 <label>
                   {isUpdatingPassword ? "New password" : "Password"}
@@ -515,7 +530,7 @@ export function AuthGate({ children }) {
             <button type="submit" className="primary-button">
               {mode === "sign-up"
                 ? "Create account"
-                : mode === "reset"
+                : mode === "reset" || needsPasswordResetSession
                   ? "Send reset email"
                   : mode === "update-password"
                     ? "Update password"
@@ -525,7 +540,7 @@ export function AuthGate({ children }) {
             </button>
           </form>
 
-          {isUpdatingPassword ? null : (
+          {isUpdatingPassword && !needsPasswordResetSession ? null : (
             <div className="button-row">
               <button type="button" className="secondary-button" onClick={() => setMode("sign-in")}>
                 Sign in
