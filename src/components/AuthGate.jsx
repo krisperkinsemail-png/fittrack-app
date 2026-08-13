@@ -60,13 +60,14 @@ export function useAuth() {
 }
 
 export function AuthGate({ children }) {
+  const isPasswordResetLink = hasPasswordResetMarker();
   const [session, setSession] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showAuthForm, setShowAuthForm] = useState(false);
+  const [showAuthForm, setShowAuthForm] = useState(isPasswordResetLink);
   const [showHomepage, setShowHomepage] = useState(false);
-  const [mode, setMode] = useState("sign-in");
+  const [mode, setMode] = useState(isPasswordResetLink ? "update-password" : "sign-in");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(hasSupabaseConfig);
   const isUpdatingPassword = mode === "update-password";
@@ -78,13 +79,30 @@ export function AuthGate({ children }) {
 
     let isMounted = true;
 
-    const isPasswordResetLink = hasPasswordResetMarker();
-
     if (isPasswordResetLink) {
       setMode("update-password");
       setShowAuthForm(true);
       setShowHomepage(false);
     }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      const isRecoveryEvent = event === "PASSWORD_RECOVERY";
+      const shouldShowPasswordUpdate = isRecoveryEvent || hasPasswordResetMarker();
+
+      if (shouldShowPasswordUpdate) {
+        setMode("update-password");
+        setShowAuthForm(true);
+        setShowHomepage(false);
+        if (isRecoveryEvent) {
+          setMessage("Enter a new password to finish resetting your account.");
+        }
+      }
+
+      setSession(nextSession);
+      setLoading(false);
+    });
 
     supabase.auth.getSession().then(({ data, error }) => {
       if (!isMounted) {
@@ -97,20 +115,6 @@ export function AuthGate({ children }) {
         setSession(data.session);
         setShowHomepage(false);
       }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setMode("update-password");
-        setShowAuthForm(true);
-        setShowHomepage(false);
-        setMessage("Enter a new password to finish resetting your account.");
-      }
-
-      setSession(nextSession);
       setLoading(false);
     });
 
