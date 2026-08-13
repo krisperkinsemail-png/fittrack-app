@@ -1,6 +1,52 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { hasSupabaseConfig, supabase } from "../lib/supabase";
 
+const PASSWORD_RESET_QUERY = "password-reset";
+
+function getPasswordResetRedirectUrl() {
+  const url = new URL(window.location.origin);
+  url.searchParams.set(PASSWORD_RESET_QUERY, "1");
+  return url.toString();
+}
+
+function hasPasswordResetMarker() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  return (
+    searchParams.get(PASSWORD_RESET_QUERY) === "1" ||
+    searchParams.get("type") === "recovery" ||
+    hashParams.get("type") === "recovery"
+  );
+}
+
+function clearPasswordResetMarker() {
+  const url = new URL(window.location.href);
+  [
+    PASSWORD_RESET_QUERY,
+    "code",
+    "error",
+    "error_code",
+    "error_description",
+    "type",
+  ].forEach((param) => url.searchParams.delete(param));
+
+  if (url.hash) {
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+    [
+      "access_token",
+      "expires_at",
+      "expires_in",
+      "refresh_token",
+      "token_type",
+      "type",
+    ].forEach((param) => hashParams.delete(param));
+    const nextHash = hashParams.toString();
+    url.hash = nextHash ? `#${nextHash}` : "";
+  }
+
+  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+}
+
 const AuthContext = createContext({
   session: null,
   signOut: async () => {},
@@ -23,6 +69,7 @@ export function AuthGate({ children }) {
   const [mode, setMode] = useState("sign-in");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(hasSupabaseConfig);
+  const isUpdatingPassword = mode === "update-password";
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -31,23 +78,38 @@ export function AuthGate({ children }) {
 
     let isMounted = true;
 
+    const isPasswordResetLink = hasPasswordResetMarker();
+
+    if (isPasswordResetLink) {
+      setMode("update-password");
+      setShowAuthForm(true);
+      setShowHomepage(false);
+    }
+
     supabase.auth.getSession().then(({ data, error }) => {
       if (!isMounted) {
         return;
       }
 
       if (error) {
-      setMessage(error.message);
-    } else {
-      setSession(data.session);
-      setShowHomepage(false);
-    }
-    setLoading(false);
-  });
+        setMessage(error.message);
+      } else {
+        setSession(data.session);
+        setShowHomepage(false);
+      }
+      setLoading(false);
+    });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("update-password");
+        setShowAuthForm(true);
+        setShowHomepage(false);
+        setMessage("Enter a new password to finish resetting your account.");
+      }
+
       setSession(nextSession);
       setLoading(false);
     });
@@ -63,10 +125,16 @@ export function AuthGate({ children }) {
       return;
     }
 
+    if (isUpdatingPassword) {
+      setShowAuthForm(true);
+      setShowHomepage(false);
+      return;
+    }
+
     setShowHomepage(false);
     setShowAuthForm(false);
     setMessage("");
-  }, [session]);
+  }, [isUpdatingPassword, session]);
 
   const authValue = useMemo(
     () => ({
@@ -108,7 +176,7 @@ export function AuthGate({ children }) {
     event.preventDefault();
     setMessage("");
 
-    if (mode === "sign-up" && password !== confirmPassword) {
+    if ((mode === "sign-up" || mode === "update-password") && password !== confirmPassword) {
       setMessage("Passwords do not match.");
       return;
     }
@@ -116,15 +184,29 @@ export function AuthGate({ children }) {
     setLoading(true);
 
     const response =
-      mode === "sign-up"
-        ? await supabase.auth.signUp({ email, password })
-        : await supabase.auth.signInWithPassword({ email, password });
+      mode === "update-password"
+        ? await supabase.auth.updateUser({ password })
+        : mode === "sign-up"
+          ? await supabase.auth.signUp({ email, password })
+          : await supabase.auth.signInWithPassword({ email, password });
 
     const { data, error } = response;
 
     if (error) {
       setMessage(error.message);
     } else {
+      if (mode === "update-password") {
+        clearPasswordResetMarker();
+        setPassword("");
+        setConfirmPassword("");
+        setMode("sign-in");
+        setShowAuthForm(false);
+        setShowHomepage(false);
+        setMessage("Password updated.");
+        setLoading(false);
+        return;
+      }
+
       if (data.session) {
         setSession(data.session);
         setShowHomepage(false);
@@ -147,7 +229,7 @@ export function AuthGate({ children }) {
     setLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
+      redirectTo: getPasswordResetRedirectUrl(),
     });
 
     if (error) {
@@ -348,13 +430,17 @@ export function AuthGate({ children }) {
                   ? "Create your account"
                   : mode === "reset"
                     ? "Reset your password"
-                    : mode === "magic-link"
-                      ? "Email me a sign-in link"
-                      : "Sign in to sync your data"}
+                    : mode === "update-password"
+                      ? "Choose a new password"
+                      : mode === "magic-link"
+                        ? "Email me a sign-in link"
+                        : "Sign in to sync your data"}
               </h2>
             </div>
             <p className="muted">
-              Use email and password for regular login. Magic link stays available as a fallback.
+              {isUpdatingPassword
+                ? "Enter and confirm the new password for your account."
+                : "Use email and password for regular login. Magic link stays available as a fallback."}
             </p>
           </div>
 
@@ -368,39 +454,41 @@ export function AuthGate({ children }) {
                   : handlePasswordAuth
             }
           >
-            <label>
-              Email
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-            </label>
+            {isUpdatingPassword ? null : (
+              <label>
+                Email
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </label>
+            )}
 
-            {mode === "sign-in" || mode === "sign-up" ? (
+            {mode === "sign-in" || mode === "sign-up" || mode === "update-password" ? (
               <>
                 <label>
-                  Password
+                  {isUpdatingPassword ? "New password" : "Password"}
                   <input
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Enter password"
+                    placeholder={isUpdatingPassword ? "Enter new password" : "Enter password"}
                     required
                     minLength={6}
                   />
                 </label>
 
-                {mode === "sign-up" ? (
+                {mode === "sign-up" || mode === "update-password" ? (
                   <label>
-                    Confirm password
+                    {isUpdatingPassword ? "Confirm new password" : "Confirm password"}
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
-                      placeholder="Re-enter password"
+                      placeholder={isUpdatingPassword ? "Re-enter new password" : "Re-enter password"}
                       required
                       minLength={6}
                     />
@@ -414,41 +502,45 @@ export function AuthGate({ children }) {
                 ? "Create account"
                 : mode === "reset"
                   ? "Send reset email"
-                  : mode === "magic-link"
-                    ? "Email me a magic link"
-                    : "Sign in"}
+                  : mode === "update-password"
+                    ? "Update password"
+                    : mode === "magic-link"
+                      ? "Email me a magic link"
+                      : "Sign in"}
             </button>
           </form>
 
-          <div className="button-row">
+          {isUpdatingPassword ? null : (
+            <div className="button-row">
               <button type="button" className="secondary-button" onClick={() => setMode("sign-in")}>
                 Sign in
               </button>
               <button type="button" className="secondary-button" onClick={() => setMode("sign-up")}>
                 Create account
-            </button>
-            <button type="button" className="secondary-button" onClick={() => setMode("reset")}>
-              Forgot password
-            </button>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => setMode("magic-link")}
-            >
-              Magic link
-            </button>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => {
-                setMessage("");
-                setShowAuthForm(false);
-                setShowHomepage(Boolean(session));
-              }}
-            >
-              Back
-            </button>
-          </div>
+              </button>
+              <button type="button" className="secondary-button" onClick={() => setMode("reset")}>
+                Forgot password
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setMode("magic-link")}
+              >
+                Magic link
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setMessage("");
+                  setShowAuthForm(false);
+                  setShowHomepage(Boolean(session));
+                }}
+              >
+                Back
+              </button>
+            </div>
+          )}
 
           {message ? <p className="muted">{message}</p> : null}
         </section>
