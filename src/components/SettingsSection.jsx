@@ -21,7 +21,11 @@ export function SettingsSection({
   syncError,
 }) {
   const [form, setForm] = useState(settings);
-  const { session, signOut, hasCloud } = useAuth();
+  const [accountPassword, setAccountPassword] = useState("");
+  const [accountConfirmPassword, setAccountConfirmPassword] = useState("");
+  const [accountPasswordMessage, setAccountPasswordMessage] = useState("");
+  const [accountPasswordStatus, setAccountPasswordStatus] = useState("idle");
+  const { session, signOut, updatePassword, hasCloud } = useAuth();
 
   useEffect(() => {
     setForm(settings);
@@ -86,6 +90,31 @@ export function SettingsSection({
           };
 
     onSave(nextSettings);
+  }
+
+  async function handlePasswordSubmit(event) {
+    event.preventDefault();
+    setAccountPasswordMessage("");
+
+    if (accountPassword !== accountConfirmPassword) {
+      setAccountPasswordMessage("Passwords do not match.");
+      return;
+    }
+
+    setAccountPasswordStatus("saving");
+
+    const { error } = await updatePassword(accountPassword);
+
+    if (error) {
+      setAccountPasswordStatus("idle");
+      setAccountPasswordMessage(error.message || "Password update failed.");
+      return;
+    }
+
+    setAccountPassword("");
+    setAccountConfirmPassword("");
+    setAccountPasswordStatus("idle");
+    setAccountPasswordMessage("Password updated.");
   }
 
   return (
@@ -295,11 +324,49 @@ export function SettingsSection({
         </div>
 
         {session ? (
-          <div className="account-actions">
-            <button type="button" className="secondary-button" onClick={signOut}>
-              Sign Out
-            </button>
-          </div>
+          <>
+            <form className="form-grid account-password-form" onSubmit={handlePasswordSubmit}>
+              <label>
+                New password
+                <input
+                  type="password"
+                  value={accountPassword}
+                  onChange={(event) => setAccountPassword(event.target.value)}
+                  placeholder="Enter new password"
+                  required
+                  minLength={6}
+                />
+              </label>
+
+              <label>
+                Confirm new password
+                <input
+                  type="password"
+                  value={accountConfirmPassword}
+                  onChange={(event) => setAccountConfirmPassword(event.target.value)}
+                  placeholder="Re-enter new password"
+                  required
+                  minLength={6}
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={accountPasswordStatus === "saving"}
+              >
+                {accountPasswordStatus === "saving" ? "Updating..." : "Update password"}
+              </button>
+            </form>
+
+            {accountPasswordMessage ? <p className="muted">{accountPasswordMessage}</p> : null}
+
+            <div className="account-actions">
+              <button type="button" className="secondary-button" onClick={signOut}>
+                Sign Out
+              </button>
+            </div>
+          </>
         ) : null}
       </section>
 

@@ -2,9 +2,11 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { hasSupabaseConfig, supabase } from "../lib/supabase";
 
 const PASSWORD_RESET_QUERY = "password-reset";
+const PASSWORD_RESET_PATH = "/reset-password";
+const PASSWORD_RESET_STORAGE_KEY = "aifit.password-reset-callback";
 
 function getPasswordResetRedirectUrl() {
-  const url = new URL(window.location.origin);
+  const url = new URL(PASSWORD_RESET_PATH, window.location.origin);
   url.searchParams.set(PASSWORD_RESET_QUERY, "1");
   return url.toString();
 }
@@ -13,6 +15,8 @@ function hasPasswordResetMarker() {
   const searchParams = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   return (
+    window.location.pathname === PASSWORD_RESET_PATH ||
+    window.sessionStorage.getItem(PASSWORD_RESET_STORAGE_KEY) === "1" ||
     searchParams.get(PASSWORD_RESET_QUERY) === "1" ||
     searchParams.get("type") === "recovery" ||
     hashParams.get("type") === "recovery"
@@ -21,6 +25,7 @@ function hasPasswordResetMarker() {
 
 function clearPasswordResetMarker() {
   const url = new URL(window.location.href);
+  window.sessionStorage.removeItem(PASSWORD_RESET_STORAGE_KEY);
   [
     PASSWORD_RESET_QUERY,
     "code",
@@ -44,12 +49,13 @@ function clearPasswordResetMarker() {
     url.hash = nextHash ? `#${nextHash}` : "";
   }
 
-  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+  window.history.replaceState({}, document.title, `/${url.search}${url.hash}`);
 }
 
 const AuthContext = createContext({
   session: null,
   signOut: async () => {},
+  updatePassword: async () => {},
   goToHomepage: () => {},
   returnToApp: () => {},
   hasCloud: false,
@@ -144,6 +150,7 @@ export function AuthGate({ children }) {
     () => ({
       session,
       signOut: handleSignOut,
+      updatePassword: handleUpdatePassword,
       goToHomepage: () => setShowHomepage(true),
       returnToApp: () => setShowHomepage(false),
       hasCloud: hasSupabaseConfig,
@@ -189,7 +196,7 @@ export function AuthGate({ children }) {
 
     const response =
       mode === "update-password"
-        ? await supabase.auth.updateUser({ password })
+        ? await handleUpdatePassword(password)
         : mode === "sign-up"
           ? await supabase.auth.signUp({ email, password })
           : await supabase.auth.signInWithPassword({ email, password });
@@ -250,6 +257,10 @@ export function AuthGate({ children }) {
     setShowHomepage(false);
     setMessage("");
     await supabase.auth.signOut();
+  }
+
+  async function handleUpdatePassword(nextPassword) {
+    return supabase.auth.updateUser({ password: nextPassword });
   }
 
   if (loading) {
