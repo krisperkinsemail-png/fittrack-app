@@ -865,9 +865,26 @@ button {
 
 .workout-session-selector {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
   gap: 10px;
+}
+
+.workout-session-selector__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.workout-session-selector__actions .secondary-button {
+  min-width: 0;
+  min-height: 40px;
+  padding: 7px 8px;
+  font-size: 0.86rem;
+}
+
+.workout-import-preview {
+  display: grid;
+  align-items: center;
+  gap: 8px;
 }
 
 .workout-session-selector strong,
@@ -878,6 +895,16 @@ button {
 .workout-session-selector strong {
   display: block;
   font-size: 1.1rem;
+}
+
+.workout-import-preview__exercises {
+  display: grid;
+  gap: 6px;
+}
+
+.workout-import-preview__exercises span {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .workout-picker-modal {
@@ -2008,14 +2035,6 @@ button:focus {
 
   .topbar-copy {
     display: none;
-  }
-
-  .workout-session-selector {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .workout-session-selector > div {
-    grid-column: 1 / -1;
   }
 
   .dashboard-fold-content {

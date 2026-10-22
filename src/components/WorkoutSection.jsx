@@ -6,11 +6,29 @@ const CUSTOM_EXERCISE_BANK_KEY = "fittrack.custom-exercise-bank.v1";
 const WORKOUT_DRAFTS_KEY = "fittrack.workout-drafts.v1";
 const ACTIVE_WORKOUT_SELECTION_KEY = "fittrack.active-workout-selection.v1";
 const TIMER_TONE_STORAGE_KEY = "fittrack.timer-tone.v1";
+const INDIVIDUAL_WORKOUTS_SYSTEM_ID = "00000000-0000-4000-8000-000000000001";
 const TIMER_TONES = {
   chime: { label: "Chime", waveform: "sine", notes: [784, 988, 1175, 1568], gap: 0.34, duration: 0.3, gain: 0.34 },
   bell: { label: "Bell", waveform: "triangle", notes: [1046, 1318, 1568, 2093], gap: 0.38, duration: 0.34, gain: 0.32 },
   alarm: { label: "Alarm", waveform: "square", notes: [740, 740, 988, 988, 740, 740], gap: 0.25, duration: 0.22, gain: 0.24 },
 };
+const WORKOUT_IMPORT_PROMPT = `Take the workout we just developed and convert it into valid JSON for AI Fit. Return only the JSON object—no Markdown fences, explanation, or extra text.
+
+Use exactly this structure:
+{
+  "workoutName": "Workout name",
+  "summary": "One short description",
+  "exercises": [
+    {
+      "name": "Exercise name",
+      "target": "3 x 8-10",
+      "sets": 3,
+      "notes": "Optional coaching note"
+    }
+  ]
+}
+
+Rules: preserve exercise order; include at least one exercise; use a whole number from 1 to 12 for sets; keep target as readable text. Do not invent a program name. The user will choose whether to save this as an individual workout or add it to a program in AI Fit.`;
 
 function createSet() {
   return {
@@ -101,6 +119,12 @@ export function WorkoutSection({
   const [timerTone, setTimerTone] = useState(() => getStoredTimerTone());
   const [isProgramPickerOpen, setIsProgramPickerOpen] = useState(false);
   const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
+  const [isWorkoutImportOpen, setIsWorkoutImportOpen] = useState(false);
+  const [workoutImportText, setWorkoutImportText] = useState("");
+  const [importedWorkout, setImportedWorkout] = useState(null);
+  const [workoutImportMessage, setWorkoutImportMessage] = useState("");
+  const [workoutImportDestination, setWorkoutImportDestination] = useState("individual");
+  const [workoutImportProgramId, setWorkoutImportProgramId] = useState("");
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isTimerOptionsOpen, setIsTimerOptionsOpen] = useState(false);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
@@ -161,6 +185,14 @@ export function WorkoutSection({
   const selectedWorkout = useMemo(
     () => availableWorkouts.find((workout) => workout.id === selectedWorkoutId) || availableWorkouts[0],
     [availableWorkouts, selectedWorkoutId]
+  );
+  const customWorkoutPlans = customSystems.filter((system) => !isIndividualWorkoutsSystem(system));
+  const individualWorkoutsSystem = customSystems.find(isIndividualWorkoutsSystem);
+  const importTargetProgram = customSystems.find(
+    (system) => system.id === workoutImportProgramId && !isIndividualWorkoutsSystem(system)
+  );
+  const importTargetWorkout = importTargetProgram?.workouts?.find(
+    (workout) => workout.name.toLowerCase() === importedWorkout?.workoutName.toLowerCase()
   );
 
   useEffect(() => {
@@ -812,7 +844,7 @@ export function WorkoutSection({
   }
 
   function openCustomBuilder(plan = null) {
-    const firstSystem = customSystems[0];
+    const firstSystem = customSystems.find((system) => !isIndividualWorkoutsSystem(system));
     setBuilderForm({
       systemName: plan?.name || firstSystem?.name || "My Workouts",
       workoutName: "",
@@ -981,6 +1013,87 @@ export function WorkoutSection({
     openCustomBuilder(plan);
   }
 
+  function openWorkoutImport() {
+    setWorkoutImportText("");
+    setImportedWorkout(null);
+    setWorkoutImportMessage("");
+    setWorkoutImportDestination("individual");
+    setWorkoutImportProgramId(
+      customSystems.find((system) => system.id === selectedProgramId && !isIndividualWorkoutsSystem(system))?.id ||
+      customSystems.find((system) => !isIndividualWorkoutsSystem(system))?.id ||
+      ""
+    );
+    setIsWorkoutImportOpen(true);
+  }
+
+  async function copyWorkoutImportPrompt() {
+    try {
+      await navigator.clipboard.writeText(WORKOUT_IMPORT_PROMPT);
+      setWorkoutImportMessage("Prompt copied. Paste it into your ChatGPT conversation, then paste its JSON response here.");
+    } catch {
+      setWorkoutImportMessage("Copy did not work automatically. Copy the prompt shown below instead.");
+    }
+  }
+
+  function previewWorkoutImport() {
+    try {
+      const workout = parseWorkoutImport(workoutImportText);
+      setImportedWorkout(workout);
+      setWorkoutImportMessage("");
+    } catch (error) {
+      setImportedWorkout(null);
+      setWorkoutImportMessage(error.message || "That workout could not be read.");
+    }
+  }
+
+  function saveImportedWorkout() {
+    if (!importedWorkout) {
+      return;
+    }
+
+    const existingPlan = workoutImportDestination === "program"
+      ? customSystems.find(
+          (system) => system.id === workoutImportProgramId && !isIndividualWorkoutsSystem(system)
+        )
+      : customSystems.find(isIndividualWorkoutsSystem);
+    const existingWorkouts = existingPlan?.workouts || [];
+    const existingWorkoutIndex = existingWorkouts.findIndex(
+      (workout) => workout.name.toLowerCase() === importedWorkout.workoutName.toLowerCase()
+    );
+    if (workoutImportDestination === "program" && !existingPlan) {
+      setWorkoutImportMessage("Choose one of your custom programs first.");
+      return;
+    }
+    const workout = {
+      id:
+        existingWorkoutIndex >= 0
+          ? existingWorkouts[existingWorkoutIndex].id
+          : crypto.randomUUID(),
+      name: importedWorkout.workoutName,
+      summary: importedWorkout.summary,
+      exercises: importedWorkout.exercises,
+    };
+    const workouts =
+      existingWorkoutIndex >= 0
+        ? existingWorkouts.map((existingWorkout, index) =>
+            index === existingWorkoutIndex ? workout : existingWorkout
+          )
+        : [workout, ...existingWorkouts];
+    const planId = existingPlan?.id || INDIVIDUAL_WORKOUTS_SYSTEM_ID;
+
+    onSaveSystem({
+      id: planId,
+      name: existingPlan?.name || "Individual Workouts",
+      description: existingPlan?.description || "Workouts saved individually, outside a training program.",
+      isCustom: true,
+      workouts,
+    });
+    setSelectedProgramId(planId);
+    setSelectedPhaseId(null);
+    setSelectedWorkoutId(workout.id);
+    setIsWorkoutImportOpen(false);
+  }
+
   return (
     <div className="section-stack">
       <section className="card">
@@ -993,20 +1106,17 @@ export function WorkoutSection({
               {selectedPhase ? ` • ${selectedPhase.name}` : ""}
             </p>
           </div>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setIsProgramPickerOpen(true)}
-          >
-            Change program
-          </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setIsWorkoutPickerOpen(true)}
-          >
-            Change workout
-          </button>
+          <div className="workout-session-selector__actions">
+            <button type="button" className="secondary-button" onClick={() => setIsProgramPickerOpen(true)}>
+              Program
+            </button>
+            <button type="button" className="secondary-button" onClick={() => setIsWorkoutPickerOpen(true)}>
+              Workout
+            </button>
+            <button type="button" className="secondary-button" onClick={openWorkoutImport}>
+              Import
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1701,6 +1811,146 @@ export function WorkoutSection({
         ) : null}
       </section>
 
+      {isWorkoutImportOpen ? (
+        <div
+          className="insights-modal-backdrop"
+          role="presentation"
+          onClick={() => setIsWorkoutImportOpen(false)}
+        >
+          <section
+            className="insights-modal workout-picker-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="workout-import-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">ChatGPT workout import</p>
+                <h2 id="workout-import-title">Bring in a finished workout</h2>
+              </div>
+              <button type="button" className="secondary-button" onClick={() => setIsWorkoutImportOpen(false)}>
+                Close
+              </button>
+            </div>
+
+            <div className="summary-panel">
+              <span>Step 1</span>
+              <strong>Copy the prompt into ChatGPT</strong>
+              <p className="muted">
+                Use it in the chat where you developed the workout. ChatGPT will return the exact format AI Fit needs.
+              </p>
+              <div className="button-row">
+                <button type="button" className="primary-button" onClick={copyWorkoutImportPrompt}>
+                  Copy the prompt
+                </button>
+              </div>
+            </div>
+
+            {workoutImportMessage ? <p className="muted">{workoutImportMessage}</p> : null}
+
+            {workoutImportMessage.startsWith("Copy did not") ? (
+              <label>
+                Prompt to copy
+                <textarea value={WORKOUT_IMPORT_PROMPT} readOnly rows="12" />
+              </label>
+            ) : null}
+
+            <label>
+              Step 2: Paste ChatGPT&apos;s JSON response
+              <textarea
+                value={workoutImportText}
+                onChange={(event) => {
+                  setWorkoutImportText(event.target.value);
+                  setImportedWorkout(null);
+                }}
+                rows="10"
+                placeholder='{"workoutName":"Push Day","summary":"Chest and triceps","exercises":[...]}'
+              />
+            </label>
+
+            <div className="button-row">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={previewWorkoutImport}
+                disabled={!workoutImportText.trim()}
+              >
+                Preview workout
+              </button>
+            </div>
+
+            {importedWorkout ? (
+              <div className="summary-panel workout-import-preview">
+                <span>Step 3: Choose where to save it</span>
+                <strong>{importedWorkout.workoutName}</strong>
+                <p className="muted">
+                  {importedWorkout.exercises.length} exercise
+                  {importedWorkout.exercises.length === 1 ? "" : "s"}
+                </p>
+                <label>
+                  Save as
+                  <select
+                    value={workoutImportDestination}
+                    onChange={(event) => setWorkoutImportDestination(event.target.value)}
+                  >
+                    <option value="individual">Individual workout</option>
+                    <option value="program">Add to a custom program</option>
+                  </select>
+                </label>
+                {workoutImportDestination === "program" ? (
+                  customWorkoutPlans.length ? (
+                    <label>
+                      Custom program
+                      <select
+                        value={workoutImportProgramId}
+                        onChange={(event) => setWorkoutImportProgramId(event.target.value)}
+                      >
+                        {customWorkoutPlans.map((program) => (
+                          <option key={program.id} value={program.id}>{program.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <p className="muted">Create a custom program first, or save this as an individual workout.</p>
+                  )
+                ) : null}
+                <p className="muted">
+                  {workoutImportDestination === "individual"
+                    ? individualWorkoutsSystem?.workouts.some(
+                        (workout) => workout.name.toLowerCase() === importedWorkout.workoutName.toLowerCase()
+                      )
+                      ? "A same-named individual workout exists and will be replaced."
+                      : "This will be saved under Individual Workouts, outside your programs."
+                    : importTargetWorkout
+                      ? `This will replace “${importTargetWorkout.name}” in ${importTargetProgram.name}.`
+                      : `This will be added to ${importTargetProgram?.name || "the selected custom program"}.`}
+                </p>
+                <div className="workout-import-preview__exercises">
+                  {importedWorkout.exercises.map((exercise) => (
+                    <span key={`${exercise.name}-${exercise.target}`}>
+                      {exercise.name} • {exercise.target}
+                    </span>
+                  ))}
+                </div>
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={saveImportedWorkout}
+                    disabled={workoutImportDestination === "program" && !importTargetProgram}
+                  >
+                    {workoutImportDestination === "program" && importTargetWorkout
+                      ? "Replace workout in program"
+                      : "Import workout"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        </div>
+      ) : null}
+
       {isProgramPickerOpen ? (
         <div
           className="insights-modal-backdrop"
@@ -1733,10 +1983,10 @@ export function WorkoutSection({
               phases.
             </p>
 
-            {workoutPrograms.some((p) => p.isCustom) && (
+            {customWorkoutPlans.length > 0 && (
               <>
                 <div className="workout-system-grid">
-                  {workoutPrograms.filter((p) => p.isCustom).map((program) => (
+                  {customWorkoutPlans.map((program) => (
                     <button
                       key={program.id}
                       type="button"
@@ -1754,7 +2004,7 @@ export function WorkoutSection({
                 </div>
                 <div className="button-row">
                   <button type="button" className="secondary-button" onClick={openPlanManager}>
-                    Manage custom plans
+                    Manage custom programs
                   </button>
                 </div>
               </>
@@ -1768,6 +2018,31 @@ export function WorkoutSection({
               <strong>+ Create custom plan</strong>
               <span>Start a new plan with its first workout day</span>
             </button>
+
+            {individualWorkoutsSystem ? (
+              <>
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">Your workouts</p>
+                    <h2>Individual workouts</h2>
+                  </div>
+                </div>
+                <div className="workout-system-grid">
+                  <button
+                    type="button"
+                    className={
+                      individualWorkoutsSystem.id === selectedProgramId
+                        ? "workout-chip workout-chip--selected"
+                        : "workout-chip"
+                    }
+                    onClick={() => handleProgramChange(individualWorkoutsSystem.id)}
+                  >
+                    <strong>Individual workouts</strong>
+                    <span>{individualWorkoutsSystem.workouts.length} saved workout{individualWorkoutsSystem.workouts.length === 1 ? "" : "s"}</span>
+                  </button>
+                </div>
+              </>
+            ) : null}
 
             <div className="section-heading">
               <div>
@@ -1909,9 +2184,9 @@ export function WorkoutSection({
               Add workout days, rename plans, or duplicate a plan before customizing it.
             </p>
 
-            {customSystems.length ? (
+            {customWorkoutPlans.length ? (
               <div className="list-stack">
-                {customSystems.map((plan) => (
+                {customWorkoutPlans.map((plan) => (
                   <article className="log-card" key={plan.id}>
                     {editingPlanId === plan.id ? (
                       <div className="form-grid">
@@ -2813,6 +3088,59 @@ function clearWorkoutDraft(date, workoutId) {
   const drafts = loadAllWorkoutDrafts();
   delete drafts[getWorkoutDraftKey(date, workoutId)];
   saveAllWorkoutDrafts(drafts);
+}
+
+function isIndividualWorkoutsSystem(system) {
+  return system?.id === INDIVIDUAL_WORKOUTS_SYSTEM_ID;
+}
+
+function parseWorkoutImport(value) {
+  const cleanedValue = String(value || "")
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
+  let parsed;
+
+  try {
+    parsed = JSON.parse(cleanedValue);
+  } catch {
+    throw new Error("AI Fit needs valid JSON. Use Copy the prompt in the same ChatGPT conversation, then paste its full response here.");
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("The import must be one workout JSON object.");
+  }
+
+  const workoutName = String(parsed.workoutName || "").trim();
+  const summary = String(parsed.summary || "").trim();
+
+  if (!workoutName || !Array.isArray(parsed.exercises) || !parsed.exercises.length) {
+    throw new Error("Include workoutName and at least one exercise in the ChatGPT response.");
+  }
+
+  const exercises = parsed.exercises.map((exercise, index) => {
+    const name = String(exercise?.name || "").trim();
+    const setCount = Math.min(12, Math.max(1, Math.round(Number(exercise?.sets) || 3)));
+    const reps = String(exercise?.reps || "").trim();
+    const target = String(exercise?.target || `${setCount} × ${reps || "open"}`).trim();
+
+    if (!name) {
+      throw new Error(`Exercise ${index + 1} needs a name.`);
+    }
+
+    return {
+      name,
+      target,
+      defaultSets: setCount,
+      notes: String(exercise?.notes || "").trim(),
+    };
+  });
+
+  return {
+    workoutName,
+    summary: summary || exercises.slice(0, 3).map((exercise) => exercise.name).join(", "),
+    exercises,
+  };
 }
 
 function formatDateTime(value) {
