@@ -1174,7 +1174,10 @@ button {
 .workout-timer-float__panel {
   pointer-events: auto;
   padding: 12px;
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .workout-timer-float__header {
@@ -1290,7 +1293,7 @@ button {
   display: block;
   font-size: clamp(1.75rem, 8vw, 2.4rem);
   line-height: 1;
-  color: var(--accent);
+  color: #ff5a5f;
 }
 
 .exercise-card {
