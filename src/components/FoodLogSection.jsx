@@ -248,6 +248,7 @@ export function FoodLogSection({
   const [quickSearchStatus, setQuickSearchStatus] = useState("idle");
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
   const [isFoodLogOpen, setIsFoodLogOpen] = useState(false);
+  const [isManualFoodEntryOpen, setIsManualFoodEntryOpen] = useState(false);
   const [hasTriedFoodSubmit, setHasTriedFoodSubmit] = useState(false);
   const [isDayHistoryOpen, setIsDayHistoryOpen] = useState(false);
   const [isQuickPicksOpen, setIsQuickPicksOpen] = useState(false);
@@ -546,6 +547,7 @@ export function FoodLogSection({
     setQuickSearchResults([]);
     setQuickSearchStatus("idle");
     setIsQuickSearchOpen(false);
+    setIsManualFoodEntryOpen(false);
   }
 
   function loadPreset(item) {
@@ -557,6 +559,7 @@ export function FoodLogSection({
     setQuickSearchResults([]);
     setQuickSearchStatus("idle");
     setIsQuickSearchOpen(false);
+    setIsManualFoodEntryOpen(true);
     setForm({
       foodName: item.name,
       servingSize: item.servingSize,
@@ -853,7 +856,7 @@ export function FoodLogSection({
             }}
             disabled={!waterAmount}
           >
-            Submit water
+            Add water
           </button>
           <button
             type="button"
@@ -961,8 +964,17 @@ export function FoodLogSection({
               >
                 Copy yesterday
               </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setIsManualFoodEntryOpen((current) => !current)}
+                aria-expanded={isManualFoodEntryOpen}
+              >
+                {isManualFoodEntryOpen ? "Hide manual entry" : "Add food manually"}
+              </button>
             </div>
 
+            {isManualFoodEntryOpen ? (
             <form className="form-grid food-log-content" onSubmit={handleSubmit}>
           <label>
             Food name
@@ -1135,6 +1147,11 @@ export function FoodLogSection({
             </button>
           </div>
             </form>
+            ) : (
+              <p className="muted food-log-content">
+                Search your library above, or choose “Add food manually” to enter nutrition details.
+              </p>
+            )}
           </>
         ) : null}
       </section>

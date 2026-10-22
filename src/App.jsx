@@ -4,7 +4,7 @@ import { useAuth } from "./components/AuthGate";
 import { DateNavigator } from "./components/DateNavigator";
 import { FoodLogSection } from "./components/FoodLogSection";
 import { MobileTabs } from "./components/MobileTabs";
-import { FeedbackModal, SettingsSection } from "./components/SettingsSection";
+import { FeedbackModal, GoalsSection, SettingsSection } from "./components/SettingsSection";
 import { WeightSection } from "./components/WeightSection";
 import { WorkoutSection } from "./components/WorkoutSection";
 import { useFitTrackStore } from "./hooks/useFitTrackStore";
@@ -23,7 +23,7 @@ const TABS = [
   { id: "food", label: "Food" },
   { id: "weight", label: "Weight" },
   { id: "workouts", label: "Workouts" },
-  { id: "settings", label: "Goals" },
+  { id: "goals", label: "Goals" },
 ];
 
 export default function App() {
@@ -223,6 +223,14 @@ export default function App() {
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
+    const loggedDayCount = [...totalsByDate.values()].filter(
+      (dayTotals) =>
+        dayTotals.calories > 0 ||
+        dayTotals.protein > 0 ||
+        dayTotals.carbs > 0 ||
+        dayTotals.fat > 0
+    ).length;
+    const averageDivisor = Math.max(loggedDayCount, 1);
 
     const yesterdayDate = addDays(state.selectedDate, -1);
     const yesterdayTotals = totalsByDate.get(yesterdayDate) || {
@@ -234,11 +242,12 @@ export default function App() {
 
     return {
       weeklyAverage: {
-        calories: sums.calories / 7,
-        protein: sums.protein / 7,
-        carbs: sums.carbs / 7,
-        fat: sums.fat / 7,
+        calories: sums.calories / averageDivisor,
+        protein: sums.protein / averageDivisor,
+        carbs: sums.carbs / averageDivisor,
+        fat: sums.fat / averageDivisor,
       },
+      loggedDayCount,
       yesterdayDate,
       yesterdayTotals,
     };
@@ -354,21 +363,16 @@ export default function App() {
             </button>
             <button
               type="button"
-              className="secondary-button topbar-icon-button"
-              aria-label="Feedback / Report Issue"
-              title="Feedback / Report Issue"
-              onClick={() => setIsFeedbackOpen(true)}
+              className={
+                activeTab === "settings"
+                  ? "secondary-button topbar-icon-button is-selected-accent"
+                  : "secondary-button topbar-icon-button"
+              }
+              aria-label="Settings"
+              title="Settings"
+              onClick={() => setActiveTab("settings")}
             >
-              ?
-            </button>
-            <button
-              type="button"
-              className="secondary-button topbar-refresh-button"
-              aria-label="Update app"
-              title="Update app"
-              onClick={handleHardRefresh}
-            >
-              ↻
+              ⚙
             </button>
           </div>
         </div>
@@ -444,7 +448,6 @@ export default function App() {
               complianceSummary={complianceSummary}
               nutritionAverages={nutritionAverages}
               workoutSnapshot={workoutSnapshot}
-              onUpdateSettings={updateSettings}
             />
             {syncStatus !== "local" ? (
               <section className="card sync-card">
@@ -525,12 +528,20 @@ export default function App() {
           />
         </section>
 
+        <section className={activeTab === "goals" ? "section is-active" : "section"}>
+          <GoalsSection settings={state.settings} onSave={updateSettings} />
+        </section>
+
         <section className={activeTab === "settings" ? "section is-active" : "section"}>
           <SettingsSection
             settings={state.settings}
             onSave={updateSettings}
             syncStatus={syncStatus}
             syncError={syncError}
+            lastSyncedAt={lastSyncedAt}
+            onRetrySync={retryCloudSync}
+            onOpenFeedback={() => setIsFeedbackOpen(true)}
+            onRefresh={handleHardRefresh}
           />
         </section>
       </main>

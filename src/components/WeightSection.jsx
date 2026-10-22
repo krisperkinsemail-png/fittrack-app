@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatLongDate } from "../lib/date";
 import { WeightTrendChart } from "./WeightTrendChart";
 
@@ -13,12 +13,18 @@ export function WeightSection({
   onDeleteEntry,
 }) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [weight, setWeight] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    setWeight(currentEntry?.weight === undefined ? "" : String(currentEntry.weight));
+    setNotes(currentEntry?.notes || "");
+  }, [currentEntry, selectedDate]);
 
   function handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const nextWeight = Number(formData.get("weight"));
-    const nextNotes = String(formData.get("notes") || "").trim();
+    const nextWeight = Number(weight);
+    const nextNotes = notes.trim();
 
     if (
       currentEntry &&
@@ -37,8 +43,6 @@ export function WeightSection({
       weight: nextWeight,
       notes: nextNotes,
     });
-
-    event.currentTarget.reset();
   }
 
   return (
@@ -59,7 +63,16 @@ export function WeightSection({
         <form className="inline-form" onSubmit={handleSubmit}>
           <label>
             Weight ({settings.weightUnit})
-            <input name="weight" type="number" inputMode="decimal" min="0" step="0.1" required />
+            <input
+              name="weight"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.1"
+              value={weight}
+              onChange={(event) => setWeight(event.target.value)}
+              required
+            />
           </label>
           <label className="inline-form__notes">
             Notes
@@ -68,11 +81,12 @@ export function WeightSection({
               type="text"
               maxLength="120"
               placeholder="Fasted, after long run, low sleep..."
-              defaultValue={currentEntry?.notes || ""}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
             />
           </label>
           <button type="submit" className="primary-button">
-            Save weight
+            {currentEntry ? "Update weight" : "Save weight"}
           </button>
         </form>
       </section>

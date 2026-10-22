@@ -815,6 +815,11 @@ button {
   margin-top: 14px;
 }
 
+.settings-field-label {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
 .feedback-modal {
   width: min(100%, 640px);
 }
@@ -835,13 +840,6 @@ button {
   gap: 12px;
 }
 
-.workout-selector-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: 6px 0 14px;
-}
-
 .food-library-grid {
   margin-top: 10px;
 }
@@ -859,53 +857,27 @@ button {
   margin-top: 10px;
 }
 
-.workout-heading-actions {
-  display: flex;
-  align-self: stretch;
-  align-items: center;
-  justify-content: center;
-}
-
-.workout-selector-card {
-  width: 100%;
-  min-height: 132px;
-  display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: 8px;
-  padding: 16px;
-  border: 1px solid rgba(96, 114, 139, 0.22);
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
-  touch-action: pan-y;
-  transition:
-    transform 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease;
-}
-
-.workout-selector-card:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--accent) 42%, rgba(96, 114, 139, 0.22));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
-}
-
-.workout-selector-card p {
-  margin: 0;
-}
-
-.workout-selector-card span,
-.workout-selector-card strong {
-  margin: 0;
-}
-
-.workout-selector-card span,
 .workout-chip strong,
 .exercise-card__summary strong,
-.exercise-card__collapsed-meta span:last-child,
-.secondary-button.workout-insights-button {
+.exercise-card__collapsed-meta span:last-child {
   color: var(--accent-strong);
+}
+
+.workout-session-selector {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.workout-session-selector strong,
+.workout-session-selector p {
+  margin: 0;
+}
+
+.workout-session-selector strong {
+  display: block;
+  font-size: 1.1rem;
 }
 
 .workout-picker-modal {
@@ -914,46 +886,6 @@ button {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-}
-
-.secondary-button.workout-insights-button {
-  min-width: 260px;
-  min-height: 84px;
-  padding: 20px 34px;
-  font-size: 1.05rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 46%),
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, #162131), #0f1724 78%);
-  border: 1px solid color-mix(in srgb, var(--accent) 58%, rgba(255, 255, 255, 0.18));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(6, 10, 18, 0.58),
-    0 14px 28px rgba(5, 9, 16, 0.42),
-    0 0 0 1px rgba(17, 24, 39, 0.18);
-  letter-spacing: 0.01em;
-  transition:
-    transform 140ms ease,
-    box-shadow 140ms ease,
-    border-color 140ms ease,
-    filter 140ms ease;
-}
-
-.workout-insights-button:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--accent) 72%, rgba(255, 255, 255, 0.2));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(6, 10, 18, 0.62),
-    0 18px 34px rgba(5, 9, 16, 0.5),
-    0 0 0 1px rgba(31, 41, 55, 0.2);
-  filter: saturate(1.08);
-}
-
-.workout-insights-button:active {
-  transform: translateY(0);
-  box-shadow:
-    inset 0 2px 4px rgba(6, 10, 18, 0.42),
-    0 10px 20px rgba(5, 9, 16, 0.36);
 }
 
 .food-log-search {
@@ -1234,38 +1166,97 @@ button {
   top: calc(env(safe-area-inset-top) + 12px);
   left: 50%;
   transform: translateX(-50%);
-  width: min(calc(100vw - 24px), 560px);
+  width: min(calc(100vw - 24px), 390px);
   z-index: 30;
   pointer-events: none;
 }
 
 .workout-timer-float__panel {
   pointer-events: auto;
+  padding: 12px;
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
 }
 
 .workout-timer-float__header {
   display: flex;
-  align-items: start;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.workout-timer-float__controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workout-timer-float__controls .primary-button,
+.workout-timer-float__controls .secondary-button,
+.workout-timer-options-toggle {
+  min-height: 40px;
+  padding: 7px 10px;
+}
+
+.workout-timer-float__controls .secondary-button:last-child {
+  min-width: 40px;
+  width: 40px;
+  padding: 0;
+  font-size: 1.35rem;
+}
+
+.workout-timer-options-toggle {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.workout-timer-options {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.timer-duration-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.timer-duration-editor__heading {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  font-weight: 700;
 }
 
-.workout-timer-float__header .eyebrow {
-  margin-bottom: 8px;
+.timer-duration-editor__heading strong {
+  color: var(--accent);
 }
 
-.timer-custom-row {
-  display: flex;
+.timer-duration-slider {
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+}
+
+.timer-duration-editor .muted {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.timer-tone-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
   gap: 8px;
-  align-items: center;
-  margin: 4px 0;
 }
 
-.timer-custom-input {
-  flex: 1;
-  min-width: 0;
+.timer-tone-editor label {
+  gap: 6px;
+}
+
+.timer-tone-editor select,
+.timer-tone-editor button {
+  min-height: 40px;
 }
 
 .custom-exercise-save-toggle {
@@ -1297,7 +1288,7 @@ button {
 
 .timer-readout {
   display: block;
-  font-size: clamp(2rem, 10vw, 3.4rem);
+  font-size: clamp(1.75rem, 8vw, 2.4rem);
   line-height: 1;
   color: var(--accent);
 }
@@ -1913,11 +1904,6 @@ button:focus {
     align-items: start;
   }
 
-  .workout-heading-actions {
-    justify-content: center;
-    align-items: center;
-  }
-
   .food-log-search {
     justify-self: end;
   }
@@ -1999,6 +1985,36 @@ button:focus {
 }
 
 @media (max-width: 899px) {
+  .app-shell {
+    padding-top: max(10px, env(safe-area-inset-top));
+    gap: 12px;
+  }
+
+  .topbar {
+    padding: 14px 16px;
+    gap: 6px;
+  }
+
+  .topbar-heading-row {
+    gap: 8px;
+  }
+
+  .topbar h1 {
+    font-size: clamp(1.7rem, 8vw, 2.3rem);
+  }
+
+  .topbar-copy {
+    display: none;
+  }
+
+  .workout-session-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workout-session-selector > div {
+    grid-column: 1 / -1;
+  }
+
   .dashboard-fold-content {
     display: none;
   }

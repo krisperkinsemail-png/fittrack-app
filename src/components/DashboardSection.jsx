@@ -34,14 +34,6 @@ function formatDelta(value, unit) {
   return `${prefix}${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} ${unit} vs yesterday`;
 }
 
-function formatThemeLabel(value) {
-  if (!value) {
-    return "--";
-  }
-
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 export function DashboardSection({
   selectedDate,
   formattedDate,
@@ -54,7 +46,6 @@ export function DashboardSection({
   complianceSummary,
   nutritionAverages,
   workoutSnapshot,
-  onUpdateSettings,
 }) {
   const [openSection, setOpenSection] = useState(null);
   const progressItems = [
@@ -94,12 +85,6 @@ export function DashboardSection({
 
   function toggleSection(sectionId) {
     setOpenSection((current) => (current === sectionId ? null : sectionId));
-  }
-
-  function handleThemeToggle() {
-    onUpdateSettings({
-      accentColor: settings.accentColor === "purple" ? "blue" : "purple",
-    });
   }
 
   return (
@@ -179,7 +164,13 @@ export function DashboardSection({
             <div className="summary-panel">
               <span>7-day average calories</span>
               <strong>{formatMetricValue(nutritionAverages.weeklyAverage.calories)}</strong>
-              <p className="muted">Daily average across the last 7 selected days</p>
+              <p className="muted">
+                {nutritionAverages.loggedDayCount
+                  ? `Average across ${nutritionAverages.loggedDayCount} logged day${
+                      nutritionAverages.loggedDayCount === 1 ? "" : "s"
+                    } in the last 7`
+                  : "No food logged in the last 7 days"}
+              </p>
             </div>
             <div className="summary-panel">
               <span>7-day average protein</span>
@@ -331,26 +322,6 @@ export function DashboardSection({
         </div>
       </section>
 
-      <section className="card dashboard-section-card">
-        <button
-          type="button"
-          className="dashboard-fold-toggle"
-          onClick={handleThemeToggle}
-        >
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Appearance</p>
-              <h2>Theme color</h2>
-            </div>
-            <p className="muted">Tap to switch between blue and purple accents.</p>
-          </div>
-          <div className="dashboard-fold-summary">
-            <strong>{formatThemeLabel(settings.accentColor)}</strong>
-            <span>Tap to change</span>
-          </div>
-          <span className="dashboard-fold-chevron">↺</span>
-        </button>
-      </section>
     </div>
   );
 }

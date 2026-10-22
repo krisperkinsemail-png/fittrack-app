@@ -2,10 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getAllWorkoutSystems } from "../lib/workoutTemplates";
 import { formatLongDate } from "../lib/date";
 
-const REST_PRESETS = [60, 90, 120, 180];
 const CUSTOM_EXERCISE_BANK_KEY = "fittrack.custom-exercise-bank.v1";
 const WORKOUT_DRAFTS_KEY = "fittrack.workout-drafts.v1";
 const ACTIVE_WORKOUT_SELECTION_KEY = "fittrack.active-workout-selection.v1";
+const TIMER_TONE_STORAGE_KEY = "fittrack.timer-tone.v1";
+const TIMER_TONES = {
+  chime: { label: "Chime", waveform: "sine", notes: [784, 988, 1175, 1568], gap: 0.34, duration: 0.3, gain: 0.34 },
+  bell: { label: "Bell", waveform: "triangle", notes: [1046, 1318, 1568, 2093], gap: 0.38, duration: 0.34, gain: 0.32 },
+  alarm: { label: "Alarm", waveform: "square", notes: [740, 740, 988, 988, 740, 740], gap: 0.25, duration: 0.22, gain: 0.24 },
+};
 
 function createSet() {
   return {
@@ -46,19 +51,6 @@ function summarizeSession(entry) {
 
 function normalizeExerciseName(value) {
   return value.trim().toLowerCase();
-}
-
-function startOfDay(dateString) {
-  return new Date(`${dateString}T12:00:00`);
-}
-
-function getDayDifference(leftDate, rightDate) {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.floor((startOfDay(leftDate) - startOfDay(rightDate)) / msPerDay);
-}
-
-function getEntrySetCount(entry) {
-  return entry.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
 }
 
 function moveItem(items, fromIndex, toIndex) {
@@ -106,11 +98,11 @@ export function WorkoutSection({
   const [restDuration, setRestDuration] = useState(90);
   const [timeLeft, setTimeLeft] = useState(90);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [customTimerInput, setCustomTimerInput] = useState("");
-  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [timerTone, setTimerTone] = useState(() => getStoredTimerTone());
   const [isProgramPickerOpen, setIsProgramPickerOpen] = useState(false);
   const [isWorkoutPickerOpen, setIsWorkoutPickerOpen] = useState(false);
   const [isTimerOpen, setIsTimerOpen] = useState(false);
+  const [isTimerOptionsOpen, setIsTimerOptionsOpen] = useState(false);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
   const [customExerciseBank, setCustomExerciseBank] = useState(() => loadCustomExerciseBank());
   const [savedWorkoutDraft, setSavedWorkoutDraft] = useState(null);
@@ -120,6 +112,7 @@ export function WorkoutSection({
   const [openNoteExerciseId, setOpenNoteExerciseId] = useState(null);
   const exerciseCardRefs = useRef({});
   const timerFloatRef = useRef(null);
+  const workoutLogRef = useRef(null);
   const [openHistoryEntryId, setOpenHistoryEntryId] = useState(null);
   const [editingDateEntryId, setEditingDateEntryId] = useState(null);
   const [editingDateValue, setEditingDateValue] = useState("");
@@ -303,11 +296,15 @@ export function WorkoutSection({
 
   useEffect(() => {
     if (previousTimeLeftRef.current > 0 && timeLeft === 0) {
-      playTimerAlarm(audioContextRef);
+      playTimerAlarm(audioContextRef, timerTone);
     }
 
     previousTimeLeftRef.current = timeLeft;
-  }, [timeLeft]);
+  }, [timeLeft, timerTone]);
+
+  useEffect(() => {
+    persistTimerTone(timerTone);
+  }, [timerTone]);
 
   useEffect(() => {
     return () => {
@@ -355,6 +352,25 @@ export function WorkoutSection({
     return () => cancelAnimationFrame(frameId);
   }, [openExerciseId]);
 
+  useEffect(() => {
+    if (!isTimerOpen) {
+      return undefined;
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      const workoutLog = workoutLogRef.current;
+      if (!workoutLog) {
+        return;
+      }
+
+      const timerBottom = timerFloatRef.current?.getBoundingClientRect().bottom || 0;
+      const workoutTop = workoutLog.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(0, workoutTop - timerBottom - 12), behavior: "smooth" });
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, [isTimerOpen]);
+
   const isDraftDirty = useMemo(
     () => hasDraftChanges(draftExercises, selectedWorkout),
     [draftExercises, selectedWorkout]
@@ -388,90 +404,6 @@ export function WorkoutSection({
       ])
     );
   }, [latestMatchingWorkout]);
-
-  const workoutInsights = useMemo(() => {
-    const sortedEntries = [...allEntries].sort((left, right) => new Date(right.date) - new Date(left.date));
-    const last30Entries = sortedEntries.filter((entry) => getDayDifference(selectedDate, entry.date) >= 0 && getDayDifference(selectedDate, entry.date) < 30);
-    const prior30Entries = sortedEntries.filter((entry) => getDayDifference(selectedDate, entry.date) >= 30 && getDayDifference(selectedDate, entry.date) < 60);
-    const last30Sets = last30Entries.reduce((sum, entry) => sum + getEntrySetCount(entry), 0);
-    const uniqueExercises = new Set(
-      last30Entries.flatMap((entry) => entry.exercises.map((exercise) => normalizeExerciseName(exercise.name)))
-    ).size;
-
-    const exerciseBestMap = new Map();
-
-    [...sortedEntries].reverse().forEach((entry) => {
-      entry.exercises.forEach((exercise) => {
-        const exerciseName = exercise.name.trim();
-        if (!exerciseName) {
-          return;
-        }
-
-        const bestSetWeight = Math.max(
-          0,
-          ...exercise.sets.map((set) => Number(set.weight || 0))
-        );
-        const current = exerciseBestMap.get(exerciseName) || {
-          exerciseName,
-          firstWeight: null,
-          latestWeight: null,
-          firstDate: null,
-          latestDate: null,
-        };
-
-        if (current.firstWeight === null) {
-          current.firstWeight = bestSetWeight;
-          current.firstDate = entry.date;
-        }
-
-        current.latestWeight = bestSetWeight;
-        current.latestDate = entry.date;
-        exerciseBestMap.set(exerciseName, current);
-      });
-    });
-
-    const improvedExercise = [...exerciseBestMap.values()]
-      .filter((exercise) => exercise.firstWeight !== null && exercise.latestWeight !== null)
-      .map((exercise) => ({
-        ...exercise,
-        improvement: exercise.latestWeight - exercise.firstWeight,
-      }))
-      .sort((left, right) => right.improvement - left.improvement)[0] || null;
-
-    const focusExercise = [...exerciseBestMap.values()]
-      .filter(
-        (exercise) =>
-          exercise.firstWeight !== null &&
-          exercise.latestWeight !== null &&
-          exercise.firstDate !== exercise.latestDate
-      )
-      .map((exercise) => ({
-        ...exercise,
-        improvement: exercise.latestWeight - exercise.firstWeight,
-      }))
-      .sort((left, right) => left.improvement - right.improvement)[0] || null;
-
-    const strongestRecentExercise = last30Entries
-      .flatMap((entry) =>
-        entry.exercises.map((exercise) => ({
-          name: exercise.name,
-          weight: Math.max(0, ...exercise.sets.map((set) => Number(set.weight || 0))),
-          date: entry.date,
-        }))
-      )
-      .sort((left, right) => right.weight - left.weight)[0] || null;
-
-    return {
-      totalSessions: sortedEntries.length,
-      last30Sessions: last30Entries.length,
-      prior30Sessions: prior30Entries.length,
-      last30Sets,
-      uniqueExercises,
-      improvedExercise,
-      focusExercise,
-      strongestRecentExercise,
-    };
-  }, [allEntries, selectedDate]);
 
   useEffect(() => {
     if (!removedExerciseUndo) {
@@ -1052,43 +984,28 @@ export function WorkoutSection({
   return (
     <div className="section-stack">
       <section className="card">
-        <div className="section-heading">
+        <div className="workout-session-selector">
           <div>
             <p className="eyebrow">Workout tracking</p>
-            <h2>Build the session, then log each set cleanly</h2>
-            <p className="muted">Selected day: {formatLongDate(selectedDate)}</p>
+            <strong>{selectedWorkout.name}</strong>
+            <p className="muted">
+              {selectedProgram.name}
+              {selectedPhase ? ` • ${selectedPhase.name}` : ""}
+            </p>
           </div>
-          <div className="workout-heading-actions">
-            <button
-              type="button"
-              className="secondary-button workout-insights-button"
-              onClick={() => setIsInsightsOpen(true)}
-            >
-              Growth Metrics
-            </button>
-          </div>
-        </div>
-
-        <div className="workout-selector-grid">
           <button
             type="button"
-            className="summary-panel workout-selector-card"
+            className="secondary-button"
             onClick={() => setIsProgramPickerOpen(true)}
           >
-            <span>Program</span>
-            <strong>{selectedProgram.name}</strong>
-            <p className="muted">{selectedPhase ? selectedPhase.name : "Tap to choose"}</p>
+            Change program
           </button>
           <button
             type="button"
-            className="summary-panel workout-selector-card"
+            className="secondary-button"
             onClick={() => setIsWorkoutPickerOpen(true)}
           >
-            <span>Workout</span>
-            <strong>{selectedWorkout.name}</strong>
-            <p className="muted">
-              {selectedWorkout.summary || "Switching workouts reloads the active template automatically."}
-            </p>
+            Change workout
           </button>
         </div>
       </section>
@@ -1105,12 +1022,15 @@ export function WorkoutSection({
         <button
           type="button"
           className="summary-panel workout-timer-launcher"
-          onClick={() => setIsTimerOpen(true)}
+          onClick={() => {
+            setIsTimerOptionsOpen(false);
+            setIsTimerOpen(true);
+          }}
         >
           <div>
             <span>Current timer</span>
             <strong>{formatTimer(timeLeft)}</strong>
-            <p className="muted">Preset: {restDuration / 60}m</p>
+            <p className="muted">Rest duration: {formatTimer(restDuration)}</p>
           </div>
           <div className="workout-timer-launcher__meta">
             <span>{isTimerRunning ? "Running" : "Ready"}</span>
@@ -1124,106 +1044,106 @@ export function WorkoutSection({
           <div className="timer-panel workout-timer-float__panel">
             <div className="workout-timer-float__header">
               <div>
-                <p className="eyebrow">Rest timer</p>
                 <strong className="timer-readout">{formatTimer(timeLeft)}</strong>
               </div>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setIsTimerOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-            <div className="button-row">
-              {REST_PRESETS.map((preset) => (
+              <div className="workout-timer-float__controls">
                 <button
-                  key={preset}
                   type="button"
-                  className={
-                    preset === restDuration
-                      ? "secondary-button is-selected-accent"
-                      : "secondary-button"
-                  }
+                  className="primary-button"
                   onClick={() => {
                     ensureAudioContext(audioContextRef);
-                    setRestDuration(preset);
-                    setTimeLeft(preset);
+                    setIsTimerRunning((current) => !current);
+                  }}
+                >
+                  {isTimerRunning ? "Pause" : "Start"}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => {
+                    ensureAudioContext(audioContextRef);
+                    setTimeLeft(restDuration);
                     setIsTimerRunning(false);
                   }}
                 >
-                  {preset / 60}m
+                  Reset
                 </button>
-              ))}
+                <button
+                  type="button"
+                  className="secondary-button"
+                  aria-label="Close rest timer"
+                  title="Close rest timer"
+                  onClick={() => {
+                    setIsTimerOpen(false);
+                    setIsTimerOptionsOpen(false);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
             </div>
-            <div className="timer-custom-row">
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                className="timer-custom-input"
-                placeholder="Custom (sec)"
-                value={customTimerInput}
-                onChange={(e) => setCustomTimerInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const secs = parseInt(customTimerInput, 10);
-                    if (!isNaN(secs) && secs > 0) {
+            <button
+              type="button"
+              className="secondary-button workout-timer-options-toggle"
+              onClick={() => setIsTimerOptionsOpen((current) => !current)}
+              aria-expanded={isTimerOptionsOpen}
+            >
+              {isTimerOptionsOpen ? "Hide timer editor" : "Edit timer"}
+            </button>
+            {isTimerOptionsOpen ? (
+              <div className="workout-timer-options">
+                <div className="timer-duration-editor">
+                  <div className="timer-duration-editor__heading">
+                    <span>Rest duration</span>
+                    <strong>{formatTimer(restDuration)}</strong>
+                  </div>
+                  <input
+                    type="range"
+                    className="timer-duration-slider"
+                    min="10"
+                    max="600"
+                    step="10"
+                    value={restDuration}
+                    aria-label="Rest duration in seconds"
+                    onChange={(event) => {
+                      const nextDuration = Number(event.target.value);
                       ensureAudioContext(audioContextRef);
-                      setRestDuration(secs);
-                      setTimeLeft(secs);
+                      setRestDuration(nextDuration);
+                      setTimeLeft(nextDuration);
                       setIsTimerRunning(false);
-                      setCustomTimerInput("");
-                    }
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  const secs = parseInt(customTimerInput, 10);
-                  if (!isNaN(secs) && secs > 0) {
-                    ensureAudioContext(audioContextRef);
-                    setRestDuration(secs);
-                    setTimeLeft(secs);
-                    setIsTimerRunning(false);
-                    setCustomTimerInput("");
-                  }
-                }}
-                disabled={!customTimerInput.trim() || isNaN(parseInt(customTimerInput, 10)) || parseInt(customTimerInput, 10) <= 0}
-              >
-                Set
-              </button>
-            </div>
-            <div className="button-row">
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => {
-                  ensureAudioContext(audioContextRef);
-                  setIsTimerRunning((current) => !current);
-                }}
-              >
-                {isTimerRunning ? "Pause" : "Start"}
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  ensureAudioContext(audioContextRef);
-                  setTimeLeft(restDuration);
-                  setIsTimerRunning(false);
-                }}
-              >
-                Reset
-              </button>
-            </div>
+                    }}
+                  />
+                  <p className="muted">10 seconds to 10 minutes, in 10-second steps.</p>
+                </div>
+                <div className="timer-tone-editor">
+                  <label>
+                    Alert tone
+                    <select value={timerTone} onChange={(event) => setTimerTone(event.target.value)}>
+                      {Object.entries(TIMER_TONES).map(([toneId, tone]) => (
+                        <option key={toneId} value={toneId}>
+                          {tone.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => {
+                      ensureAudioContext(audioContextRef);
+                      playTimerAlarm(audioContextRef, timerTone);
+                    }}
+                  >
+                    Test tone
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
 
-      <section className="card">
+      <section className="card" ref={workoutLogRef}>
         <div className="section-heading">
           <div>
             <p className="eyebrow">Active workout</p>
@@ -1780,88 +1700,6 @@ export function WorkoutSection({
           </>
         ) : null}
       </section>
-
-      {isInsightsOpen ? (
-        <div
-          className="insights-modal-backdrop"
-          role="presentation"
-          onClick={() => setIsInsightsOpen(false)}
-        >
-          <section
-            className="insights-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="workout-insights-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Workout insights</p>
-                <h2 id="workout-insights-title">Growth Metrics</h2>
-              </div>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setIsInsightsOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="compact-grid compact-grid--two">
-              <div className="summary-panel">
-                <span>Sessions in last 30 days</span>
-                <strong>{workoutInsights.last30Sessions}</strong>
-                <p className="muted">{workoutInsights.prior30Sessions} in the prior 30</p>
-              </div>
-              <div className="summary-panel">
-                <span>Total sets in last 30 days</span>
-                <strong>{workoutInsights.last30Sets}</strong>
-                <p className="muted">{workoutInsights.uniqueExercises} unique exercises</p>
-              </div>
-              <div className="summary-panel">
-                <span>Focus area</span>
-                <strong>{workoutInsights.focusExercise?.exerciseName || "Not enough history yet"}</strong>
-                <p className="muted">
-                  {workoutInsights.focusExercise
-                    ? `${Math.round(workoutInsights.focusExercise.improvement)} lb from ${formatLongDate(workoutInsights.focusExercise.firstDate)} to ${formatLongDate(workoutInsights.focusExercise.latestDate)}`
-                    : "This fills in once the same lift has been logged on multiple days."}
-                </p>
-              </div>
-              <div className="summary-panel">
-                <span>Total logged sessions</span>
-                <strong>{workoutInsights.totalSessions}</strong>
-                <p className="muted">Across your full workout history</p>
-              </div>
-            </div>
-
-            <div className="compact-grid compact-grid--two">
-              <div className="summary-panel">
-                <span>Best improvement</span>
-                <strong>
-                  {workoutInsights.improvedExercise?.exerciseName || "Not enough history yet"}
-                </strong>
-                <p className="muted">
-                  {workoutInsights.improvedExercise
-                    ? `${Math.round(workoutInsights.improvedExercise.improvement)} lb from ${formatLongDate(workoutInsights.improvedExercise.firstDate)} to ${formatLongDate(workoutInsights.improvedExercise.latestDate)}`
-                    : "Log the same lift on multiple dates to see progression."}
-                </p>
-              </div>
-              <div className="summary-panel">
-                <span>Strongest recent top set</span>
-                <strong>
-                  {workoutInsights.strongestRecentExercise?.name || "No recent set data"}
-                </strong>
-                <p className="muted">
-                  {workoutInsights.strongestRecentExercise
-                    ? `${Math.round(workoutInsights.strongestRecentExercise.weight)} lb on ${formatLongDate(workoutInsights.strongestRecentExercise.date)}`
-                    : "This fills in once you log weighted sets."}
-                </p>
-              </div>
-            </div>
-          </section>
-        </div>
-      ) : null}
 
       {isProgramPickerOpen ? (
         <div
@@ -2665,33 +2503,60 @@ function ensureAudioContext(audioContextRef) {
   }
 }
 
-function scheduleBeeps(context) {
+function scheduleTimerTone(context, toneId) {
+  const tone = TIMER_TONES[toneId] || TIMER_TONES.chime;
   const startAt = context.currentTime;
-  [0, 0.22, 0.44].forEach((offset, index) => {
+  tone.notes.forEach((frequency, index) => {
+    const offset = index * tone.gap;
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
 
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(index === 1 ? 1046.5 : 880, startAt + offset);
+    oscillator.type = tone.waveform;
+    oscillator.frequency.setValueAtTime(frequency, startAt + offset);
     gainNode.gain.setValueAtTime(0.0001, startAt + offset);
-    gainNode.gain.exponentialRampToValueAtTime(0.18, startAt + offset + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.16);
+    gainNode.gain.exponentialRampToValueAtTime(tone.gain, startAt + offset + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + tone.duration);
 
     oscillator.connect(gainNode);
     gainNode.connect(context.destination);
     oscillator.start(startAt + offset);
-    oscillator.stop(startAt + offset + 0.18);
+    oscillator.stop(startAt + offset + tone.duration);
   });
 }
 
-function playTimerAlarm(audioContextRef) {
+function playTimerAlarm(audioContextRef, toneId) {
   const context = audioContextRef.current;
   if (!context) return;
 
   if (context.state === "suspended") {
-    context.resume().then(() => scheduleBeeps(context)).catch(() => {});
+    context.resume().then(() => scheduleTimerTone(context, toneId)).catch(() => {});
   } else {
-    scheduleBeeps(context);
+    scheduleTimerTone(context, toneId);
+  }
+}
+
+function getStoredTimerTone() {
+  if (typeof window === "undefined") {
+    return "chime";
+  }
+
+  try {
+    const tone = window.localStorage.getItem(TIMER_TONE_STORAGE_KEY);
+    return tone && TIMER_TONES[tone] ? tone : "chime";
+  } catch {
+    return "chime";
+  }
+}
+
+function persistTimerTone(tone) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(TIMER_TONE_STORAGE_KEY, tone);
+  } catch {
+    // Keep the selected tone for this session if browser storage is unavailable.
   }
 }
 

@@ -14,18 +14,11 @@ function parseOptionalNumber(value) {
   return Number.isFinite(numericValue) ? numericValue : "";
 }
 
-export function SettingsSection({
+export function GoalsSection({
   settings,
   onSave,
-  syncStatus,
-  syncError,
 }) {
   const [form, setForm] = useState(settings);
-  const [accountPassword, setAccountPassword] = useState("");
-  const [accountConfirmPassword, setAccountConfirmPassword] = useState("");
-  const [accountPasswordMessage, setAccountPasswordMessage] = useState("");
-  const [accountPasswordStatus, setAccountPasswordStatus] = useState("idle");
-  const { session, signOut, updatePassword, hasCloud } = useAuth();
 
   useEffect(() => {
     setForm(settings);
@@ -72,8 +65,6 @@ export function SettingsSection({
             carbsPercent: macroPercents.carbsPercent,
             fatPercent: macroPercents.fatPercent,
             weightGoal: parseOptionalNumber(form.weightGoal),
-            weightUnit: form.weightUnit,
-            accentColor: form.accentColor,
           }
         : {
             calorieTarget: parseOptionalNumber(form.calorieTarget),
@@ -85,36 +76,9 @@ export function SettingsSection({
             carbsPercent: macroPercents.carbsPercent,
             fatPercent: macroPercents.fatPercent,
             weightGoal: parseOptionalNumber(form.weightGoal),
-            weightUnit: form.weightUnit,
-            accentColor: form.accentColor,
           };
 
     onSave(nextSettings);
-  }
-
-  async function handlePasswordSubmit(event) {
-    event.preventDefault();
-    setAccountPasswordMessage("");
-
-    if (accountPassword !== accountConfirmPassword) {
-      setAccountPasswordMessage("Passwords do not match.");
-      return;
-    }
-
-    setAccountPasswordStatus("saving");
-
-    const { error } = await updatePassword(accountPassword);
-
-    if (error) {
-      setAccountPasswordStatus("idle");
-      setAccountPasswordMessage(error.message || "Password update failed.");
-      return;
-    }
-
-    setAccountPassword("");
-    setAccountConfirmPassword("");
-    setAccountPasswordStatus("idle");
-    setAccountPasswordMessage("Password updated.");
   }
 
   return (
@@ -122,8 +86,8 @@ export function SettingsSection({
       <section className="card">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Goals and settings</p>
-            <h2>Targets</h2>
+            <p className="eyebrow">Goals</p>
+            <h2>Nutrition targets</h2>
           </div>
           <p className="muted">These targets drive the dashboard calculations.</p>
         </div>
@@ -270,9 +234,9 @@ export function SettingsSection({
             </div>
           )}
 
-          <div className="compact-grid compact-grid--two">
+          <div className="compact-grid">
             <label>
-              Weight goal
+              Target weight
               <input
                 type="number"
                 min="0"
@@ -281,21 +245,128 @@ export function SettingsSection({
                 onChange={(event) => setForm({ ...form, weightGoal: event.target.value })}
               />
             </label>
-
-            <label>
-              Weight unit
-              <select
-                value={form.weightUnit}
-                onChange={(event) => setForm({ ...form, weightUnit: event.target.value })}
-              >
-                <option value="lb">lb</option>
-                <option value="kg">kg</option>
-              </select>
-            </label>
           </div>
 
           <button type="submit" className="primary-button">
-            Save targets
+            Save goals
+          </button>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+export function SettingsSection({
+  settings,
+  onSave,
+  syncStatus,
+  syncError,
+  lastSyncedAt,
+  onRetrySync,
+  onOpenFeedback,
+  onRefresh,
+}) {
+  const [weightUnit, setWeightUnit] = useState(settings.weightUnit);
+  const [accentColor, setAccentColor] = useState(settings.accentColor);
+  const [accountPassword, setAccountPassword] = useState("");
+  const [accountConfirmPassword, setAccountConfirmPassword] = useState("");
+  const [accountPasswordMessage, setAccountPasswordMessage] = useState("");
+  const [accountPasswordStatus, setAccountPasswordStatus] = useState("idle");
+  const { session, signOut, updatePassword, hasCloud } = useAuth();
+
+  useEffect(() => {
+    setWeightUnit(settings.weightUnit);
+  }, [settings.weightUnit]);
+
+  useEffect(() => {
+    setAccentColor(settings.accentColor);
+  }, [settings.accentColor]);
+
+  const syncLabel = syncStatus
+    ? `${syncStatus.charAt(0).toUpperCase()}${syncStatus.slice(1)}`
+    : "--";
+  const formattedLastSyncedAt = lastSyncedAt
+    ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(lastSyncedAt)
+    : "";
+
+  function handlePreferencesSubmit(event) {
+    event.preventDefault();
+    onSave({ weightUnit, accentColor });
+  }
+
+  async function handlePasswordSubmit(event) {
+    event.preventDefault();
+    setAccountPasswordMessage("");
+
+    if (accountPassword !== accountConfirmPassword) {
+      setAccountPasswordMessage("Passwords do not match.");
+      return;
+    }
+
+    setAccountPasswordStatus("saving");
+    const { error } = await updatePassword(accountPassword);
+
+    if (error) {
+      setAccountPasswordStatus("idle");
+      setAccountPasswordMessage(error.message || "Password update failed.");
+      return;
+    }
+
+    setAccountPassword("");
+    setAccountConfirmPassword("");
+    setAccountPasswordStatus("idle");
+    setAccountPasswordMessage("Password updated.");
+  }
+
+  return (
+    <div className="section-stack">
+      <section className="card">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Preferences</p>
+            <h2>App preferences</h2>
+          </div>
+          <p className="muted">Choose how body weight is displayed throughout AI Fit.</p>
+        </div>
+
+        <form className="form-grid" onSubmit={handlePreferencesSubmit}>
+          <label>
+            Weight unit
+            <select value={weightUnit} onChange={(event) => setWeightUnit(event.target.value)}>
+              <option value="lb">lb</option>
+              <option value="kg">kg</option>
+            </select>
+          </label>
+          <div>
+            <p className="eyebrow">Appearance</p>
+            <p className="settings-field-label">Theme color</p>
+            <div className="button-row">
+              <button
+                type="button"
+                className={
+                  accentColor === "blue"
+                    ? "secondary-button is-selected-accent"
+                    : "secondary-button"
+                }
+                onClick={() => setAccentColor("blue")}
+              >
+                Blue
+              </button>
+              <button
+                type="button"
+                className={
+                  accentColor === "purple"
+                    ? "secondary-button is-selected-accent"
+                    : "secondary-button"
+                }
+                onClick={() => setAccentColor("purple")}
+              >
+                Purple
+              </button>
+            </div>
+          </div>
+          <button type="submit" className="primary-button">
+            Save preferences
           </button>
         </form>
       </section>
@@ -303,24 +374,47 @@ export function SettingsSection({
       <section className="card">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Account</p>
-            <h2>Cloud account</h2>
+            <p className="eyebrow">Data and sync</p>
+            <h2>Cloud sync</h2>
           </div>
           <p className="muted">
-            {hasCloud ? "Manage your signed-in account and sync state." : "Cloud sync is not configured."}
+            {hasCloud ? "Your app data is kept in sync with your account." : "Cloud sync is not configured."}
           </p>
         </div>
 
         <div className="summary-grid">
           <div className="summary-panel">
-            <span>Email</span>
-            <p className="account-email">{session?.user?.email || "--"}</p>
-          </div>
-          <div className="summary-panel">
             <span>Sync status</span>
-            <strong>{syncStatus ? `${syncStatus.charAt(0).toUpperCase()}${syncStatus.slice(1)}` : "--"}</strong>
+            <strong>{syncLabel}</strong>
             {syncError ? <p className="muted">{syncError}</p> : null}
           </div>
+          <div className="summary-panel">
+            <span>Last synced</span>
+            <strong>{formattedLastSyncedAt || "--"}</strong>
+          </div>
+        </div>
+
+        {syncStatus === "error" ? (
+          <div className="account-actions">
+            <button type="button" className="secondary-button" onClick={onRetrySync}>
+              Retry sync
+            </button>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="card">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Account and security</p>
+            <h2>Your account</h2>
+          </div>
+          <p className="muted">Manage your sign-in details and password.</p>
+        </div>
+
+        <div className="summary-panel">
+          <span>Email</span>
+          <p className="account-email">{session?.user?.email || "--"}</p>
         </div>
 
         {session ? (
@@ -363,13 +457,30 @@ export function SettingsSection({
 
             <div className="account-actions">
               <button type="button" className="secondary-button" onClick={signOut}>
-                Sign Out
+                Sign out
               </button>
             </div>
           </>
         ) : null}
       </section>
 
+      <section className="card">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Support</p>
+            <h2>Help and updates</h2>
+          </div>
+          <p className="muted">Report an issue or refresh to the latest version of the app.</p>
+        </div>
+        <div className="button-row">
+          <button type="button" className="secondary-button" onClick={onOpenFeedback}>
+            Feedback / report issue
+          </button>
+          <button type="button" className="secondary-button" onClick={onRefresh}>
+            Update app
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
