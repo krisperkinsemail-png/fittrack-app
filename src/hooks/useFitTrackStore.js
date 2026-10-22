@@ -145,7 +145,8 @@ function reducer(state, action) {
           (meal) =>
             meal.name.toLowerCase() === action.payload.name.toLowerCase() &&
             (meal.templateType || "meal") === (action.payload.templateType || "meal") &&
-            meal.servingSize.toLowerCase() === action.payload.servingSize.toLowerCase()
+            meal.servingSize.toLowerCase() === action.payload.servingSize.toLowerCase() &&
+            (meal.creator || "").toLowerCase() === (action.payload.creator || "").toLowerCase()
         )
       ) {
         return {
@@ -153,7 +154,8 @@ function reducer(state, action) {
           mealTemplates: state.mealTemplates.map((meal) =>
             meal.name.toLowerCase() === action.payload.name.toLowerCase() &&
             (meal.templateType || "meal") === (action.payload.templateType || "meal") &&
-            meal.servingSize.toLowerCase() === action.payload.servingSize.toLowerCase()
+            meal.servingSize.toLowerCase() === action.payload.servingSize.toLowerCase() &&
+            (meal.creator || "").toLowerCase() === (action.payload.creator || "").toLowerCase()
               ? { ...meal, ...action.payload }
               : meal
           ),
@@ -263,11 +265,17 @@ export function useFitTrackStore() {
     let isMounted = true;
 
     async function hydrateStore() {
+      const localSnapshotPromise = hasSupabaseConfig
+        ? localStorageAdapter.load()
+        : Promise.resolve({});
+      let offlineCache = null;
+
       try {
-        const [payload, localSnapshot] = await Promise.all([
-          appStorage.load(),
-          hasSupabaseConfig ? localStorageAdapter.load() : Promise.resolve({}),
-        ]);
+        offlineCache = await appStorage.loadOfflineCache?.();
+        if (offlineCache?.pendingCollections?.length) {
+          await appStorage.syncPendingChanges?.();
+        }
+        const [payload, localSnapshot] = await Promise.all([appStorage.load(), localSnapshotPromise]);
 
         if (!isMounted) {
           return;
@@ -287,8 +295,21 @@ export function useFitTrackStore() {
       } catch (error) {
         console.error("Failed to hydrate FitTrack state.", error);
         if (isMounted) {
+          try {
+            offlineCache = await appStorage.loadOfflineCache?.();
+          } catch (cacheError) {
+            console.error("Failed to load FitTrack offline cache.", cacheError);
+          }
+
+          if (offlineCache?.snapshot) {
+            dispatch({ type: "hydrate", payload: offlineCache.snapshot });
+            setSyncError(
+              "Saved on this device. Cloud changes will retry when the service is available."
+            );
+          } else {
+            setSyncError(error.message || "Failed to load data.");
+          }
           setSyncStatus("error");
-          setSyncError(error.message || "Failed to load data.");
           setIsHydrated();
         }
       }
@@ -317,6 +338,10 @@ export function useFitTrackStore() {
       isRefreshing = true;
 
       try {
+        const offlineCache = await appStorage.loadOfflineCache?.();
+        if (offlineCache?.pendingCollections?.length) {
+          await appStorage.syncPendingChanges?.();
+        }
         const payload = await appStorage.load();
         dispatch({ type: "hydrate", payload });
         handleSyncSuccess();
@@ -385,7 +410,6 @@ export function useFitTrackStore() {
     }
 
     if (storageCapabilities.supportsGranularSync) {
-      setSyncStatus("synced");
       return;
     }
 
@@ -402,11 +426,38 @@ export function useFitTrackStore() {
       });
   }, [isHydrated, state]);
 
+  async function retryCloudSync() {
+    if (!storageCapabilities.hasCloudConfig) {
+      return;
+    }
+
+    setSyncStatus("saving");
+    setSyncError("");
+
+    try {
+      const offlineCache = await appStorage.loadOfflineCache?.();
+      if (offlineCache?.pendingCollections?.length) {
+        await appStorage.syncPendingChanges?.();
+      }
+      const payload = await appStorage.load();
+      dispatch({ type: "hydrate", payload });
+      handleSyncSuccess();
+      lastCloudRefreshAtRef.current = Date.now();
+    } catch (error) {
+      console.error("Failed to retry FitTrack cloud sync.", error);
+      setSyncStatus("error");
+      setSyncError(
+        "Saved on this device. Cloud changes will retry when the service is available."
+      );
+    }
+  }
+
   return {
     state,
     syncStatus,
     syncError,
     lastSyncedAt,
+    retryCloudSync,
     localMigrationData,
     dismissLocalMigration: () => setLocalMigrationData(null),
     importLocalMigration: () => {
@@ -509,7 +560,8 @@ export function useFitTrackStore() {
         (entry) =>
           entry.name.toLowerCase() === meal.name.toLowerCase() &&
           (entry.templateType || "meal") === (meal.templateType || "meal") &&
-          entry.servingSize.toLowerCase() === meal.servingSize.toLowerCase()
+          entry.servingSize.toLowerCase() === meal.servingSize.toLowerCase() &&
+          (entry.creator || "").toLowerCase() === (meal.creator || "").toLowerCase()
       );
       const nextMeals = existing
         ? state.mealTemplates.map((entry) =>

@@ -130,6 +130,10 @@ export function WorkoutSection({
     saveToBank: false,
   });
   const [isCustomBuilderOpen, setIsCustomBuilderOpen] = useState(false);
+  const [builderPlanId, setBuilderPlanId] = useState(null);
+  const [isPlanManagerOpen, setIsPlanManagerOpen] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [planDetailsForm, setPlanDetailsForm] = useState({ name: "", description: "" });
   const [builderStep, setBuilderStep] = useState(1);
   const [builderForm, setBuilderForm] = useState(null);
   const builderExerciseRefs = useRef({});
@@ -875,13 +879,14 @@ export function WorkoutSection({
     return { id: crypto.randomUUID(), name: "", sets: 3, reps: "10-12" };
   }
 
-  function openCustomBuilder() {
+  function openCustomBuilder(plan = null) {
     const firstSystem = customSystems[0];
     setBuilderForm({
-      systemName: firstSystem?.name || "My Workouts",
+      systemName: plan?.name || firstSystem?.name || "My Workouts",
       workoutName: "",
       exercises: [makeBuilderExercise()],
     });
+    setBuilderPlanId(plan?.id || null);
     setBuilderStep(1);
     setBuilderFocusId(null);
     setBuilderFocusedExId(null);
@@ -966,16 +971,16 @@ export function WorkoutSection({
       })),
     };
 
-    const existingSystem = customSystems.find(
-      (s) => s.name.toLowerCase() === systemName.toLowerCase()
-    );
+    const existingSystem = builderPlanId
+      ? customSystems.find((system) => system.id === builderPlanId)
+      : customSystems.find((system) => system.name.toLowerCase() === systemName.toLowerCase());
     const systemId = existingSystem?.id || crypto.randomUUID();
     const existingWorkouts = existingSystem?.workouts || [];
 
     onSaveSystem({
       id: systemId,
       name: systemName,
-      description: "Custom workout system",
+      description: existingSystem?.description || "Custom workout plan",
       isCustom: true,
       workouts: [newWorkout, ...existingWorkouts],
     });
@@ -986,6 +991,62 @@ export function WorkoutSection({
     setSelectedPhaseId(null);
     setIsProgramPickerOpen(false);
     setIsCustomBuilderOpen(false);
+  }
+
+  function openPlanManager() {
+    setEditingPlanId(null);
+    setPlanDetailsForm({ name: "", description: "" });
+    setIsProgramPickerOpen(false);
+    setIsPlanManagerOpen(true);
+  }
+
+  function startEditingPlan(plan) {
+    setEditingPlanId(plan.id);
+    setPlanDetailsForm({ name: plan.name, description: plan.description || "" });
+  }
+
+  function savePlanDetails() {
+    const plan = customSystems.find((system) => system.id === editingPlanId);
+    const name = planDetailsForm.name.trim();
+    if (!plan || !name) {
+      return;
+    }
+
+    onSaveSystem({
+      ...plan,
+      name,
+      description: planDetailsForm.description.trim(),
+      isCustom: true,
+    });
+    setEditingPlanId(null);
+  }
+
+  function duplicatePlan(plan) {
+    const duplicatedPlanId = crypto.randomUUID();
+    onSaveSystem({
+      ...plan,
+      id: duplicatedPlanId,
+      name: `Copy of ${plan.name}`,
+      isCustom: true,
+      workouts: plan.workouts.map((workout) => ({
+        ...workout,
+        id: crypto.randomUUID(),
+      })),
+    });
+    setSelectedProgramId(duplicatedPlanId);
+    setSelectedPhaseId(null);
+  }
+
+  function deletePlan(plan) {
+    onDeleteSystem(plan.id);
+    if (editingPlanId === plan.id) {
+      setEditingPlanId(null);
+    }
+  }
+
+  function addWorkoutToPlan(plan) {
+    setIsPlanManagerOpen(false);
+    openCustomBuilder(plan);
   }
 
   return (
@@ -1835,32 +1896,39 @@ export function WorkoutSection({
             </p>
 
             {workoutPrograms.some((p) => p.isCustom) && (
-              <div className="workout-system-grid">
-                {workoutPrograms.filter((p) => p.isCustom).map((program) => (
-                  <button
-                    key={program.id}
-                    type="button"
-                    className={
-                      program.id === selectedProgramId
-                        ? "workout-chip workout-chip--selected"
-                        : "workout-chip"
-                    }
-                    onClick={() => handleProgramChange(program.id)}
-                  >
-                    <strong>{program.name}</strong>
-                    <span>{program.description || "Custom workout system"}</span>
+              <>
+                <div className="workout-system-grid">
+                  {workoutPrograms.filter((p) => p.isCustom).map((program) => (
+                    <button
+                      key={program.id}
+                      type="button"
+                      className={
+                        program.id === selectedProgramId
+                          ? "workout-chip workout-chip--selected"
+                          : "workout-chip"
+                      }
+                      onClick={() => handleProgramChange(program.id)}
+                    >
+                      <strong>{program.name}</strong>
+                      <span>{program.description || "Custom workout plan"}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="button-row">
+                  <button type="button" className="secondary-button" onClick={openPlanManager}>
+                    Manage custom plans
                   </button>
-                ))}
-              </div>
+                </div>
+              </>
             )}
 
             <button
               type="button"
               className="workout-chip builder-create-chip"
-              onClick={openCustomBuilder}
+              onClick={() => openCustomBuilder()}
             >
-              <strong>+ Build Custom Workout</strong>
-              <span>Design your own exercises, sets &amp; reps</span>
+              <strong>+ Create custom plan</strong>
+              <span>Start a new plan with its first workout day</span>
             </button>
 
             <div className="section-heading">
@@ -1967,6 +2035,157 @@ export function WorkoutSection({
                   <span>{workout.phaseSummary || workout.summary}</span>
                 </button>
               ))}
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {isPlanManagerOpen ? (
+        <div
+          className="insights-modal-backdrop"
+          role="presentation"
+          onClick={() => setIsPlanManagerOpen(false)}
+        >
+          <section
+            className="insights-modal workout-picker-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="plan-manager-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Custom plans</p>
+                <h2 id="plan-manager-title">Manage workout plans</h2>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setIsPlanManagerOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="muted">
+              Add workout days, rename plans, or duplicate a plan before customizing it.
+            </p>
+
+            {customSystems.length ? (
+              <div className="list-stack">
+                {customSystems.map((plan) => (
+                  <article className="log-card" key={plan.id}>
+                    {editingPlanId === plan.id ? (
+                      <div className="form-grid">
+                        <label>
+                          Plan name
+                          <input
+                            value={planDetailsForm.name}
+                            onChange={(event) =>
+                              setPlanDetailsForm((current) => ({
+                                ...current,
+                                name: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Description
+                          <input
+                            value={planDetailsForm.description}
+                            onChange={(event) =>
+                              setPlanDetailsForm((current) => ({
+                                ...current,
+                                description: event.target.value,
+                              }))
+                            }
+                            placeholder="Optional training focus"
+                          />
+                        </label>
+                        <div className="button-row">
+                          <button
+                            type="button"
+                            className="primary-button"
+                            onClick={savePlanDetails}
+                            disabled={!planDetailsForm.name.trim()}
+                          >
+                            Save plan
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setEditingPlanId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="log-card__top">
+                          <div>
+                            <h3>{plan.name}</h3>
+                            <p className="muted">
+                              {plan.description || "Custom workout plan"} • {plan.workouts.length} workout
+                              {plan.workouts.length === 1 ? "" : "s"}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="muted">
+                          {plan.workouts.map((workout) => workout.name).join(" • ")}
+                        </p>
+                        <div className="button-row">
+                          <button
+                            type="button"
+                            className="primary-button"
+                            onClick={() => addWorkoutToPlan(plan)}
+                          >
+                            Add workout day
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => startEditingPlan(plan)}
+                          >
+                            Edit plan
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => duplicatePlan(plan)}
+                          >
+                            Duplicate
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button danger-button"
+                            onClick={() => deletePlan(plan)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-panel">
+                <p>Create a custom plan to start organizing your own workout days.</p>
+              </div>
+            )}
+
+            <div className="button-row">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setIsPlanManagerOpen(false);
+                  openCustomBuilder();
+                }}
+              >
+                + Create a plan
+              </button>
             </div>
           </section>
         </div>
@@ -2137,7 +2356,7 @@ export function WorkoutSection({
           >
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Custom Workout</p>
+                <p className="eyebrow">Custom plan workout</p>
                 <h2 id="builder-modal-title">
                   {builderStep === 1
                     ? "Name your workout"
@@ -2196,7 +2415,7 @@ export function WorkoutSection({
                   />
                 </label>
                 <label>
-                  Program group
+                  Workout plan
                   <input
                     value={builderForm.systemName}
                     onChange={(e) =>
@@ -2208,7 +2427,7 @@ export function WorkoutSection({
                 {customSystems.length > 0 ? (
                   <div>
                     <p className="muted" style={{ margin: "0 0 8px" }}>
-                      Or add to an existing group:
+                      Or add this workout to an existing plan:
                     </p>
                     <div className="builder-chip-group">
                       {customSystems.map((sys) => (
@@ -2403,7 +2622,7 @@ export function WorkoutSection({
                 </div>
 
                 <p className="muted">
-                  After saving, this workout appears in your program picker and is ready to log immediately.
+                  After saving, this workout appears in the selected plan and is ready to log immediately.
                 </p>
 
                 <div className="button-row">

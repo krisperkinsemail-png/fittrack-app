@@ -53,6 +53,7 @@ export default function App() {
     syncStatus,
     syncError,
     lastSyncedAt,
+    retryCloudSync,
     localMigrationData,
     dismissLocalMigration,
     importLocalMigration,
@@ -460,6 +461,11 @@ export default function App() {
                   </span>
                 </div>
                 {syncError ? <p className="muted">{syncError}</p> : null}
+                {syncStatus === "error" ? (
+                  <button type="button" className="secondary-button" onClick={retryCloudSync}>
+                    Retry now
+                  </button>
+                ) : null}
                 {formattedLastSyncedAt ? (
                   <p className="muted">Last synced {formattedLastSyncedAt}</p>
                 ) : null}

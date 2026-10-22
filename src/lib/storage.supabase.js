@@ -1,10 +1,55 @@
-import { loadCachedWaterEntries, saveCachedWaterEntries } from "./storage.local";
+import {
+  loadCloudCache,
+  saveCloudCache,
+  updateCloudCache,
+} from "./storage.local";
 import { supabase } from "./supabase";
 
 let lastSyncedState = null;
 
+const SYNCED_COLLECTIONS = [
+  "settings",
+  "foodEntries",
+  "mealTemplates",
+  "weightEntries",
+  "waterEntries",
+  "workoutEntries",
+  "customWorkoutSystems",
+];
+
+function normalizeSyncState(state = {}) {
+  return {
+    settings: {},
+    foodEntries: [],
+    mealTemplates: [],
+    weightEntries: [],
+    waterEntries: [],
+    workoutEntries: [],
+    customWorkoutSystems: [],
+    ...state,
+  };
+}
+
 function cloneState(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+async function getCurrentSession() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    throw error;
+  }
+
+  return session;
+}
+
+async function getCurrentUserId() {
+  const session = await getCurrentSession();
+  return session?.user?.id || null;
 }
 
 function isMissingWaterEntriesError(error) {
@@ -104,6 +149,7 @@ function mapMealTemplateFromRow(row) {
     id: row.id,
     name: row.name,
     templateType: row.template_type || "meal",
+    creator: row.creator || "",
     servingSize: row.serving_size,
     calories: row.calories,
     protein: row.protein,
@@ -118,6 +164,7 @@ function mapMealTemplateToRow(userId, meal) {
     user_id: userId,
     name: meal.name,
     template_type: meal.templateType || "meal",
+    creator: meal.creator || null,
     serving_size: meal.servingSize,
     calories: meal.calories,
     protein: meal.protein,
@@ -247,16 +294,27 @@ async function syncCollection(table, userId, previousRows, nextRows, mapper) {
   }
 }
 
+async function beginCollectionSync(collection, value) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return null;
+  }
+
+  updateCloudCache(userId, { [collection]: value }, { markPending: collection });
+  return userId;
+}
+
+function finishCollectionSync(userId, collection, value) {
+  updateCloudCache(userId, { [collection]: value }, { clearPending: collection });
+  lastSyncedState = {
+    ...(lastSyncedState || {}),
+    [collection]: cloneState(value),
+  };
+}
+
 export const supabaseStorageAdapter = {
   async load() {
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      throw sessionError;
-    }
+    const session = await getCurrentSession();
 
     if (!session?.user) {
       return {};
@@ -304,8 +362,10 @@ export const supabaseStorageAdapter = {
         .order("updated_at", { ascending: false }),
     ]);
 
+    const waterTableUnavailable =
+      waterResultRaw.error && isMissingWaterEntriesError(waterResultRaw.error);
     const waterResult =
-      waterResultRaw.error && isMissingWaterEntriesError(waterResultRaw.error)
+      waterTableUnavailable
         ? { data: [], error: null }
         : waterResultRaw;
 
@@ -323,39 +383,61 @@ export const supabaseStorageAdapter = {
       }
     }
 
-    const snapshot = {
+    const remoteSnapshot = {
       settings: mapSettingsRow(settingsResult.data) || undefined,
       foodEntries: foodResult.data.map(mapFoodEntryFromRow),
       mealTemplates: mealResult.data.map(mapMealTemplateFromRow),
       weightEntries: weightResult.data.map(mapWeightEntryFromRow),
-      waterEntries:
-        waterResult.data.length > 0 || !waterResultRaw.error
-          ? waterResult.data.map(mapWaterEntryFromRow)
-          : loadCachedWaterEntries(),
+      waterEntries: waterResult.data.map(mapWaterEntryFromRow),
       workoutEntries: workoutResult.data.map(mapWorkoutEntryFromRow),
       customWorkoutSystems: customSystemResult.data.map(mapWorkoutSystemFromRow),
     };
+    const cached = loadCloudCache(session.user.id);
+    const pendingCollections = new Set(cached?.pendingCollections || []);
+    const snapshot = { ...remoteSnapshot };
 
-    saveCachedWaterEntries(snapshot.waterEntries);
-    lastSyncedState = cloneState(snapshot);
+    for (const collection of pendingCollections) {
+      if (cached?.snapshot?.[collection] !== undefined) {
+        snapshot[collection] = cached.snapshot[collection];
+      }
+    }
+
+    if (waterTableUnavailable && cached?.snapshot?.waterEntries !== undefined) {
+      snapshot.waterEntries = cached.snapshot.waterEntries;
+    }
+
+    saveCloudCache(session.user.id, snapshot, [...pendingCollections]);
+    lastSyncedState = cloneState(remoteSnapshot);
     return snapshot;
   },
 
-  async save(state) {
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+  async loadOfflineCache() {
+    const userId = await getCurrentUserId();
+    return userId ? loadCloudCache(userId) : null;
+  },
 
-    if (sessionError) {
-      throw sessionError;
+  async syncPendingChanges() {
+    const userId = await getCurrentUserId();
+    const cached = userId ? loadCloudCache(userId) : null;
+
+    if (!cached?.pendingCollections.length) {
+      return false;
     }
+
+    await this.save(cached.snapshot);
+    return true;
+  },
+
+  async save(state) {
+    const normalizedState = normalizeSyncState(state);
+    const session = await getCurrentSession();
 
     if (!session?.user) {
       return;
     }
 
     const userId = session.user.id;
+    saveCloudCache(userId, normalizedState, SYNCED_COLLECTIONS);
     const previousState = lastSyncedState || {
       settings: null,
       foodEntries: [],
@@ -366,10 +448,10 @@ export const supabaseStorageAdapter = {
       customWorkoutSystems: [],
     };
 
-    if (JSON.stringify(previousState.settings) !== JSON.stringify(state.settings)) {
+    if (JSON.stringify(previousState.settings) !== JSON.stringify(normalizedState.settings)) {
       const { error: settingsError } = await supabase
         .from("settings")
-        .upsert(mapSettingsToRow(userId, state.settings), { onConflict: "user_id" });
+        .upsert(mapSettingsToRow(userId, normalizedState.settings), { onConflict: "user_id" });
 
       if (settingsError) {
         throw settingsError;
@@ -381,166 +463,125 @@ export const supabaseStorageAdapter = {
         "food_entries",
         userId,
         previousState.foodEntries || [],
-        state.foodEntries,
+        normalizedState.foodEntries,
         mapFoodEntryToRow
       ),
       syncCollection(
         "meal_templates",
         userId,
         previousState.mealTemplates || [],
-        state.mealTemplates,
+        normalizedState.mealTemplates,
         mapMealTemplateToRow
       ),
       syncCollection(
         "weight_entries",
         userId,
         previousState.weightEntries || [],
-        state.weightEntries,
+        normalizedState.weightEntries,
         mapWeightEntryToRow
       ),
       syncCollection(
         "water_entries",
         userId,
         previousState.waterEntries || [],
-        state.waterEntries,
+        normalizedState.waterEntries,
         mapWaterEntryToRow
       ),
       syncCollection(
         "workout_entries",
         userId,
         previousState.workoutEntries || [],
-        state.workoutEntries,
+        normalizedState.workoutEntries,
         mapWorkoutEntryToRow
       ),
       syncCollection(
         "custom_workout_systems",
         userId,
         previousState.customWorkoutSystems || [],
-        state.customWorkoutSystems,
+        normalizedState.customWorkoutSystems,
         mapWorkoutSystemToRow
       ),
     ]);
 
-    lastSyncedState = cloneState(state);
+    lastSyncedState = cloneState(normalizedState);
+    saveCloudCache(userId, normalizedState, []);
   },
 
   async syncSettings(settings) {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      if (error) {
-        throw error;
-      }
+    const userId = await beginCollectionSync("settings", settings);
+    if (!userId) {
       return;
     }
 
     const { error: upsertError } = await supabase
       .from("settings")
-      .upsert(mapSettingsToRow(session.user.id, settings), { onConflict: "user_id" });
+      .upsert(mapSettingsToRow(userId, settings), { onConflict: "user_id" });
 
     if (upsertError) {
       throw upsertError;
     }
 
-    lastSyncedState = {
-      ...(lastSyncedState || {}),
-      settings: cloneState(settings),
-    };
+    finishCollectionSync(userId, "settings", settings);
   },
 
   async syncFoodEntries(foodEntries) {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      if (error) {
-        throw error;
-      }
+    const userId = await beginCollectionSync("foodEntries", foodEntries);
+    if (!userId) {
       return;
     }
 
     await syncCollection(
       "food_entries",
-      session.user.id,
+      userId,
       lastSyncedState?.foodEntries || [],
       foodEntries,
       mapFoodEntryToRow
     );
-    lastSyncedState = {
-      ...(lastSyncedState || {}),
-      foodEntries: cloneState(foodEntries),
-    };
+    finishCollectionSync(userId, "foodEntries", foodEntries);
   },
 
   async syncMealTemplates(mealTemplates) {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      if (error) {
-        throw error;
-      }
+    const userId = await beginCollectionSync("mealTemplates", mealTemplates);
+    if (!userId) {
       return;
     }
 
     await syncCollection(
       "meal_templates",
-      session.user.id,
+      userId,
       lastSyncedState?.mealTemplates || [],
       mealTemplates,
       mapMealTemplateToRow
     );
-    lastSyncedState = {
-      ...(lastSyncedState || {}),
-      mealTemplates: cloneState(mealTemplates),
-    };
+    finishCollectionSync(userId, "mealTemplates", mealTemplates);
   },
 
   async syncWeightEntries(weightEntries) {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      if (error) {
-        throw error;
-      }
+    const userId = await beginCollectionSync("weightEntries", weightEntries);
+    if (!userId) {
       return;
     }
 
     await syncCollection(
       "weight_entries",
-      session.user.id,
+      userId,
       lastSyncedState?.weightEntries || [],
       weightEntries,
       mapWeightEntryToRow
     );
-    lastSyncedState = {
-      ...(lastSyncedState || {}),
-      weightEntries: cloneState(weightEntries),
-    };
+    finishCollectionSync(userId, "weightEntries", weightEntries);
   },
 
   async syncWaterEntries(waterEntries) {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      if (error) {
-        throw error;
-      }
+    const userId = await beginCollectionSync("waterEntries", waterEntries);
+    if (!userId) {
       return;
     }
 
     try {
       await syncCollection(
         "water_entries",
-        session.user.id,
+        userId,
         lastSyncedState?.waterEntries || [],
         waterEntries,
         mapWaterEntryToRow
@@ -548,69 +589,42 @@ export const supabaseStorageAdapter = {
     } catch (error) {
       if (isMissingWaterEntriesError(error)) {
         console.warn("Skipping water entry sync because the water_entries table is unavailable.", error);
-        saveCachedWaterEntries(waterEntries);
-        lastSyncedState = {
-          ...(lastSyncedState || {}),
-          waterEntries: cloneState(waterEntries),
-        };
         return;
       }
       throw error;
     }
-    saveCachedWaterEntries(waterEntries);
-    lastSyncedState = {
-      ...(lastSyncedState || {}),
-      waterEntries: cloneState(waterEntries),
-    };
+    finishCollectionSync(userId, "waterEntries", waterEntries);
   },
 
   async syncWorkoutEntries(workoutEntries) {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      if (error) {
-        throw error;
-      }
+    const userId = await beginCollectionSync("workoutEntries", workoutEntries);
+    if (!userId) {
       return;
     }
 
     await syncCollection(
       "workout_entries",
-      session.user.id,
+      userId,
       lastSyncedState?.workoutEntries || [],
       workoutEntries,
       mapWorkoutEntryToRow
     );
-    lastSyncedState = {
-      ...(lastSyncedState || {}),
-      workoutEntries: cloneState(workoutEntries),
-    };
+    finishCollectionSync(userId, "workoutEntries", workoutEntries);
   },
 
   async syncCustomWorkoutSystems(customWorkoutSystems) {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      if (error) {
-        throw error;
-      }
+    const userId = await beginCollectionSync("customWorkoutSystems", customWorkoutSystems);
+    if (!userId) {
       return;
     }
 
     await syncCollection(
       "custom_workout_systems",
-      session.user.id,
+      userId,
       lastSyncedState?.customWorkoutSystems || [],
       customWorkoutSystems,
       mapWorkoutSystemToRow
     );
-    lastSyncedState = {
-      ...(lastSyncedState || {}),
-      customWorkoutSystems: cloneState(customWorkoutSystems),
-    };
+    finishCollectionSync(userId, "customWorkoutSystems", customWorkoutSystems);
   },
 };

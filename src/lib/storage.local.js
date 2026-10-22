@@ -1,6 +1,78 @@
 const STORAGE_KEY = "fittrack.app.v1";
 const THEME_KEY = "fittrack.theme-accent.v1";
-const WATER_CACHE_KEY = "fittrack.water-cache.v1";
+const CLOUD_CACHE_KEY_PREFIX = "fittrack.cloud-cache.v1.";
+
+function getCloudCacheKey(userId) {
+  return `${CLOUD_CACHE_KEY_PREFIX}${userId}`;
+}
+
+function readJson(key, fallback) {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch (error) {
+    console.error("Failed to read FitTrack local data.", error);
+    return fallback;
+  }
+}
+
+function writeJson(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error("Failed to save FitTrack local data.", error);
+  }
+}
+
+export function loadCloudCache(userId) {
+  if (typeof window === "undefined" || !userId) {
+    return null;
+  }
+
+  const cached = readJson(getCloudCacheKey(userId), null);
+  if (!cached?.snapshot || typeof cached.snapshot !== "object") {
+    return null;
+  }
+
+  return {
+    snapshot: cached.snapshot,
+    pendingCollections: Array.isArray(cached.pendingCollections) ? cached.pendingCollections : [],
+    updatedAt: cached.updatedAt || null,
+  };
+}
+
+export function saveCloudCache(userId, snapshot, pendingCollections = []) {
+  if (typeof window === "undefined" || !userId || !snapshot) {
+    return;
+  }
+
+  writeJson(getCloudCacheKey(userId), {
+    snapshot,
+    pendingCollections: [...new Set(pendingCollections)],
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export function updateCloudCache(userId, updates, { markPending, clearPending } = {}) {
+  const current = loadCloudCache(userId) || {
+    snapshot: {},
+    pendingCollections: [],
+  };
+  const pendingCollections = new Set(current.pendingCollections);
+
+  if (markPending) {
+    pendingCollections.add(markPending);
+  }
+  if (clearPending) {
+    pendingCollections.delete(clearPending);
+  }
+
+  saveCloudCache(
+    userId,
+    { ...current.snapshot, ...updates },
+    [...pendingCollections]
+  );
+}
 
 export function hasMeaningfulLocalData(snapshot) {
   if (!snapshot) {
@@ -39,42 +111,6 @@ export const localStorageAdapter = {
     }
   },
 };
-
-export function loadCachedWaterEntries() {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const value = window.localStorage.getItem(WATER_CACHE_KEY);
-    if (!value) {
-      return [];
-    }
-
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.error("Failed to load FitTrack water cache from localStorage.", error);
-    return [];
-  }
-}
-
-export function saveCachedWaterEntries(entries) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    if (!entries?.length) {
-      window.localStorage.removeItem(WATER_CACHE_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(WATER_CACHE_KEY, JSON.stringify(entries));
-  } catch (error) {
-    console.error("Failed to save FitTrack water cache to localStorage.", error);
-  }
-}
 
 export function getStoredAccentColor() {
   if (typeof window === "undefined") {

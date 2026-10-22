@@ -45,6 +45,7 @@ create table if not exists public.meal_templates (
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
   template_type text not null default 'meal',
+  creator text,
   serving_size text not null,
   calories integer not null,
   protein numeric not null,
@@ -52,6 +53,9 @@ create table if not exists public.meal_templates (
   fat numeric not null,
   updated_at timestamptz not null default now()
 );
+
+alter table public.meal_templates
+  add column if not exists creator text;
 
 create table if not exists public.weight_entries (
   id uuid primary key default gen_random_uuid(),

@@ -16,6 +16,7 @@ const EMPTY_FORM = {
   protein: "",
   carbs: "",
   fat: "",
+  creator: "",
 };
 
 const QUICK_SEARCH_LIMIT = 50;
@@ -138,12 +139,12 @@ function matchesSearch(item, term) {
 }
 
 function getItemSearchMeta(item, term) {
-  return getSearchMeta(term, [item.name, item.brand, item.servingSize, item.description]);
+  return getSearchMeta(term, [item.name, item.brand, item.creator, item.servingSize, item.description]);
 }
 
 function getQuickSearchMeta(item, foodTerm, restaurantTerm) {
   const foodMeta = foodTerm
-    ? getSearchMeta(foodTerm, [item.name, item.servingSize, item.description])
+    ? getSearchMeta(foodTerm, [item.name, item.creator, item.servingSize, item.description])
     : { tier: 3, score: 1 };
   const brandMeta = restaurantTerm
     ? getSearchMeta(restaurantTerm, [item.brand || ""])
@@ -251,6 +252,7 @@ export function FoodLogSection({
   const [isDayHistoryOpen, setIsDayHistoryOpen] = useState(false);
   const [isQuickPicksOpen, setIsQuickPicksOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [creatorFilter, setCreatorFilter] = useState("all");
   const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
   const [restaurantLibrary, setRestaurantLibrary] = useState([]);
   const [restaurantStatus, setRestaurantStatus] = useState("idle");
@@ -350,6 +352,17 @@ export function FoodLogSection({
 
     return [...savedMeals, ...accessibleFoodLibrary.map((item) => ({ ...item, itemType: "food" }))];
   }, [accessibleFoodLibrary, mealTemplates]);
+
+  const savedMealCreators = useMemo(
+    () =>
+      [...new Set(
+        mealTemplates
+          .filter((meal) => inferSavedTemplateType(meal) === "meal")
+          .map((meal) => meal.creator?.trim())
+          .filter(Boolean)
+      )].sort((left, right) => left.localeCompare(right)),
+    [mealTemplates]
+  );
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -501,7 +514,9 @@ export function FoodLogSection({
       .map((item) => ({ item, meta: getItemSearchMeta(item, search) }))
       .filter(({ item, meta }) => {
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
-        return matchesCategory && meta.tier > 0;
+        const matchesCreator =
+          creatorFilter === "all" || item.creator?.trim().toLowerCase() === creatorFilter.toLowerCase();
+        return matchesCategory && matchesCreator && meta.tier > 0;
       })
       .sort((left, right) => {
         if (search && right.meta.tier !== left.meta.tier) {
@@ -515,10 +530,10 @@ export function FoodLogSection({
         return compareItems(left.item, right.item, search, usageCounts);
       })
       .map(({ item }) => item);
-  }, [categoryFilter, quickPickLibrary, restaurantLibrary, search, usageCounts]);
+  }, [categoryFilter, creatorFilter, quickPickLibrary, restaurantLibrary, search, usageCounts]);
 
   const shouldShowQuickPicksCard =
-    categoryFilter !== "restaurant" && search.trim().length === 0;
+    categoryFilter !== "restaurant" && creatorFilter === "all" && search.trim().length === 0;
   const quickPickPreview = useMemo(() => filteredLibrary.slice(0, 8), [filteredLibrary]);
 
   function resetForm() {
@@ -551,6 +566,7 @@ export function FoodLogSection({
       protein: String(item.protein),
       carbs: String(item.carbs),
       fat: String(item.fat),
+      creator: item.creator || "",
     });
   }
 
@@ -592,6 +608,7 @@ export function FoodLogSection({
       protein: payload.protein,
       carbs: payload.carbs,
       fat: payload.fat,
+      creator: templateType === "meal" ? form.creator.trim() : "",
     });
   }
 
@@ -895,6 +912,7 @@ export function FoodLogSection({
                               <small>
                                 {item.brand ? `${item.brand} • ` : ""}
                                 {item.servingSize}
+                                {item.creator ? ` • ${item.creator}` : ""}
                               </small>
                             </span>
                             <span>{item.calories} cal</span>
@@ -1059,34 +1077,38 @@ export function FoodLogSection({
             </label>
           </div>
 
+          <label>
+            Recipe creator <span className="muted">(optional, saved with quick meals)</span>
+            <input
+              value={form.creator}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, creator: event.target.value }))
+              }
+              placeholder="TastyShredz"
+            />
+          </label>
+
           <div className="button-row">
             <button
               type="button"
               className="primary-button"
               onClick={() => submitEntry({ saveTemplateType: null })}
             >
-              Add Food
+              Log food
             </button>
             <button
               type="button"
               className="secondary-button"
               onClick={() => submitEntry({ saveTemplateType: "food" })}
             >
-              Add Food + Save
-            </button>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => submitEntry({ saveTemplateType: null })}
-            >
-              Add Meal
+              Log + save favorite
             </button>
             <button
               type="button"
               className="secondary-button"
               onClick={() => submitEntry({ saveTemplateType: "meal" })}
             >
-              Add Meal + Save
+              Log + save quick meal
             </button>
           </div>
             </form>
@@ -1289,7 +1311,7 @@ export function FoodLogSection({
             <p className="eyebrow">Food library</p>
             <h2>Quick-pick foods and saved meals</h2>
           </div>
-          <p className="muted">Search by food title, serving, or saved meal.</p>
+          <p className="muted">Search by food, saved meal, or recipe creator.</p>
         </div>
 
         <div className="form-grid">
@@ -1328,6 +1350,28 @@ export function FoodLogSection({
               </button>
             ))}
           </div>
+
+          {savedMealCreators.length ? (
+            <label>
+              Show meals from
+              <select
+                value={creatorFilter}
+                onChange={(event) => {
+                  setCreatorFilter(event.target.value);
+                  if (event.target.value !== "all") {
+                    setCategoryFilter("meal");
+                  }
+                }}
+              >
+                <option value="all">All creators</option>
+                {savedMealCreators.map((creator) => (
+                  <option key={creator} value={creator}>
+                    {creator}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
         </div>
 
         {categoryFilter === "restaurant" && restaurantStatus === "loading" ? (
@@ -1376,6 +1420,7 @@ export function FoodLogSection({
                           {item.brand ? `${item.brand} • ` : ""}
                           {item.servingSize}
                           {item.category ? ` • ${item.category}` : ""}
+                          {item.creator ? ` • ${item.creator}` : ""}
                         </p>
                       </div>
                       <strong>{item.calories} cal</strong>
@@ -1424,6 +1469,7 @@ export function FoodLogSection({
                       {item.brand ? `${item.brand} • ` : ""}
                       {item.servingSize}
                       {item.category ? ` • ${item.category}` : ""}
+                      {item.creator ? ` • ${item.creator}` : ""}
                     </p>
                   </div>
                   <strong>{item.calories} cal</strong>
