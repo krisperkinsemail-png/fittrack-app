@@ -519,13 +519,23 @@ button {
 
 .water-tracker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  grid-template-columns: minmax(72px, 1fr) minmax(112px, 1.3fr) minmax(72px, 1fr);
   gap: 10px;
 }
 
 .water-preset-button {
   font-weight: 800;
   letter-spacing: 0.01em;
+}
+
+.water-tracker-amount {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-strong));
+  font-size: 1.1rem;
 }
 
 .water-tracker-actions {

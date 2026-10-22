@@ -20,7 +20,7 @@ const EMPTY_FORM = {
 };
 
 const QUICK_SEARCH_LIMIT = 50;
-const WATER_PRESETS = [8, 12, 16, 24, 32];
+const WATER_INCREMENT = 2;
 
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
@@ -253,6 +253,7 @@ export function FoodLogSection({
   const [isQuickPicksOpen, setIsQuickPicksOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [creatorFilter, setCreatorFilter] = useState("all");
+  const [waterAmount, setWaterAmount] = useState(0);
   const [usageCounts, setUsageCounts] = useState(() => loadFoodLibraryUsage());
   const [restaurantLibrary, setRestaurantLibrary] = useState([]);
   const [restaurantStatus, setRestaurantStatus] = useState("idle");
@@ -814,24 +815,46 @@ export function FoodLogSection({
     <div className="section-stack">
       <section className="card water-tracker-card">
         <div className="section-heading water-tracker-heading">
-          <p className="eyebrow">Water tracker</p>
-          <h2>{waterOunces} oz</h2>
+          <div>
+            <p className="eyebrow">Water tracker</p>
+            <h2>{waterOunces} oz today</h2>
+          </div>
+          <p className="muted">Add water in 2 oz increments</p>
         </div>
 
         <div className="water-tracker-grid">
-          {WATER_PRESETS.map((ounces) => (
-            <button
-              key={ounces}
-              type="button"
-              className="secondary-button water-preset-button"
-              onClick={() => onAddWater(ounces)}
-            >
-              +{ounces} oz
-            </button>
-          ))}
+          <button
+            type="button"
+            className="secondary-button water-preset-button"
+            onClick={() => setWaterAmount((current) => Math.max(0, current - WATER_INCREMENT))}
+            disabled={!waterAmount}
+            aria-label="Decrease water amount by 2 ounces"
+          >
+            −
+          </button>
+          <strong className="water-tracker-amount">{waterAmount} oz</strong>
+          <button
+            type="button"
+            className="secondary-button water-preset-button"
+            onClick={() => setWaterAmount((current) => current + WATER_INCREMENT)}
+            aria-label="Increase water amount by 2 ounces"
+          >
+            +
+          </button>
         </div>
 
         <div className="button-row water-tracker-actions">
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => {
+              onAddWater(waterAmount);
+              setWaterAmount(0);
+            }}
+            disabled={!waterAmount}
+          >
+            Submit water
+          </button>
           <button
             type="button"
             className="secondary-button"
